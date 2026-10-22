@@ -1,9 +1,9 @@
-# Validation record — 21–22 October 2026
+# Validation record — 21–23 October 2026
 
 ## Confirmed
 
-- TypeScript and 27 tests passed in the final checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
-- Both Android and iOS production Hermes bundles exported successfully. Bundle size fell from 7.3MB to 5.2MB per platform after importing only used icons; original exam artwork dropped from 1.18MB to 83KB. Final bundle file sizes are recorded in build-check.json. Export success is not a compiled/signed binary or physical-device runtime test.
+- TypeScript and 40 tests passed in the final checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
+- Both Android and iOS production Hermes bundles exported successfully. Bundle size fell from 7.3MB to approximately 5.3MB per platform after importing only used icons; original exam artwork dropped from 1.18MB to 83KB. Final bundle file sizes are recorded in build-check.json. Export success is not a compiled/signed binary or physical-device runtime test.
 - The SDK 57 local dependency compatibility check passed in offline mode against Expo's installed version map. Online validation timed out during a network change.
 - All 183 original web source files matched the initial hashes.
 - Live VPS readiness/catalog/public download SHA-256 checks passed earlier; docs/vps-check.json contains the evidence. Later laptop requests timed out after the network changed; the user reported the health page opening independently. The later failed checks must not be represented as successful.
@@ -16,7 +16,7 @@
 
 The independent-client sync test reached Supabase but the actual database rejected the write: missing exam_sessions.answered_count. A reviewed copy of the existing source migration is in backend/migrations/001_student_data_only.sql. The user chose to run it in the SQL Editor; application has not yet been confirmed. Rerun npm run check:account-sync after confirmation and record the outcome. Do not mark two-way history or analytics sync complete before it passes.
 
-Live personal text/photo/PDF extraction → confirmation → practice → cross-client result verification remains pending reliable laptop VPS access and the shared migration. The code uses the existing protected owner-scoped endpoints, supports resuming confirmed photo batches, and keeps failed work locally; code review and pure tests are not substitutes for this live journey.
+The VPS health endpoint is reachable again. The authorized synthetic personal-text upload was accepted, but its worker paused with OpenRouter 401: User not found. The provider credential must be corrected on the VPS; this cannot be repaired by the mobile client. The saved QA job is reused rather than creating duplicate extraction jobs. Live personal text/photo/PDF extraction → confirmation → practice → cross-client result verification remains pending that server correction and the shared migration. The code uses the existing protected owner-scoped endpoints, supports resuming confirmed photo batches, and keeps failed work locally; code review and pure tests are not substitutes for this live journey.
 
 ## Release gates still open
 
@@ -30,3 +30,13 @@ Live personal text/photo/PDF extraction → confirmation → practice → cross-
 ## Dependency audit
 
 The last registry audit reported 23 production advisories (15 high, 8 moderate); a later full dependency install reported 24 including development dependencies in Expo/Metro tooling dependency chains. Direct vulnerable roots include braces <=3.0.3 and node-forge <=1.4.0; those were also the latest available registry versions when checked. Do not apply npm audit fix --force: its proposed Expo 44 / React Native 0.72 downgrade breaks the SDK 57 requirement. The JSON report is saved as dependency-audit.json. Reassess upstream patches before release; no vulnerability-free claim is made.
+
+## Mobile experience follow-up — 23 October
+
+- Baseline committed first (9f0dbac) and pushed to the requested emmanuel582/pastqapp repository before publishing the subsequent mobile improvements. Credentials, QA account details, source-reference copies, caches and generated bundles are excluded.
+- Added deliberate horizontal CBT gestures, ordered cross-subject navigation and reduced-motion-aware native animation. Swipe bounds do not wrap or submit. Vertical and diagonal drags, taps and multi-touch are rejected by domain tests. Browser mouse dragging did not advance; physical touch acceptance is still required.
+- Native reminder tests exercise the actual adapter with mocked OS scheduling: permission denial preserves the old plan, partial scheduling rolls back, provisional iOS permission works, account cleanup is scoped, foreground CBT is quiet and a permission-dialog race cannot cancel a newly enabled plan. Notification taps only accept matching-owner, whitelisted destinations. Device delivery and cold-start behaviour remain physical checks.
+- Reminder plans renew on app resume/day changes and study completion; previous owner requests and delivered reminders are removed on cleanup. This is local OS scheduling, not native remote push registration or VPS delivery.
+- Library, Discover and Preferences now have compact, distinct headers; Home keeps the original wordmark. The 390×844 fixture walkthrough checked these headers, moved forward/back across subjects, retained the selected Mathematics answer and submitted two answered/one skipped questions. The result was 33%, one correct, one incorrect, one skipped; the topic table matched those counts. No new browser console errors appeared. This local fixture check does not prove live service sync.
+- Processing stops polling while paused or awaiting input, avoids overlapping requests, restarts after explicit recovery and shows service failures without misleading photo replacement actions.
+- Final TypeScript, 40 regression tests, all 183 source-integrity checks and iOS/Android Hermes exports passed. No new runtime package was added for gestures or reminder improvements.

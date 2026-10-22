@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import {
   NavigationContainer,
@@ -12,10 +12,12 @@ import { useApp, designPreview } from "../state/AppContext";
 import { supabase } from "../services/auth";
 import { Screen, Loading } from "../components/ui";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import NativeNotificationBridge from "../components/NativeNotificationBridge";
 import type { Routes } from "./types";
 const Stack = createNativeStackNavigator<Routes>(),
   ref = createNavigationContainerRef<Routes>();
 export default function RootNavigator() {
+  const [activeRoute, setActiveRoute] = useState<string | undefined>();
   const { ready, session, profile, owner, palette } = useApp(),
     reduced = useReducedMotion();
   useEffect(() => {
@@ -86,9 +88,15 @@ export default function RootNavigator() {
       <StatusBar style={palette.scheme === "dark" ? "light" : "dark"} />
       <NavigationContainer
         ref={ref}
+        onReady={() => setActiveRoute(ref.getCurrentRoute()?.name)}
+        onStateChange={() => setActiveRoute(ref.getCurrentRoute()?.name)}
         theme={theme}
         key={owner + ":" + (profile?.onboarding_complete ? "ready" : "new")}
       >
+        <NativeNotificationBridge
+          navigationRef={ref}
+          activeRoute={activeRoute}
+        />
         <Stack.Navigator
           initialRouteName={initial}
           screenOptions={{
@@ -133,6 +141,7 @@ export default function RootNavigator() {
           />
           <Stack.Screen
             name="Exam"
+            options={{ gestureEnabled: false }}
             getComponent={() => require("../screens/ExamScreen").default}
           />
           <Stack.Screen

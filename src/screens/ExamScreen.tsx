@@ -35,6 +35,8 @@ import {
   Loading,
   Empty,
 } from "../components/ui";
+import QuestionSwipeSurface from "../components/QuestionSwipeSurface";
+import { adjacentQuestion } from "../domain/swipe";
 import ExamClock from "../components/ExamClock";
 import RichText from "../components/RichText";
 import QuestionMedia from "../components/QuestionMedia";
@@ -183,6 +185,14 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
       setBusy(false);
     }
   }
+  const bookmarkIds = useMemo(
+    () => new Set(bookmarks.map((bookmark) => bookmark.id)),
+    [bookmarks],
+  );
+  const totals = useMemo(
+    () => (attempt ? attemptSummary(attempt) : null),
+    [attempt?.questions, attempt?.answers, attempt?.written],
+  );
   const reviewIndexes = useMemo(
     () =>
       attempt
@@ -195,9 +205,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
               attempt.answers[i] !== answerIndex(q)) ||
             (reviewFilter === "skipped" && !questionAnswered(attempt, i)) ||
             (reviewFilter === "saved" &&
-              bookmarks.some(
-                (b) => b.id === bookmarkIdentity(attempt.bundleId, q),
-              ))
+              bookmarkIds.has(bookmarkIdentity(attempt.bundleId, q)))
               ? [i]
               : [],
           )
@@ -224,6 +232,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
       ),
     [attempt?.questions, reviewIndexSet],
   );
+  const orderedIndexes = useMemo(() => [...grouped.values()].flat(), [grouped]);
   useEffect(() => {
     scroll.current?.scrollTo({ y: 0, animated: false });
   }, [attempt?.current]);
@@ -259,21 +268,25 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     total = indexes.length,
     answered = subjectAnsweredCount(indexes, attempt.answers, attempt.written),
     following = subjects[subjects.indexOf(q.subject) + 1],
-    summary = attemptSummary(attempt),
-    marked = bookmarks.some(
-      (b) => b.id === bookmarkIdentity(attempt.bundleId, q),
-    );
+    summary = totals!,
+    marked = bookmarkIds.has(bookmarkIdentity(attempt.bundleId, q));
   function go(index: number) {
     subjectPositions.current.set(q.subject, attempt!.current);
     update({ current: index });
   }
   function switchSubject(subject: string) {
     const list = grouped.get(subject) || [];
-    if (list.length) go(subjectPositions.current.get(subject) ?? list[0]);
+    const remembered = subjectPositions.current.get(subject);
+    if (list.length)
+      go(
+        remembered !== undefined && list.includes(remembered)
+          ? remembered
+          : list[0],
+      );
   }
   function advance() {
-    if (number < total) go(indexes[number]);
-    else if (following) switchSubject(following);
+    const next = adjacentQuestion(orderedIndexes, attempt!.current, 1);
+    if (next !== null) go(next);
     else if (review) navigation.navigate("Main", { tab: "library" });
     else setFinish(true);
   }
@@ -489,326 +502,355 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         </View>
       ) : null}
       <View style={{ flex: 1, minHeight: 0 }}>
-        <ScrollView
-          ref={scroll}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            paddingTop: 17,
-            paddingHorizontal: 20,
-            paddingBottom: 24,
-            maxWidth: 790,
-            width: "100%",
-            alignSelf: "center",
+        <QuestionSwipeSurface
+          questionKey={attempt.id + ":" + attempt.current}
+          enabled={
+            !busy &&
+            !hydrating &&
+            !finish &&
+            !navigator &&
+            !calculator &&
+            !board &&
+            !leaving &&
+            (!review || reviewIndexes.length > 0)
+          }
+          onSwipe={(direction) => {
+            const target = adjacentQuestion(
+              orderedIndexes,
+              attempt.current,
+              direction,
+            );
+            if (target !== null) go(target);
           }}
         >
-          {review && !reviewIndexes.length ? (
-            <Empty title="No matching questions." />
-          ) : (
-            <>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "flex-end",
-                  gap: 3,
-                  marginBottom: 16,
-                }}
-              >
-                <QuestionReport
-                  bundleId={attempt.bundleId}
-                  version={attempt.version}
-                  question={q}
-                />
-                <IconButton
-                  label="Decrease question text"
-                  disabled={scale <= 0.9}
-                  onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
-                  style={{ width: 32, height: 34 }}
-                >
-                  <Minus size={15} color={palette.muted} />
-                </IconButton>
-                <IconButton
-                  label="Increase question text"
-                  disabled={scale >= 1.4}
-                  onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
-                  style={{ width: 32, height: 34 }}
-                >
-                  <Plus size={15} color={palette.muted} />
-                </IconButton>
-                <IconButton
-                  label={marked ? "Remove saved question" : "Save question"}
-                  active={marked}
-                  disabled={bookmarkBusy || hydrating}
-                  onPress={() => {
-                    setBookmarkBusy(true);
-                    void toggleBookmark(
-                      owner,
-                      {
-                        id: attempt.bundleId,
-                        title: attempt.title,
-                        assets: questionAssets,
-                      },
-                      q,
-                    )
-                      .then(refreshPractice)
-                      .catch((e) => setError(e.message))
-                      .finally(() => setBookmarkBusy(false));
+          <ScrollView
+            ref={scroll}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingTop: 17,
+              paddingHorizontal: 20,
+              paddingBottom: 24,
+              maxWidth: 790,
+              width: "100%",
+              alignSelf: "center",
+            }}
+          >
+            {review && !reviewIndexes.length ? (
+              <Empty title="No matching questions." />
+            ) : (
+              <>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    gap: 3,
+                    marginBottom: 16,
                   }}
-                  style={{ width: 32, height: 34 }}
                 >
-                  <Bookmark
-                    size={18}
-                    color={marked ? palette.accent : palette.muted}
-                    fill={marked ? palette.accent : "none"}
+                  <QuestionReport
+                    bundleId={attempt.bundleId}
+                    version={attempt.version}
+                    question={q}
                   />
-                </IconButton>
-                {!review ? (
                   <IconButton
-                    label={
-                      attempt.flagged[attempt.current]
-                        ? "Unflag question"
-                        : "Flag question"
-                    }
-                    active={attempt.flagged[attempt.current]}
+                    label="Decrease question text"
+                    disabled={scale <= 0.9}
+                    onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
+                    style={{ width: 32, height: 34 }}
+                  >
+                    <Minus size={15} color={palette.muted} />
+                  </IconButton>
+                  <IconButton
+                    label="Increase question text"
+                    disabled={scale >= 1.4}
+                    onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
+                    style={{ width: 32, height: 34 }}
+                  >
+                    <Plus size={15} color={palette.muted} />
+                  </IconButton>
+                  <IconButton
+                    label={marked ? "Remove saved question" : "Save question"}
+                    active={marked}
+                    disabled={bookmarkBusy || hydrating}
                     onPress={() => {
-                      const flagged = [...attempt.flagged];
-                      flagged[attempt.current] = !flagged[attempt.current];
-                      update({ flagged });
+                      setBookmarkBusy(true);
+                      void toggleBookmark(
+                        owner,
+                        {
+                          id: attempt.bundleId,
+                          title: attempt.title,
+                          assets: questionAssets,
+                        },
+                        q,
+                      )
+                        .then(refreshPractice)
+                        .catch((e) => setError(e.message))
+                        .finally(() => setBookmarkBusy(false));
                     }}
                     style={{ width: 32, height: 34 }}
                   >
-                    <Flag size={18} color={palette.muted} />
+                    <Bookmark
+                      size={18}
+                      color={marked ? palette.accent : palette.muted}
+                      fill={marked ? palette.accent : "none"}
+                    />
                   </IconButton>
-                ) : null}
-              </View>
-              <QuestionMedia
-                passage={q.passage}
-                figures={q.figures}
-                assets={questionAssets}
-              />
-              <View style={{ marginBottom: 24 }}>
-                {typeof q.nativeRef === "string" && !loaded ? (
-                  <Loading label="Opening question" />
-                ) : null}
-                <RichText
-                  text={q.question}
-                  html={q.questionHtml}
+                  {!review ? (
+                    <IconButton
+                      label={
+                        attempt.flagged[attempt.current]
+                          ? "Unflag question"
+                          : "Flag question"
+                      }
+                      active={attempt.flagged[attempt.current]}
+                      onPress={() => {
+                        const flagged = [...attempt.flagged];
+                        flagged[attempt.current] = !flagged[attempt.current];
+                        update({ flagged });
+                      }}
+                      style={{ width: 32, height: 34 }}
+                    >
+                      <Flag size={18} color={palette.muted} />
+                    </IconButton>
+                  ) : null}
+                </View>
+                <QuestionMedia
+                  passage={q.passage}
+                  figures={q.figures}
                   assets={questionAssets}
-                  size={18 * scale}
-                  serif
                 />
-              </View>
-              {theory && (!review || attempt.written[attempt.current]) ? (
-                <View style={{ gap: 8, marginVertical: 18 }}>
-                  <Muted>
-                    {q.type === "theory"
-                      ? "Your working (optional)"
-                      : "Your answer"}
-                  </Muted>
-                  <TextInput
-                    multiline
-                    editable={!review && !hydrating}
-                    accessibilityLabel="Your answer"
-                    placeholder="Type your answer"
-                    placeholderTextColor={palette.faint}
-                    value={attempt.written[attempt.current] || ""}
-                    onChangeText={(text) => {
-                      const written = [...attempt.written];
-                      written[attempt.current] = text;
-                      update({ written });
-                    }}
-                    style={{
-                      minHeight: 100,
-                      borderWidth: 1,
-                      borderColor: palette.line,
-                      borderRadius: 8,
-                      padding: 12,
-                      color: palette.ink,
-                      fontFamily: fonts.body,
-                      fontSize: 16,
-                      textAlignVertical: "top",
-                    }}
+                <View style={{ marginBottom: 24 }}>
+                  {typeof q.nativeRef === "string" && !loaded ? (
+                    <Loading label="Opening question" />
+                  ) : null}
+                  <RichText
+                    text={q.question}
+                    html={q.questionHtml}
+                    assets={questionAssets}
+                    size={18 * scale}
+                    serif
                   />
                 </View>
-              ) : null}
-              {!theory && !hydrating ? (
-                <View style={{ gap: 10 }}>
-                  {q.options.map((option, i) => (
-                    <Pressable
-                      key={i}
-                      disabled={review || hydrating}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: selected === i }}
-                      onPress={() => {
-                        const answers = [...attempt.answers];
-                        answers[attempt.current] = i;
-                        update({ answers });
+                {theory && (!review || attempt.written[attempt.current]) ? (
+                  <View style={{ gap: 8, marginVertical: 18 }}>
+                    <Muted>
+                      {q.type === "theory"
+                        ? "Your working (optional)"
+                        : "Your answer"}
+                    </Muted>
+                    <TextInput
+                      multiline
+                      editable={!review && !hydrating}
+                      accessibilityLabel="Your answer"
+                      placeholder="Type your answer"
+                      placeholderTextColor={palette.faint}
+                      value={attempt.written[attempt.current] || ""}
+                      onChangeText={(text) => {
+                        const written = [...attempt.written];
+                        written[attempt.current] = text;
+                        update({ written });
                       }}
                       style={{
-                        minHeight: 61,
-                        paddingVertical: 12,
-                        paddingLeft: 10,
-                        paddingRight: 14,
-                        gap: 12,
-                        flexDirection: "row",
-                        alignItems: "center",
+                        minHeight: 100,
                         borderWidth: 1,
-                        borderRadius: 6,
-                        borderColor:
-                          selected === i
-                            ? palette.accent
-                            : review && key === i
-                              ? palette.done
-                              : palette.line,
-                        backgroundColor:
-                          selected === i ? palette.accentWash : palette.wash,
-                        borderStyle:
-                          review && selected === i && key !== null && key !== i
-                            ? "dashed"
-                            : "solid",
+                        borderColor: palette.line,
+                        borderRadius: 8,
+                        padding: 12,
+                        color: palette.ink,
+                        fontFamily: fonts.body,
+                        fontSize: 16,
+                        textAlignVertical: "top",
                       }}
-                    >
-                      <View
+                    />
+                  </View>
+                ) : null}
+                {!theory && !hydrating ? (
+                  <View style={{ gap: 10 }}>
+                    {q.options.map((option, i) => (
+                      <Pressable
+                        key={i}
+                        disabled={review || hydrating}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: selected === i }}
+                        onPress={() => {
+                          const answers = [...attempt.answers];
+                          answers[attempt.current] = i;
+                          update({ answers });
+                        }}
                         style={{
-                          width: 29,
-                          height: 29,
+                          minHeight: 61,
+                          paddingVertical: 12,
+                          paddingLeft: 10,
+                          paddingRight: 14,
+                          gap: 12,
+                          flexDirection: "row",
+                          alignItems: "center",
                           borderWidth: 1,
+                          borderRadius: 6,
                           borderColor:
                             selected === i
                               ? palette.accent
                               : review && key === i
                                 ? palette.done
                                 : palette.line,
-                          borderRadius: 4,
-                          alignItems: "center",
-                          justifyContent: "center",
                           backgroundColor:
-                            review && key === i
-                              ? palette.done
-                              : selected === i
-                                ? palette.accent
-                                : "transparent",
+                            selected === i ? palette.accentWash : palette.wash,
+                          borderStyle:
+                            review &&
+                            selected === i &&
+                            key !== null &&
+                            key !== i
+                              ? "dashed"
+                              : "solid",
                         }}
                       >
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            color:
-                              review && key === i
-                                ? palette.onDone
-                                : selected === i
-                                  ? palette.bg
-                                  : palette.muted,
-                          }}
-                        >
-                          {String.fromCharCode(65 + i)}
-                        </Text>
-                      </View>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <RichText
-                          text={option}
-                          html={q.optionsHtml?.[i]}
-                          assets={questionAssets}
-                          size={13 * scale}
-                        />
-                      </View>
-                      {review && key === i ? (
-                        <Check size={16} color={palette.done} />
-                      ) : review && selected === i && key !== null ? (
-                        <X size={16} color={palette.accent} />
-                      ) : selected === i ? (
                         <View
                           style={{
-                            width: 7,
-                            height: 7,
-                            borderRadius: 2,
-                            backgroundColor: palette.accent,
-                          }}
-                        />
-                      ) : null}
-                      {review && selected === i ? (
-                        <Muted
-                          style={{
-                            fontSize: 8,
-                            maxWidth: 45,
-                            textAlign: "right",
+                            width: 29,
+                            height: 29,
+                            borderWidth: 1,
+                            borderColor:
+                              selected === i
+                                ? palette.accent
+                                : review && key === i
+                                  ? palette.done
+                                  : palette.line,
+                            borderRadius: 4,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor:
+                              review && key === i
+                                ? palette.done
+                                : selected === i
+                                  ? palette.accent
+                                  : "transparent",
                           }}
                         >
-                          Your answer
-                        </Muted>
-                      ) : null}
-                    </Pressable>
-                  ))}
-                </View>
-              ) : null}
-              {q.type === "theory" && !reveal ? (
-                <Button
-                  onPress={() => {
-                    const answers = [...attempt.answers];
-                    answers[attempt.current] = 0;
-                    update({ answers });
-                  }}
-                  style={{ marginTop: 32 }}
-                >
-                  I’ve solved it — show answer
-                </Button>
-              ) : null}
-              {reveal ? (
-                <View
-                  style={{
-                    marginTop: 25,
-                    paddingTop: 20,
-                    borderTopWidth: 1,
-                    borderTopColor: palette.accent,
-                  }}
-                >
-                  {q.topic ? (
-                    <View
-                      style={{ flexDirection: "row", gap: 8, marginBottom: 14 }}
-                    >
-                      <Muted>Topic</Muted>
-                      <Text
-                        style={{ fontSize: 12, fontFamily: fonts.semibold }}
-                      >
-                        {String(q.topic)}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {theory && (q.answerText || q.answerHtml) ? (
-                    <>
-                      <Text
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              color:
+                                review && key === i
+                                  ? palette.onDone
+                                  : selected === i
+                                    ? palette.bg
+                                    : palette.muted,
+                            }}
+                          >
+                            {String.fromCharCode(65 + i)}
+                          </Text>
+                        </View>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <RichText
+                            text={option}
+                            html={q.optionsHtml?.[i]}
+                            assets={questionAssets}
+                            size={13 * scale}
+                          />
+                        </View>
+                        {review && key === i ? (
+                          <Check size={16} color={palette.done} />
+                        ) : review && selected === i && key !== null ? (
+                          <X size={16} color={palette.accent} />
+                        ) : selected === i ? (
+                          <View
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: 2,
+                              backgroundColor: palette.accent,
+                            }}
+                          />
+                        ) : null}
+                        {review && selected === i ? (
+                          <Muted
+                            style={{
+                              fontSize: 8,
+                              maxWidth: 45,
+                              textAlign: "right",
+                            }}
+                          >
+                            Your answer
+                          </Muted>
+                        ) : null}
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+                {q.type === "theory" && !reveal ? (
+                  <Button
+                    onPress={() => {
+                      const answers = [...attempt.answers];
+                      answers[attempt.current] = 0;
+                      update({ answers });
+                    }}
+                    style={{ marginTop: 32 }}
+                  >
+                    I’ve solved it — show answer
+                  </Button>
+                ) : null}
+                {reveal ? (
+                  <View
+                    style={{
+                      marginTop: 25,
+                      paddingTop: 20,
+                      borderTopWidth: 1,
+                      borderTopColor: palette.accent,
+                    }}
+                  >
+                    {q.topic ? (
+                      <View
                         style={{
-                          fontSize: 14,
-                          fontFamily: fonts.semibold,
-                          marginBottom: 18,
-                          color: palette.muted,
+                          flexDirection: "row",
+                          gap: 8,
+                          marginBottom: 14,
                         }}
                       >
-                        Source answer
-                      </Text>
-                      <RichText
-                        text={q.answerText || ""}
-                        html={q.answerHtml}
-                        assets={questionAssets}
-                        size={13}
-                      />
-                    </>
-                  ) : null}
-                  <RichText
-                    text={
-                      q.explanation ||
-                      (q.type === "theory" && !q.answerText
-                        ? "No answer was supplied for this question."
-                        : "")
-                    }
-                    html={q.explanationHtml}
-                    assets={questionAssets}
-                    size={13}
-                  />
-                </View>
-              ) : null}
-            </>
-          )}
-        </ScrollView>
+                        <Muted>Topic</Muted>
+                        <Text
+                          style={{ fontSize: 12, fontFamily: fonts.semibold }}
+                        >
+                          {String(q.topic)}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {theory && (q.answerText || q.answerHtml) ? (
+                      <>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontFamily: fonts.semibold,
+                            marginBottom: 18,
+                            color: palette.muted,
+                          }}
+                        >
+                          Source answer
+                        </Text>
+                        <RichText
+                          text={q.answerText || ""}
+                          html={q.answerHtml}
+                          assets={questionAssets}
+                          size={13}
+                        />
+                      </>
+                    ) : null}
+                    <RichText
+                      text={
+                        q.explanation ||
+                        (q.type === "theory" && !q.answerText
+                          ? "No answer was supplied for this question."
+                          : "")
+                      }
+                      html={q.explanationHtml}
+                      assets={questionAssets}
+                      size={13}
+                    />
+                  </View>
+                ) : null}
+              </>
+            )}
+          </ScrollView>
+        </QuestionSwipeSurface>
         <View
           style={{
             flexDirection: "row",
@@ -823,8 +865,17 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         >
           <Button
             kind="secondary"
-            disabled={number <= 1}
-            onPress={() => go(indexes[number - 2])}
+            disabled={
+              adjacentQuestion(orderedIndexes, attempt.current, -1) === null
+            }
+            onPress={() => {
+              const target = adjacentQuestion(
+                orderedIndexes,
+                attempt.current,
+                -1,
+              );
+              if (target !== null) go(target);
+            }}
           >
             <ArrowLeft size={15} color={palette.ink} />
             <Text style={{ fontSize: 11 }}>Previous</Text>

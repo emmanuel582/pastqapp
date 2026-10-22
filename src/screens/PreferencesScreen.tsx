@@ -97,7 +97,10 @@ export default function PreferencesScreen({
   ];
   return (
     <View style={{ flex: 1 }}>
-      <Header title="Preferences" />
+      <Header
+        title="Preferences"
+        style={{ minHeight: 60, paddingVertical: 10 }}
+      />
       <Content
         style={{
           paddingTop: 24,

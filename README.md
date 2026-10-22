@@ -25,6 +25,7 @@ Normal previews use EXPO_PUBLIC_DESIGN_PREVIEW=false. An explicit development-on
 - npm run verify:source: verify the original source snapshot remains unchanged.
 - npm run check:vps: live readiness, catalog, private-route authentication and verified download-part contracts.
 - npm run check:account-sync: two independent authenticated clients, both history directions, and retry-safe analytics, using the explicitly authorized ignored .qa/account.json account.
+- npm run check:personal-upload: resume the authorized synthetic personal-material upload, confirm the reviewed questions, and load the resulting private material from a second authenticated client. The saved job ID prevents duplicate submissions on reruns.
 - npm run export:ios / npm run export:android: production Hermes bundles. These do not compile or sign native binaries.
 
 ## Project structure
@@ -45,6 +46,16 @@ Profile names and contact phone use the existing account profile/metadata. Selec
 Detailed saved answer papers, in-progress checkpoints, bookmarks/notes and downloaded banks remain device-local, matching the existing browser architecture. Browser-compatible private backups move them between devices. The current web/VPS API does not provide automatic cloud archive synchronization for those payloads; do not describe them as automatically synchronized.
 
 The live account test found exam_sessions.answered_count missing. Apply backend/migrations/001_student_data_only.sql in the existing Supabase SQL Editor, then rerun the sync check. Until that succeeds, full progress sync is not accepted as complete.
+
+## Mobile interactions
+
+Swipe left across the CBT question area for the next question; swipe right for the previous one. This follows the visible subject order, preserves answers and never submits an exam. Vertical reading, taps, multi-touch and open tools do not navigate. Reduced-motion settings are respected.
+
+Home retains the PastQ wordmark. Library, Discover and Preferences use their own compact titles without repeating the main heading.
+
+Study reminders use native iOS/Android notifications, selected weekdays, quiet hours, pause dates and completed-day skipping. Permission is requested only when enabling or testing reminders. Tapping a reminder opens the Library; a tap during CBT waits until the exam has been left. Plans cover the next 28 days and renew when opening/resuming the app or completing study. Disabling reminders or signing out cancels that account’s plan. Remote VPS push delivery is a separate release gate.
+
+The live personal-material upload was accepted but processing paused because the VPS provider returned OpenRouter 401 (User not found). Correct the provider credential on the server, resume the saved processing job, and rerun the check before accepting live extraction. Service failures now show a saved-material recovery message rather than asking for a replacement photo.
 
 ## Native builds
 

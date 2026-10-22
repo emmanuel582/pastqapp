@@ -1,23 +1,23 @@
 {
-  "checkedAt": "2026-10-21T16:05:52.901Z",
+  "checkedAt": "2026-10-22T16:14:37.273Z",
   "status": "passed",
   "typecheck": "passed",
   "tests": {
-    "passed": 27,
+    "passed": 40,
     "failed": 0
   },
   "webSourceFilesUnchanged": 183,
   "platforms": {
     "ios": {
-      "bundle": "_expo/static/js/ios/index-de71c00bb810a0b745dc599f36838a37.hbc",
-      "bytes": 5241805,
+      "bundle": "_expo/static/js/ios/index-5d132f34bf460a75e174007452979623.hbc",
+      "bytes": 5263725,
       "assets": 57
     },
     "android": {
-      "bundle": "_expo/static/js/android/index-9acd219feceeb03802747319005f8dfc.hbc",
-      "bytes": 5248654,
+      "bundle": "_expo/static/js/android/index-32f70782610abf3350408e29efc2639b.hbc",
+      "bytes": 5270003,
       "assets": 58
     }
   },
-  "limitations": "Hermes exports only; physical device, signed builds and measured performance not verified."
+  "limitations": "Hermes exports only; signed builds, physical gesture/notification acceptance and measured device performance remain unverified."
 }

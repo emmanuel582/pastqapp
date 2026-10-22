@@ -46,3 +46,13 @@ Separate ready-to-run project, pinned lockfile, setup/env examples, EAS developm
 - [x] TypeScript, regression tests, SQLite lifecycle checks, dual-platform exports and source integrity check.
 - [ ] Shared database migration confirmed and live upload/two-client sync accepted.
 - [ ] Physical device parity and release performance measurements.
+
+## Requested mobile polish — 23 October 2026
+- [x] Commit and push the separate mobile baseline before follow-up changes.
+- [x] Add deliberate CBT next/previous swipes with cross-subject order, retained answers, bounds and reduced-motion support.
+- [x] Replace the wordmark on other main tabs with their own compact heading; remove duplicate titles.
+- [x] Add native reminder tap handling, lifecycle renewal, account cleanup, scheduling rollback and CBT foreground suppression.
+- [x] Reduce repeated exam scans and stop redundant/overlapping paused processing polls.
+- [x] Repeat a browser student walkthrough, regression tests, source-integrity check and native exports.
+- [ ] Correct VPS provider authentication and apply the shared migration; rerun the prepared live checks.
+- [ ] Accept native swipes/notifications on both phones, configure remote push delivery and complete device release profiling/signing.

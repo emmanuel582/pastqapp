@@ -69,7 +69,8 @@
     "verify:source": "node scripts/verify-web-source.cjs",
     "preview:iphone": "node scripts/start-preview.cjs",
     "check:vps": "node scripts/check-vps.cjs",
-    "check:account-sync": "tsx scripts/check-account-sync.ts"
+    "check:account-sync": "tsx scripts/check-account-sync.ts",
+    "check:personal-upload": "tsx scripts/check-personal-upload.ts"
   },
   "private": true
 }

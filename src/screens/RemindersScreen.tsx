@@ -58,6 +58,11 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
     setStatus("");
   }
   async function save(value = draft) {
+    value = {
+      ...value,
+      timezone:
+        Intl.DateTimeFormat().resolvedOptions().timeZone || value.timezone,
+    };
     if (busy) return;
     setBusy(true);
     setError("");
@@ -158,8 +163,10 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
           <Button
             kind="text"
             onPress={() =>
-              void testNotification()
-                .then(() => setStatus("Test reminder sent to this device."))
+              void testNotification(owner)
+                .then(() =>
+                  setStatus("Test reminder will arrive in a few seconds."),
+                )
                 .catch((e) => setError(e.message))
             }
           >

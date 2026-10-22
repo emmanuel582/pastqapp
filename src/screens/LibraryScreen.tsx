@@ -283,7 +283,8 @@ export default function LibraryScreen({
                 }
               : undefined
           }
-          title={environment ? "Your exams" : undefined}
+          title={environment || "Library"}
+          style={{ minHeight: 60, paddingVertical: 10 }}
           right={
             <Button kind="text" onPress={() => setExploring(true)}>
               <Text style={{ color: palette.accent, fontSize: 13 }}>
@@ -311,7 +312,7 @@ export default function LibraryScreen({
           keyExtractor={(item) => ("id" in item ? item.id : item.name)}
           contentContainerStyle={{
             padding: 22,
-            paddingTop: 28,
+            paddingTop: 16,
             paddingBottom: 36,
             maxWidth: 744,
             width: "100%",
@@ -321,19 +322,6 @@ export default function LibraryScreen({
             <View>
               {
                 <>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: 7,
-                      alignItems: "center",
-                    }}
-                  >
-                    <Download size={14} color={palette.muted} />
-                    <Muted style={{ fontSize: 11 }}>On your device</Muted>
-                  </View>
-                  <Title size={32} style={{ marginVertical: 12 }}>
-                    {environment || "Your study spaces."}
-                  </Title>
                   <SearchField
                     value={query}
                     onChangeText={setQuery}
@@ -342,7 +330,7 @@ export default function LibraryScreen({
                         ? "Find a publisher, subject or question"
                         : "Find an exam, material or question"
                     }
-                    style={{ marginTop: 14, marginBottom: 24 }}
+                    style={{ marginBottom: 16 }}
                   />
                 </>
               }
@@ -459,6 +447,8 @@ export default function LibraryScreen({
         </Button>
       ) : null}
       <Header
+        title="Library"
+        style={{ minHeight: 60, paddingVertical: 10 }}
         right={
           <Button
             kind="secondary"
@@ -491,7 +481,7 @@ export default function LibraryScreen({
         windowSize={7}
         contentContainerStyle={{
           paddingHorizontal: 22,
-          paddingTop: 28,
+          paddingTop: 16,
           paddingBottom: 35,
           width: "100%",
           maxWidth: 1144,
@@ -501,9 +491,6 @@ export default function LibraryScreen({
           <View>
             {
               <>
-                <Title size={36} style={{ marginBottom: 22 }}>
-                  Browse
-                </Title>
                 <SearchField
                   value={query}
                   onChangeText={setQuery}

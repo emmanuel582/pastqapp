@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { View } from "react-native";
 import { Screen } from "../components/ui";
 import BottomNav, { type MainTab } from "../components/BottomNav";
@@ -8,7 +8,8 @@ import DiscoverScreen from "./DiscoverScreen";
 import PreferencesScreen from "./PreferencesScreen";
 import type { Props } from "../navigation/types";
 export default function MainScreen({ navigation, route }: Props<"Main">) {
-  const [tab, setTab] = useState<MainTab>(route.params?.tab || "home");
+  const tab = route.params?.tab || "home";
+  const setTab = (value: MainTab) => navigation.setParams({ tab: value });
   return (
     <Screen>
       <View style={{ flex: 1 }}>

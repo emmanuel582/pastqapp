@@ -114,6 +114,8 @@ export default function DiscoverScreen({
   return (
     <View style={{ flex: 1 }}>
       <Header
+        title="Discover"
+        style={{ minHeight: 60, paddingVertical: 10 }}
         right={
           <Button
             kind="text"
@@ -140,7 +142,7 @@ export default function DiscoverScreen({
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
           padding: 22,
-          paddingTop: 28,
+          paddingTop: 16,
           width: "100%",
           maxWidth: 1144,
           alignSelf: "center",
@@ -149,9 +151,6 @@ export default function DiscoverScreen({
           <View>
             {
               <>
-                <Title size={36} style={{ marginBottom: 22 }}>
-                  Discover
-                </Title>
                 <SearchField
                   value={query}
                   onChangeText={setQuery}

@@ -1,4 +1,4 @@
-import { missingPageInsertion } from "../domain/processing";
+import { missingPageInsertion, processingFollowUp } from "../domain/processing";
 import React, { useEffect, useRef, useState } from "react";
 import { View, AppState } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
@@ -35,12 +35,15 @@ export default function ProcessingScreen({
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const finish = useRef(false);
+  const [pollRevision, setPollRevision] = useState(0);
   useEffect(() => {
     let mounted = true,
       timer: ReturnType<typeof setTimeout> | undefined;
     const abort = new AbortController();
+    let polling = false;
     async function poll() {
-      if (!mounted || AppState.currentState !== "active") return;
+      if (!mounted || polling || AppState.currentState !== "active") return;
+      polling = true;
       try {
         const value = await visionSession(route.params.sessionId, abort.signal);
         if (!mounted) return;
@@ -59,8 +62,16 @@ export default function ProcessingScreen({
           }, 350);
           return;
         }
+        if (
+          ["failed", "paused", "needs_input", "needs_attention"].includes(
+            value.status,
+          )
+        )
+          return;
       } catch {
         if (mounted) setInterrupted(true);
+      } finally {
+        polling = false;
       }
       if (mounted) timer = setTimeout(() => void poll(), 2000);
     }
@@ -75,7 +86,7 @@ export default function ProcessingScreen({
       clearTimeout(timer);
       sub.remove();
     };
-  }, [route.params.sessionId, owner]);
+  }, [route.params.sessionId, owner, pollRevision]);
   const failed =
       session?.status === "failed" ||
       (!!session &&
@@ -98,7 +109,9 @@ export default function ProcessingScreen({
         : state === "failed"
           ? "Couldn’t prepare questions"
           : state === "waiting"
-            ? "Check this page"
+            ? session?.status === "paused"
+              ? "Preparation paused"
+              : "Check this page"
             : "Preparing your questions",
     progress = session?.progress?.total
       ? Math.min(
@@ -111,6 +124,7 @@ export default function ProcessingScreen({
     setError("");
     try {
       setSession(await work());
+      setPollRevision((value) => value + 1);
     } catch {
       setError("That didn’t work. Please try again.");
     } finally {
@@ -149,6 +163,7 @@ export default function ProcessingScreen({
         appendFile(form, "image", file);
         setSession(await replyVision(session.id, form));
       }
+      setPollRevision((value) => value + 1);
     } catch (e) {
       setError(
         e instanceof Error
@@ -242,13 +257,15 @@ export default function ProcessingScreen({
                   borderTopColor: palette.line,
                 }}
               >
-                <Muted>{item.message}</Muted>
-                <Button disabled={busy} onPress={() => void attach(item)}>
-                  {item.type === "missing_page"
-                    ? "Add missing page"
-                    : "Add clearer photo"}
-                </Button>
-                {item.type !== "unclear_image" ? (
+                <Muted>{processingFollowUp(item).message}</Muted>
+                {processingFollowUp(item).photo ? (
+                  <Button disabled={busy} onPress={() => void attach(item)}>
+                    {item.type === "missing_page"
+                      ? "Add missing page"
+                      : "Add clearer photo"}
+                  </Button>
+                ) : null}
+                {processingFollowUp(item).canSkip ? (
                   <Button
                     kind="secondary"
                     disabled={busy}
