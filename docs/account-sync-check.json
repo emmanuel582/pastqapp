@@ -1,0 +1,8 @@
+{
+  "checkedAt": "2026-10-21T16:05:52.923Z",
+  "status": "blocked",
+  "stage": "history upsert",
+  "error": "Could not find the 'answered_count' column of 'exam_sessions' in the schema cache",
+  "migration": "backend/migrations/001_student_data_only.sql",
+  "twoWaySyncVerified": false
+}

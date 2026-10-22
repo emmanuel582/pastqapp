@@ -1,0 +1,27 @@
+node_modules/
+.expo/
+dist/
+build/
+.env
+.env.local
+*.jks
+*.keystore
+reference/web/node_modules/
+reference/web/dist/
+
+.qa/
+
+# Local reference, credentials and device-preview artifacts
+reference/
+.env.*
+!.env.example
+*.p8
+*.p12
+*.pem
+*.mobileprovision
+credentials.json
+docs/preview-connection.json
+docs/iphone-preview-qr.png
+docs/network-check.json
+coverage/
+*.tsbuildinfo

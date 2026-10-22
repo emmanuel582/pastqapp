@@ -1,0 +1,83 @@
+{
+  "expo": {
+    "name": "PastQ",
+    "slug": "focalpoint",
+    "scheme": "pastq",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pastq.study",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Photograph your question papers to study them in PastQ.",
+        "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice."
+      }
+    },
+    "android": {
+      "package": "com.pastq.study",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#151515"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-document-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose your question paper photos.",
+          "cameraPermission": "Photograph question papers.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#c7927d"
+        }
+      ],
+      "expo-image",
+      "expo-sharing",
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Photograph your question papers to study them in PastQ.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#151515",
+          "image": "./assets/icon.png",
+          "imageWidth": 160
+        }
+      ]
+    ],
+    "experiments": {
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2a3c3ccd-bfc5-48af-9615-f33b8de210f6"
+      }
+    },
+    "owner": "emmanuelwritecode"
+  }
+}

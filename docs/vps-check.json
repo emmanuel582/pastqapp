@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-10-21T11:38:15.136Z",
+  "base": "https://76.13.110.6.nip.io",
+  "results": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ms": 1508
+    },
+    {
+      "path": "/api/health/ready",
+      "status": 200,
+      "ms": 1119
+    },
+    {
+      "path": "/api/library/catalog",
+      "status": 200,
+      "ms": 492
+    },
+    {
+      "path": "/api/library/bundles",
+      "status": 200,
+      "ms": 323
+    },
+    {
+      "path": "verified-download-part",
+      "bundleId": "j-e348PptINOtYSh85Sct",
+      "questions": 1,
+      "bytes": 976,
+      "sha256": true
+    },
+    {
+      "path": "/api/discover",
+      "status": 401,
+      "ms": 291
+    },
+    {
+      "path": "/api/vision/materials",
+      "status": 401,
+      "ms": 291
+    },
+    {
+      "path": "/api/reminders/inbox",
+      "status": 401,
+      "ms": 284
+    },
+    {
+      "path": "/api/question-reports",
+      "status": 401,
+      "ms": 290
+    }
+  ]
+}
