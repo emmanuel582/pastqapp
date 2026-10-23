@@ -102,7 +102,8 @@ export default function RootNavigator() {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: palette.bg },
-            animation: reduced ? "none" : "fade",
+            animation:
+              reduced || Platform.OS === "web" ? "none" : "slide_from_right",
             animationDuration: 240,
           }}
         >
@@ -141,7 +142,7 @@ export default function RootNavigator() {
           />
           <Stack.Screen
             name="Exam"
-            options={{ gestureEnabled: false }}
+            options={{ gestureEnabled: false, fullScreenGestureEnabled: false }}
             getComponent={() => require("../screens/ExamScreen").default}
           />
           <Stack.Screen

@@ -1,3 +1,4 @@
+import { checkCancelled } from "../domain/cancellation";
 import { supabase } from "./auth";
 import {
   supportsIndex,
@@ -119,7 +120,7 @@ export async function download(
   const questions: Question[] = [],
     assets: Record<string, Asset> = {};
   for (const part of parts) {
-    signal.throwIfAborted();
+    checkCancelled(signal);
     const id = value.bundle.id + ":" + part.hash;
     let text = await records.read<string>(owner, "download-part", id);
     if (
@@ -167,7 +168,7 @@ export async function download(
     done += part.bytes;
     onProgress(done, total);
   }
-  signal.throwIfAborted();
+  checkCancelled(signal);
   if (supportsIndex) {
     const indexed = await commitIndex(
       owner,

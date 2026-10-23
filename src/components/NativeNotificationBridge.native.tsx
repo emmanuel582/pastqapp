@@ -1,3 +1,4 @@
+import { refreshPush, observePushToken } from "../services/remotePush";
 import React, { useEffect, useMemo, useState } from "react";
 import { AppState } from "react-native";
 import type { NavigationContainerRefWithCurrent } from "@react-navigation/native";
@@ -40,10 +41,20 @@ export default function NativeNotificationBridge({
     configureNotificationContext(owner, activeRoute === "Exam");
   }, [owner, activeRoute]);
   useEffect(() => observeNotificationResponses(setPending), []);
+  useEffect(
+    () =>
+      observePushToken((token) => {
+        void refreshPush(owner, token).catch(() => {});
+      }),
+    [owner],
+  );
   useEffect(() => {
     const refresh = () => {
       if (AppState.currentState === "active")
-        void refreshReminders(owner, days).catch(() => {});
+        void Promise.allSettled([
+          refreshReminders(owner, days),
+          refreshPush(owner),
+        ]);
     };
     refresh();
     const subscription = AppState.addEventListener("change", (state) => {

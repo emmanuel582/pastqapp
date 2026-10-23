@@ -55,7 +55,7 @@ Home retains the PastQ wordmark. Library, Discover and Preferences use their own
 
 Study reminders use native iOS/Android notifications, selected weekdays, quiet hours, pause dates and completed-day skipping. Permission is requested only when enabling or testing reminders. Tapping a reminder opens the Library; a tap during CBT waits until the exam has been left. Plans cover the next 28 days and renew when opening/resuming the app or completing study. Disabling reminders or signing out cancels that account’s plan. Remote VPS push delivery is a separate release gate.
 
-The live personal-material upload was accepted but processing paused because the VPS provider returned OpenRouter 401 (User not found). Correct the provider credential on the server, resume the saved processing job, and rerun the check before accepting live extraction. Service failures now show a saved-material recovery message rather than asking for a replacement photo.
+The VPS extraction credential was corrected and the saved synthetic upload resumed successfully. All three sample questions were extracted, reviewed and opened from a second signed-in client. docs/personal-upload-check.json records the scope; physical photo/PDF capture and shared progress sync have separate acceptance checks.
 
 ## Offline study
 
@@ -76,3 +76,12 @@ Use Expo Go for local development. A custom development client requires installi
 Allow pastq://auth/callback in the existing Supabase redirect settings before accepting standalone OAuth/recovery. Expo Go callbacks differ; verify the actual callback URL on each device. Remote native push needs a development build, project push credentials and a native server delivery integration. Existing web push subscriptions cannot deliver native APNs/FCM notifications. Local reminders and the VPS inbox are implemented separately.
 
 Scholar playback predecodes the existing bundled key poses, shares the decoded set across mounted mascot views, bounds native image fades to less than half the remaining pose hold, and pauses pose timers on navigation blur or app background. Context changes start their study/thinking gesture without an initial idle loop. The supplied scholar tester was also updated locally with action-specific display-clock timing, correct bonus-image proportions, pause/resume and retina canvas rendering. Artwork and the original application source remain unchanged. Validation is in docs/scholar-animation-check.json.
+
+
+## Version 1.0.3 changes
+
+The shared download/upload cancellation check now supports React Native's AbortSignal implementation. Real UTME, WAEC CBT and WAEC Theory VPS parts passed pause/resume and offline SQLite reopening checks; see docs/live-native-download-check.json. Preferences has a compact account-email popover and a touch-selectable chart sized to the actual screen. Native page transitions avoid crossfading two screens, and category changes wait for the new content commit.
+
+The calculator uses basic arithmetic only. Exam tools dock below questions in portrait and alongside them in landscape; question changes and explicit exits wait for the working paper to save. The welcome bitmap has a sharper transparent version with its old second-face overlay removed.
+
+The VPS native notification patch is deployed. iPhone push credentials are configured in EAS; Android Firebase setup and physical-device delivery acceptance remain pending. See backend/NATIVE_PUSH.md. Google uses the secure OS authorization session and requests pastq://auth/callback; that exact callback must be allowed in the shared Supabase project. EAS release profiles explicitly disable design fixtures.

@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, {
   useEffect,
   useMemo,
@@ -5,7 +6,13 @@ import React, {
   useState,
   type MutableRefObject,
 } from "react";
-import { View, Pressable, PanResponder, AppState } from "react-native";
+import {
+  View,
+  Pressable,
+  PanResponder,
+  AppState,
+  useWindowDimensions,
+} from "react-native";
 import Svg, { Path, Pattern, Defs, Circle, Rect } from "react-native-svg";
 import X from "lucide-react-native/icons/x";
 import PenLine from "lucide-react-native/icons/pen-line";
@@ -25,18 +32,22 @@ import {
 } from "../domain/working";
 export default function DrawingBoard({
   attemptId,
+  side = false,
   questionIndex,
   readOnly = false,
   flushRef,
   onClose,
 }: {
   attemptId: string;
+  side?: boolean;
   questionIndex: number;
   readOnly?: boolean;
   flushRef: MutableRefObject<(() => Promise<void>) | null>;
   onClose: () => void;
 }) {
   const { palette, owner } = useApp();
+  const window = useWindowDimensions(),
+    insets = useSafeAreaInsets();
   const [erase, setErase] = useState(false),
     [revision, setRevision] = useState(0),
     [height, setHeight] = useState(220),
@@ -213,7 +224,16 @@ export default function DrawingBoard({
   }
   const controls = { height: 34, width: 34 };
   return (
-    <View style={{ height, paddingHorizontal: 16, paddingBottom: 10 }}>
+    <View
+      style={{
+        height: side
+          ? "100%"
+          : Math.min(height, Math.max(170, window.height * 0.38)),
+        width: side ? 320 : undefined,
+        paddingHorizontal: 16,
+        paddingBottom: Math.max(10, insets.bottom),
+      }}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Resize working paper"

@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import http from 'node:http';
+import {randomUUID} from 'node:crypto';
+import express from 'express';
+test('native device routes verify accounts, reject forged secrets and support signed offline revocation',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'native-api-'));process.env.DATA_DIR=dir;process.env.NODE_ENV='test';process.env.AUTH_DISABLED_FOR_LOCAL_DEVELOPMENT='false';process.env.SESSION_OWNER_HMAC_SECRET='isolated-test-secret';
+ const provider=http.createServer((req,res)=>{const id=req.headers.authorization?.replace('Bearer ','');res.setHeader('Content-Type','application/json');if(['alice','bob'].includes(id))res.end(JSON.stringify({id,email:id+'@example.test',app_metadata:{},user_metadata:{}}));else{res.statusCode=401;res.end('{}');}});
+ await new Promise(resolve=>provider.listen(0,'127.0.0.1',resolve));process.env.SUPABASE_URL='http://127.0.0.1:'+provider.address().port;process.env.SUPABASE_ANON_KEY='test-key';
+ const [{default:routes},push,auth,reminders,admin,{securityHeaders}]=await Promise.all([import('../routes/reminders.js'),import('../services/notifications/native.js'),import('../services/auth/middleware.js'),import('../services/reminders/store.js'),import('../services/admin/notifications.js'),import('../services/http/security.js')]);
+ const app=express();app.use(securityHeaders,express.json());app.use('/api/reminders',routes);const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+ t.after(async()=>{server.closeAllConnections();provider.closeAllConnections();await Promise.all([new Promise(r=>server.close(r)),new Promise(r=>provider.close(r))]);push.closeNativeStore();reminders.closeReminderStore();admin.closeNotificationStore();fs.rmSync(dir,{recursive:true,force:true});});
+ const base='http://127.0.0.1:'+server.address().port+'/api/reminders';const d={installationId:randomUUID(),secret:randomUUID()+randomUUID(),token:'ExpoPushToken[isolatedtestdevice1234]',platform:'android',owner:'forged-owner'};
+ const send=(route,body,token)=>fetch(base+route,{method:route.includes('revoke')?'POST':'PUT',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)});
+ assert.equal((await send('/native-device',d)).status,401);
+ const registered=await send('/native-device',d,'alice');assert.equal(registered.status,200);assert.equal(registered.headers.get('x-content-type-options'),'nosniff');
+ assert.equal(push.nativeReachable(auth.sessionOwnerKey('alice')),true);assert.equal(push.nativeReachable('forged-owner'),false);
+ assert.equal((await send('/native-device',{...d,secret:randomUUID()+randomUUID()},'bob')).status,403);
+ assert.equal((await send('/native-device/revoke',{...d,secret:randomUUID()+randomUUID()})).status,403);
+ assert.equal((await send('/native-device/revoke',d)).status,200);assert.equal(push.nativeReachable(auth.sessionOwnerKey('alice')),false);
+});

@@ -78,10 +78,7 @@ export function calculate(expression: string): string {
     .replace(/×/g, "*")
     .replace(/÷/g, "/")
     .replace(/−/g, "-");
-  const tokens =
-    input.match(
-      /\d*\.?\d+(?:e[+-]?\d+)?|[()+\-*/^%]|sqrt|sin|cos|tan|log|ln|pi/gi,
-    ) || [];
+  const tokens = input.match(/\d*\.?\d+(?:e[+-]?\d+)?|[()+\-*/]/gi) || [];
   if (
     tokens.join("").toLowerCase() !== input.replace(/\s/g, "").toLowerCase() ||
     !tokens.length
@@ -95,35 +92,10 @@ export function calculate(expression: string): string {
     if (token === "(") {
       value = sum();
       if (tokens[position++] !== ")") throw new Error("Close parentheses");
-    } else if (token?.toLowerCase() === "pi") value = Math.PI;
-    else if (/^(sqrt|sin|cos|tan|log|ln)$/i.test(token || "")) {
-      if (peek() !== "(") throw new Error("Use parentheses for functions");
-      const argument = atom();
-      const functions: Record<string, (n: number) => number> = {
-        sqrt: Math.sqrt,
-        sin: (n) => Math.sin((n * Math.PI) / 180),
-        cos: (n) => Math.cos((n * Math.PI) / 180),
-        tan: (n) => Math.tan((n * Math.PI) / 180),
-        log: Math.log10,
-        ln: Math.log,
-      };
-      value = functions[token.toLowerCase()](argument);
     } else {
       value = Number(token);
       if (!token || !Number.isFinite(value))
         throw new Error("Invalid expression");
-    }
-    while (peek() === "%") {
-      position++;
-      value /= 100;
-    }
-    return value;
-  }
-  function power(): number {
-    const value = atom();
-    if (peek() === "^") {
-      position++;
-      return value ** unary();
     }
     return value;
   }
@@ -136,7 +108,7 @@ export function calculate(expression: string): string {
       position++;
       return -unary();
     }
-    return power();
+    return atom();
   }
   function product(): number {
     let value = unary();

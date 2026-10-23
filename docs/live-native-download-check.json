@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-23T12:29:35.264Z",
+  "runtime": "Node SQLite with React Native AbortController; live VPS manifests and parts",
+  "physicalDevice": false,
+  "checks": [
+    {
+      "id": "utme-testdriller-2027",
+      "status": "passed",
+      "questions": 4,
+      "parts": 2,
+      "networkPartRequests": 2,
+      "pauseResume": true,
+      "offlineHydration": true
+    },
+    {
+      "id": "waec-cbt-testdriller-2027",
+      "status": "passed",
+      "questions": 4,
+      "parts": 2,
+      "networkPartRequests": 2,
+      "pauseResume": true,
+      "offlineHydration": true
+    },
+    {
+      "id": "waec-theory-testdriller-2027",
+      "status": "passed",
+      "questions": 3,
+      "parts": 2,
+      "networkPartRequests": 2,
+      "pauseResume": true,
+      "offlineHydration": true
+    }
+  ]
+}

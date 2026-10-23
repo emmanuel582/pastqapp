@@ -11,12 +11,18 @@
         "gradleCommand": ":app:assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a"
       },
       "environment": "preview",
-      "developmentClient": false
+      "developmentClient": false,
+      "env": {
+        "EXPO_PUBLIC_DESIGN_PREVIEW": "false"
+      }
     },
     "production": {
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_DESIGN_PREVIEW": "false"
       }
     }
   }

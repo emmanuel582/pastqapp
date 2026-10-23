@@ -1,3 +1,4 @@
+import { checkCancelled } from "../domain/cancellation";
 import { materialMimeType } from "../domain/files";
 import React, { useEffect, useRef, useState } from "react";
 import { View, ScrollView } from "react-native";
@@ -129,7 +130,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
         },
         abort.signal,
       );
-      abort.signal.throwIfAborted();
+      checkCancelled(abort.signal);
       await records.write(owner, "processing", "current", id);
       setDraft({ files: [], name: "" });
       navigation.replace("Processing", { sessionId: id });

@@ -2,7 +2,7 @@
 
 ## Confirmed
 
-- TypeScript and 54 tests passed in the latest checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
+- TypeScript and 66 tests passed in the latest checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
 - Both Android and iOS production Hermes bundles exported successfully. Bundle size fell from 7.3MB to approximately 5.3MB per platform after importing only used icons; original exam artwork dropped from 1.18MB to 83KB. Final bundle file sizes are recorded in build-check.json. Export success is not a compiled/signed binary or physical-device runtime test.
 - The final SDK 57 online dependency compatibility check passed after applying the recommended Expo, notification and sharing patch updates.
 - All 183 original web source files matched the initial hashes.
@@ -16,7 +16,7 @@
 
 The independent-client sync test reached Supabase but the actual database rejected the write: missing exam_sessions.answered_count. A reviewed copy of the existing source migration is in backend/migrations/001_student_data_only.sql. The user chose to run it in the SQL Editor; application has not yet been confirmed. Rerun npm run check:account-sync after confirmation and record the outcome. Do not mark two-way history or analytics sync complete before it passes.
 
-The VPS health endpoint is reachable again. The authorized synthetic personal-text upload was accepted, but its worker paused with OpenRouter 401: User not found. The provider credential must be corrected on the VPS; this cannot be repaired by the mobile client. The saved QA job is reused rather than creating duplicate extraction jobs. Live personal text/photo/PDF extraction → confirmation → practice → cross-client result verification remains pending that server correction and the shared migration. The code uses the existing protected owner-scoped endpoints, supports resuming confirmed photo batches, and keeps failed work locally; code review and pure tests are not substitutes for this live journey.
+The VPS credential was corrected and the previously paused authorized synthetic text upload completed. Three questions were extracted, reviewed and loaded from a second signed-in client, and local practice scored all three correctly. No duplicate extraction job was created. Physical photo/PDF capture and shared progress sync remain separate acceptance checks; the live database still lacks exam_sessions.answered_count.
 
 ## Release gates still open
 
@@ -73,3 +73,15 @@ The original 260 ms tester tick was replaced with timestamp-driven, action-speci
 TypeScript, 54 mobile tests and 3 tester timing tests pass. All 12 tester actions, speed changes, directional selection, pause/resume, and repeated mobile download-dialog mounting were checked in the browser with no console warnings/errors. All 183 original application source hashes still match; the user-requested tester changes are outside those application sources.
 
 Both internal builds completed from 93e4006c54fe6d0db52340eec378cc374f72d576: Android 5b0b9c05-a71d-466c-9164-ca82b0e27aa9 (BUILD SUCCESSFUL in 6m 58s) and iOS bd8f46bf-0ad4-4ae1-aaa9-7253656fc875. Artifact HEAD requests returned HTTP 200; download sizes are 60730866 bytes for Android and 15028822 bytes for iOS. No binary was downloaded to this laptop. EAS accepted the Apple distribution certificate and ad hoc profile containing the test iPhone, resolving the earlier signing blocker. Installation URLs and device identifiers are omitted from public records. Physical-device smoothness/notification acceptance and the documented live backend corrections remain outstanding.
+
+
+## Version 1.0.3 acceptance
+
+- TypeScript and 66 mobile tests pass, including the actual React Native AbortController implementation used with native SQLite download staging, pause/resume and offline hydration.
+- Live UTME, WAEC CBT and WAEC Theory parts passed the same path. This was a Node/SQLite native-adapter check with actual VPS data, not a physical-phone download.
+- Both platform Hermes release exports pass. Updated compiled binaries are being built separately; exports alone are not native build evidence.
+- 390-pixel and 844-pixel browser checks covered the compact Preferences account control, real-session chart point selection, sharper welcome art, and full-height landscape calculator beside the question. Browser mouse dragging is not acceptance evidence for physical touch gestures.
+- The native push VPS patch passed 17 isolated route/admin/reminder/upload checks with a mocked Expo transport and no external sends. Its persistent outbox also passes four local SQLite tests. A legacy mock-only security-header test fails on the unchanged base image as well; the new real HTTP test verifies the actual nosniff header.
+- The VPS was backed up, checked for active extraction, and updated with only the notification source patch. Automatic approval rejected copying the full production directory; the replacement staging build copied an explicit source allowlist onto the existing image and left secrets in place. Health and authenticated-device route checks pass after deployment.
+- The replacement extraction key is stored only on the VPS. No provider key, signing material, device identifier or direct binary URL is part of the public change.
+- iOS APNs push credentials are attached to the EAS project. Android Firebase/FCM setup and physical-device push receipts remain pending. Supabase callback allowlisting is being handled by the owner; shared history sync still requires the prepared migration.

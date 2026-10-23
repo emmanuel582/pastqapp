@@ -1,7 +1,8 @@
-import React from "react";
-import { View, Pressable } from "react-native";
+import React, { useState } from "react";
+import { View, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import Svg, { Line, Polyline, Circle, Text as SvgText } from "react-native-svg";
+import ProgressChart from "../components/ProgressChart";
+import UserRound from "lucide-react-native/icons/user-round";
 import History from "lucide-react-native/icons/rotate-ccw-clock";
 import Bookmark from "lucide-react-native/icons/bookmark";
 import Database from "lucide-react-native/icons/database";
@@ -43,8 +44,10 @@ export default function PreferencesScreen({
     remoteSessions,
     syncNow,
     syncError,
+    deletedSessions,
   } = useApp();
-  const completed = mergeHistory(attempts, remoteSessions),
+  const [showEmail, setShowEmail] = useState(false);
+  const completed = mergeHistory(attempts, remoteSessions, deletedSessions),
     scores = completed
       .map((a) => a.percent)
       .filter((v): v is number => v !== null),
@@ -59,6 +62,7 @@ export default function PreferencesScreen({
       .join("")
       .toUpperCase();
   const settings = [
+    { title: "Profile", Icon: UserRound, screen: "Profile" as const },
     { title: "Past sessions", Icon: History, screen: "History" as const },
     { title: "Saved questions", Icon: Bookmark, screen: "Saved" as const },
     { title: "Storage & backup", Icon: Database, screen: "Storage" as const },
@@ -100,6 +104,49 @@ export default function PreferencesScreen({
       <Header
         title="Preferences"
         style={{ minHeight: 60, paddingVertical: 10 }}
+        right={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Account email"
+            accessibilityState={{ expanded: showEmail }}
+            onPress={() => setShowEmail((v) => !v)}
+            style={{
+              width: 44,
+              height: 44,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {profile?.avatar_local_uri || profile?.avatar_url ? (
+              <Image
+                source={profile.avatar_local_uri || profile.avatar_url}
+                contentFit="cover"
+                style={{ width: 34, height: 34, borderRadius: 17 }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  backgroundColor: palette.accentWash,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: palette.accent,
+                    fontSize: 12,
+                    fontFamily: fonts.semibold,
+                  }}
+                >
+                  {initials}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        }
       />
       <Content
         style={{
@@ -109,52 +156,6 @@ export default function PreferencesScreen({
           maxWidth: 744,
         }}
       >
-        <Pressable
-          accessibilityLabel="Your profile"
-          onPress={() => navigation.navigate("Profile")}
-          style={{
-            flexDirection: "row",
-            gap: 14,
-            alignItems: "center",
-            paddingBottom: 28,
-          }}
-        >
-          {profile?.avatar_local_uri || profile?.avatar_url ? (
-            <Image
-              source={profile?.avatar_local_uri || profile?.avatar_url}
-              style={{ width: 46, height: 46, borderRadius: 23 }}
-            />
-          ) : (
-            <View
-              style={{
-                width: 46,
-                height: 46,
-                borderRadius: 23,
-                borderWidth: 1,
-                borderColor: palette.line,
-                backgroundColor: palette.accentWash,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{
-                  color: palette.accent,
-                  fontFamily: fonts.semibold,
-                  fontSize: 15,
-                }}
-              >
-                {initials}
-              </Text>
-            </View>
-          )}
-          <View style={{ flex: 1, gap: 3 }}>
-            <Text style={{ fontSize: 16, fontFamily: fonts.semibold }}>
-              {profile?.full_name || "Student"}
-            </Text>
-            <Muted>{profile?.email || ""}</Muted>
-          </View>
-        </Pressable>
         {completed.length ? (
           <View
             style={{
@@ -202,89 +203,7 @@ export default function PreferencesScreen({
                 </View>
               ))}
             </View>
-            {recent.length ? (
-              <>
-                <Svg viewBox="0 0 560 180" width="100%" height={120}>
-                  {[0, 50, 100].map((n) => (
-                    <React.Fragment key={n}>
-                      <Line
-                        x1={32}
-                        x2={540}
-                        y1={150 - n * 1.25}
-                        y2={150 - n * 1.25}
-                        stroke={palette.line}
-                        strokeDasharray="3 4"
-                      />
-                      <SvgText
-                        x={24}
-                        y={154 - n * 1.25}
-                        textAnchor="end"
-                        fill={palette.muted}
-                        fontSize={20}
-                      >
-                        {n}
-                      </SvgText>
-                    </React.Fragment>
-                  ))}
-                  <Polyline
-                    points={recent
-                      .map(
-                        (a, i) =>
-                          (recent.length === 1
-                            ? 286
-                            : 42 + (i * 488) / (recent.length - 1)) +
-                          "," +
-                          (150 - a.percent! * 1.25),
-                      )
-                      .join(" ")}
-                    fill="none"
-                    stroke={palette.accent}
-                    strokeWidth={2.2}
-                  />
-                  {recent.map((a, i) => (
-                    <Circle
-                      key={a.id}
-                      cx={
-                        recent.length === 1
-                          ? 286
-                          : 42 + (i * 488) / (recent.length - 1)
-                      }
-                      cy={150 - a.percent! * 1.25}
-                      r={i === recent.length - 1 ? 4 : 3}
-                      fill={
-                        i === recent.length - 1 ? palette.accent : palette.panel
-                      }
-                      stroke={palette.accent}
-                      strokeWidth={2}
-                    />
-                  ))}
-                </Svg>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingLeft: 28,
-                  }}
-                >
-                  <Muted style={{ fontSize: 11 }}>
-                    {new Date(recent[0].completedAt!).toLocaleDateString(
-                      undefined,
-                      { day: "numeric", month: "short" },
-                    )}
-                  </Muted>
-                  <Muted style={{ fontSize: 11 }}>
-                    {new Date(
-                      recent[recent.length - 1].completedAt!,
-                    ).toLocaleDateString(undefined, {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </Muted>
-                </View>
-              </>
-            ) : (
-              <Muted>Complete an objective session to see scores.</Muted>
-            )}
+            <ProgressChart items={recent} />
           </View>
         ) : (
           <View style={{ alignItems: "center", paddingBottom: 20 }}>
@@ -339,6 +258,35 @@ export default function PreferencesScreen({
           />
         </View>
       </Content>
+      {showEmail ? (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 60 }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close account email"
+            onPress={() => setShowEmail(false)}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            style={{
+              position: "absolute",
+              right: 16,
+              top: 62,
+              maxWidth: "90%",
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: palette.line,
+              backgroundColor: palette.panel,
+              boxShadow: "0 4px 14px #00000030",
+            }}
+          >
+            <Text selectable style={{ fontSize: 12 }}>
+              {profile?.email || "Signed in"}
+            </Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

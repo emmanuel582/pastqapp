@@ -1,3 +1,4 @@
+import { checkCancelled } from "../domain/cancellation";
 import { Platform, Image as NativeImage } from "react-native";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { request, json } from "./api";
@@ -48,7 +49,7 @@ export async function uploadMaterial(
   onSession?: (id: string) => Promise<void>,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
+  checkCancelled(signal);
   if (!files.length) throw new Error("Choose your material first.");
   const images = files.every((f) => f.mimeType.startsWith("image/"));
   if (!images && files.length > 1)
@@ -73,7 +74,7 @@ export async function uploadMaterial(
         true,
       );
   if (!session.id) throw new Error("Your upload could not be opened.");
-  signal?.throwIfAborted();
+  checkCancelled(signal);
   await onSession?.(session.id);
   if (resumeId && !["pending", "uploading"].includes(session.status))
     return session.id;
@@ -94,12 +95,12 @@ export async function uploadMaterial(
       index < files.length;
       index += 8
     ) {
-      signal?.throwIfAborted();
+      checkCancelled(signal);
       const form = new FormData(),
         batch = files.slice(index, index + 8);
       onProgress(index, files.length, "Preparing your photos");
       for (const file of batch) {
-        signal?.throwIfAborted();
+        checkCancelled(signal);
         const { width, height } = await new Promise<{
           width: number;
           height: number;
@@ -147,7 +148,7 @@ export async function uploadMaterial(
       true,
     );
   }
-  signal?.throwIfAborted();
+  checkCancelled(signal);
   return session.id;
 }
 export const visionSession = (id: string, signal?: AbortSignal) =>

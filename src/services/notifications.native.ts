@@ -40,6 +40,12 @@ async function prepare() {
           importance: Notifications.AndroidImportance.DEFAULT,
           sound: "default",
         });
+      if (Platform.OS === "android")
+        await Notifications.setNotificationChannelAsync("updates", {
+          name: "Uploads and PastQ messages",
+          importance: Notifications.AndroidImportance.DEFAULT,
+          sound: "default",
+        });
       await Notifications.setNotificationCategoryAsync("study-reminder", [
         {
           identifier: "study-now",
@@ -53,7 +59,7 @@ async function prepare() {
     });
   return setup;
 }
-async function permission(request: boolean): Promise<boolean> {
+export async function permission(request: boolean): Promise<boolean> {
   await prepare();
   let result = await Notifications.getPermissionsAsync();
   const allowed = () =>

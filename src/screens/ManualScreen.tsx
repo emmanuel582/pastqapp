@@ -1,3 +1,4 @@
+import { checkCancelled } from "../domain/cancellation";
 import X from "lucide-react-native/icons/x";
 import React, { useEffect, useRef, useState } from "react";
 import { View, TextInput, KeyboardAvoidingView, Platform } from "react-native";
@@ -67,7 +68,7 @@ export default function ManualScreen({ navigation }: Props<"Manual">) {
         name.trim() || "Manual Entry",
         abort.signal,
       );
-      abort.signal.throwIfAborted();
+      checkCancelled(abort.signal);
       await records.write(owner, "processing", "current", id);
       await records.remove(owner, "manual", "draft");
       navigation.replace("Processing", { sessionId: id });

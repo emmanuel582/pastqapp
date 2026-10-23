@@ -238,6 +238,18 @@ export default function ProcessingScreen({
               </View>
             </View>
           ) : null}
+          {!failed && !waiting ? (
+            <Muted style={{ textAlign: "center" }}>
+              Your uploaded files are on the server. You can close PastQ while
+              processing continues.
+            </Muted>
+          ) : null}
+          <Button
+            kind="text"
+            onPress={() => navigation.navigate("Notifications")}
+          >
+            Upload completion alerts
+          </Button>
           {interrupted ? (
             <Muted>Reconnecting. Your preparation will continue.</Muted>
           ) : failed ? (

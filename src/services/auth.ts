@@ -1,7 +1,7 @@
 import { cachedStudySession } from "../domain/offline";
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { secureStorage } from "./secure";
@@ -33,20 +33,46 @@ export function requireAuth() {
     );
   return supabase;
 }
-export async function handleAuthUrl(url: string) {
-  const client = requireAuth(),
-    parsed = new URL(url);
+export function authCallbackUrl() {
+  return Platform.OS === "web"
+    ? Linking.createURL("auth/callback")
+    : Linking.createURL("auth/callback", { scheme: "pastq" });
+}
+if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
+const exchanges = new Map<string, Promise<void>>();
+export async function handleAuthUrl(url: string): Promise<void> {
+  const parsed = new URL(url),
+    expected = new URL(authCallbackUrl());
+  if (
+    parsed.protocol !== expected.protocol ||
+    parsed.host !== expected.host ||
+    parsed.pathname !== expected.pathname
+  )
+    return;
+  const hash = new URLSearchParams(parsed.hash.slice(1));
+  if (parsed.searchParams.get("error") || hash.get("error"))
+    throw Error("Sign-in did not finish. Please try again.");
   const code = parsed.searchParams.get("code");
   if (code) {
-    const { error } = await client.auth.exchangeCodeForSession(code);
-    if (error) throw error;
+    let pending = exchanges.get(code);
+    if (!pending) {
+      pending = (async () => {
+        const { error } = await requireAuth().auth.exchangeCodeForSession(code);
+        if (error) throw error;
+      })();
+      exchanges.set(code, pending);
+      if (exchanges.size > 8) exchanges.delete(exchanges.keys().next().value!);
+      void pending.catch(() => {
+        if (exchanges.get(code) === pending) exchanges.delete(code);
+      });
+    }
+    await pending;
     return;
   }
-  const hash = new URLSearchParams(parsed.hash.slice(1));
   const access_token = hash.get("access_token"),
     refresh_token = hash.get("refresh_token");
   if (access_token && refresh_token) {
-    const { error } = await client.auth.setSession({
+    const { error } = await requireAuth().auth.setSession({
       access_token,
       refresh_token,
     });
@@ -54,7 +80,7 @@ export async function handleAuthUrl(url: string) {
   }
 }
 export async function signInGoogle() {
-  const redirectTo = Linking.createURL("auth/callback");
+  const redirectTo = authCallbackUrl();
   const client = requireAuth();
   const { data, error } = await client.auth.signInWithOAuth({
     provider: "google",

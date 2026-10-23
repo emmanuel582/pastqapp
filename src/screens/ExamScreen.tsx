@@ -6,8 +6,16 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { View, ScrollView, Pressable, TextInput, FlatList } from "react-native";
-import { usePreventRemove } from "@react-navigation/native";
+import {
+  View,
+  ScrollView,
+  Pressable,
+  TextInput,
+  FlatList,
+  BackHandler,
+  useWindowDimensions,
+} from "react-native";
+import { usePreventRemove, useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ArrowLeft from "lucide-react-native/icons/arrow-left";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
@@ -64,7 +72,9 @@ import type { Attempt } from "../domain/types";
 import type { Props } from "../navigation/types";
 export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   const { owner, palette, bookmarks, refreshPractice, syncNow } = useApp(),
-    insets = useSafeAreaInsets();
+    insets = useSafeAreaInsets(),
+    window = useWindowDimensions(),
+    sideTools = window.width > window.height && window.height < 600;
   const [attempt, setAttempt] = useState<Attempt | null>(null),
     [error, setError] = useState(""),
     [navigator, setNavigator] = useState(false),
@@ -80,6 +90,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     [bookmarkBusy, setBookmarkBusy] = useState(false);
   const latest = useRef<Attempt | null>(null),
     submitLock = useRef(false),
+    questionNavigation = useRef(false),
     scroll = useRef<React.ElementRef<typeof ScrollView>>(null),
     subjectPositions = useRef(new Map<string, number>());
   const review = !!route.params.review;
@@ -128,8 +139,58 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     };
   }, [owner, route.params.attemptId]);
   usePreventRemove(
-    !!attempt && !review && attempt.status === "active",
+    !review && (!attempt ? !error : attempt.status === "active"),
     ({ data }) => setLeaving(() => () => navigation.dispatch(data.action)),
+  );
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (busy) return true;
+        if (leaving) {
+          setLeaving(null);
+          return true;
+        }
+        if (finish) {
+          setFinish(false);
+          return true;
+        }
+        if (navigator) {
+          setNavigator(false);
+          return true;
+        }
+        if (calculator) {
+          setCalculator(false);
+          return true;
+        }
+        if (board) {
+          void workingFlush
+            .current?.()
+            .then(() => setBoard(false))
+            .catch(() =>
+              setError("Save your working before closing the board."),
+            );
+          return true;
+        }
+        if (
+          !review &&
+          (!latest.current || latest.current.status === "active")
+        ) {
+          navigation.goBack();
+          return true;
+        }
+        return false;
+      });
+      return () => sub.remove();
+    }, [
+      busy,
+      leaving,
+      finish,
+      navigator,
+      calculator,
+      board,
+      review,
+      navigation,
+    ]),
   );
   function update(value: Partial<Attempt>) {
     if (!latest.current) return;
@@ -247,6 +308,51 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     )
       update({ current: reviewIndexes[0] });
   }, [reviewIndexes]);
+  function leaveDialog() {
+    return leaving ? (
+      <Dialog
+        title="Leave this exam?"
+        onClose={() => {
+          if (!busy) setLeaving(null);
+        }}
+      >
+        <Muted>
+          Your answers and working paper will be saved. You can resume from Past
+          sessions. The exam clock keeps running.
+        </Muted>
+        <Button
+          kind="secondary"
+          disabled={busy}
+          onPress={() => setLeaving(null)}
+          style={{ marginTop: 20 }}
+        >
+          Keep working
+        </Button>
+        <Button
+          disabled={busy}
+          onPress={() => {
+            void (async () => {
+              setBusy(true);
+              try {
+                await workingFlush.current?.();
+                if (latest.current) await saveAttempt(latest.current);
+                const action = leaving!;
+                setLeaving(null);
+                action();
+              } catch {
+                setError("Your work could not be saved. Retry before leaving.");
+              } finally {
+                setBusy(false);
+              }
+            })();
+          }}
+          style={{ marginTop: 12 }}
+        >
+          {busy ? "Saving…" : "Save and leave"}
+        </Button>
+      </Dialog>
+    ) : null;
+  }
   if (!attempt)
     return (
       <Screen>
@@ -255,6 +361,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         ) : (
           <Loading label="Opening your saved exam" />
         )}
+        {leaveDialog()}
       </Screen>
     );
   const loaded =
@@ -272,9 +379,20 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     following = subjects[subjects.indexOf(q.subject) + 1],
     summary = totals!,
     marked = bookmarkIds.has(bookmarkIdentity(attempt.bundleId, q));
-  function go(index: number) {
-    subjectPositions.current.set(q.subject, attempt!.current);
-    update({ current: index });
+  async function go(index: number) {
+    if (questionNavigation.current) return;
+    questionNavigation.current = true;
+    try {
+      await workingFlush.current?.();
+      subjectPositions.current.set(q.subject, attempt!.current);
+      update({ current: index });
+    } catch {
+      setError(
+        "Your working could not be saved. Retry before changing questions.",
+      );
+    } finally {
+      questionNavigation.current = false;
+    }
   }
   function switchSubject(subject: string) {
     const list = grouped.get(subject) || [];
@@ -295,7 +413,13 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   const theory = q.type === "theory" || q.type === "short_answer",
     reveal = review || (q.type === "theory" && selected !== null);
   return (
-    <Screen>
+    <Screen
+      style={
+        sideTools && (calculator || board)
+          ? { paddingRight: 320 + insets.right, paddingLeft: insets.left }
+          : undefined
+      }
+    >
       <View
         style={{
           minHeight: 68,
@@ -333,10 +457,13 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           </>
         )}
       </View>
-      <View
-        style={{
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0, backgroundColor: palette.examHeader }}
+        contentContainerStyle={{
           flexDirection: "row",
-          flexWrap: "wrap",
+          minWidth: "100%",
           paddingVertical: 4,
           paddingHorizontal: 12,
           gap: 6,
@@ -353,7 +480,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             accessibilityState={{ selected: q.subject === subject }}
             style={{
               flexGrow: 1,
-              flexBasis: 130,
+              minWidth: 112,
               minHeight: 44,
               padding: 8,
               borderBottomWidth: 2,
@@ -376,7 +503,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
       {review ? (
         <View
           style={{
@@ -456,7 +583,19 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         </Pressable>
         <View style={{ height: 20, width: 1, backgroundColor: palette.line }} />
         <Pressable
-          onPress={() => setCalculator((v) => !v)}
+          accessibilityRole="button"
+          accessibilityLabel="Toggle calculator"
+          onPress={() => {
+            void (async () => {
+              try {
+                await workingFlush.current?.();
+                setBoard(false);
+                setCalculator((v) => !v);
+              } catch {
+                setError("Save your working before opening the calculator.");
+              }
+            })();
+          }}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -468,7 +607,19 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           <Muted style={{ fontSize: 10 }}>Calculator</Muted>
         </Pressable>
         <Pressable
-          onPress={() => setBoard((v) => !v)}
+          accessibilityRole="button"
+          accessibilityLabel="Toggle working paper"
+          onPress={() => {
+            setCalculator(false);
+            if (board) {
+              void workingFlush
+                .current?.()
+                .then(() => setBoard(false))
+                .catch(() =>
+                  setError("Save your working before closing the board."),
+                );
+            } else setBoard(true);
+          }}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -480,440 +631,465 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           <Muted style={{ fontSize: 10 }}>Working</Muted>
         </Pressable>
       </View>
-      {questionError ? (
-        <View>
-          <ErrorText>{questionError}</ErrorText>
-          <Button kind="text" onPress={() => setLoadRevision((v) => v + 1)}>
-            Retry question
-          </Button>
-        </View>
-      ) : null}
-      {error ? (
-        <View>
-          <ErrorText>{error}</ErrorText>
-          <Button
-            kind="text"
-            onPress={() =>
-              void saveAttempt(latest.current!)
-                .then(() => setError(""))
-                .catch(() => {})
-            }
-          >
-            Retry save
-          </Button>
-        </View>
-      ) : null}
       <View style={{ flex: 1, minHeight: 0 }}>
-        <QuestionSwipeSurface
-          questionKey={attempt.id + ":" + attempt.current}
-          enabled={
-            !busy &&
-            !hydrating &&
-            !finish &&
-            !navigator &&
-            !calculator &&
-            !board &&
-            !leaving &&
-            (!review || reviewIndexes.length > 0)
-          }
-          onSwipe={(direction) => {
-            const target = adjacentQuestion(
-              orderedIndexes,
-              attempt.current,
-              direction,
-            );
-            if (target !== null) go(target);
-          }}
-        >
-          <ScrollView
-            ref={scroll}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{
-              paddingTop: 17,
-              paddingHorizontal: 20,
-              paddingBottom: 24,
-              maxWidth: 790,
-              width: "100%",
-              alignSelf: "center",
+        {questionError ? (
+          <View>
+            <ErrorText>{questionError}</ErrorText>
+            <Button kind="text" onPress={() => setLoadRevision((v) => v + 1)}>
+              Retry question
+            </Button>
+          </View>
+        ) : null}
+        {error ? (
+          <View>
+            <ErrorText>{error}</ErrorText>
+            <Button
+              kind="text"
+              onPress={() =>
+                void Promise.resolve()
+                  .then(() => workingFlush.current?.())
+                  .then(() => saveAttempt(latest.current!))
+                  .then(() => setError(""))
+                  .catch(() => {})
+              }
+            >
+              Retry save
+            </Button>
+          </View>
+        ) : null}
+        <View style={{ flex: 1, minHeight: 0 }}>
+          <QuestionSwipeSurface
+            questionKey={attempt.id + ":" + attempt.current}
+            enabled={
+              !busy &&
+              !hydrating &&
+              !finish &&
+              !navigator &&
+              !leaving &&
+              (!review || reviewIndexes.length > 0)
+            }
+            onSwipe={(direction) => {
+              const target = adjacentQuestion(
+                orderedIndexes,
+                attempt.current,
+                direction,
+              );
+              if (target !== null) go(target);
             }}
           >
-            {review && !reviewIndexes.length ? (
-              <Empty title="No matching questions." />
-            ) : (
-              <>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "flex-end",
-                    gap: 3,
-                    marginBottom: 16,
-                  }}
-                >
-                  <QuestionReport
-                    bundleId={attempt.bundleId}
-                    version={attempt.version}
-                    question={q}
-                  />
-                  <IconButton
-                    label="Decrease question text"
-                    disabled={scale <= 0.9}
-                    onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
-                    style={{ width: 32, height: 34 }}
-                  >
-                    <Minus size={15} color={palette.muted} />
-                  </IconButton>
-                  <IconButton
-                    label="Increase question text"
-                    disabled={scale >= 1.4}
-                    onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
-                    style={{ width: 32, height: 34 }}
-                  >
-                    <Plus size={15} color={palette.muted} />
-                  </IconButton>
-                  <IconButton
-                    label={marked ? "Remove saved question" : "Save question"}
-                    active={marked}
-                    disabled={bookmarkBusy || hydrating}
-                    onPress={() => {
-                      setBookmarkBusy(true);
-                      void toggleBookmark(
-                        owner,
-                        {
-                          id: attempt.bundleId,
-                          title: attempt.title,
-                          assets: questionAssets,
-                        },
-                        q,
-                      )
-                        .then(refreshPractice)
-                        .catch((e) => setError(e.message))
-                        .finally(() => setBookmarkBusy(false));
+            <ScrollView
+              ref={scroll}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{
+                paddingTop: 17,
+                paddingHorizontal: 20,
+                paddingBottom: 24,
+                maxWidth: 790,
+                width: "100%",
+                alignSelf: "center",
+              }}
+            >
+              {review && !reviewIndexes.length ? (
+                <Empty title="No matching questions." />
+              ) : (
+                <>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "flex-end",
+                      gap: 3,
+                      marginBottom: 16,
                     }}
-                    style={{ width: 32, height: 34 }}
                   >
-                    <Bookmark
-                      size={18}
-                      color={marked ? palette.accent : palette.muted}
-                      fill={marked ? palette.accent : "none"}
+                    <QuestionReport
+                      bundleId={attempt.bundleId}
+                      version={attempt.version}
+                      question={q}
                     />
-                  </IconButton>
-                  {!review ? (
                     <IconButton
-                      label={
-                        attempt.flagged[attempt.current]
-                          ? "Unflag question"
-                          : "Flag question"
-                      }
-                      active={attempt.flagged[attempt.current]}
+                      label="Decrease question text"
+                      disabled={scale <= 0.9}
+                      onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
+                      style={{ width: 32, height: 34 }}
+                    >
+                      <Minus size={15} color={palette.muted} />
+                    </IconButton>
+                    <IconButton
+                      label="Increase question text"
+                      disabled={scale >= 1.4}
+                      onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
+                      style={{ width: 32, height: 34 }}
+                    >
+                      <Plus size={15} color={palette.muted} />
+                    </IconButton>
+                    <IconButton
+                      label={marked ? "Remove saved question" : "Save question"}
+                      active={marked}
+                      disabled={bookmarkBusy || hydrating}
                       onPress={() => {
-                        const flagged = [...attempt.flagged];
-                        flagged[attempt.current] = !flagged[attempt.current];
-                        update({ flagged });
+                        setBookmarkBusy(true);
+                        void toggleBookmark(
+                          owner,
+                          {
+                            id: attempt.bundleId,
+                            title: attempt.title,
+                            assets: questionAssets,
+                          },
+                          q,
+                        )
+                          .then(refreshPractice)
+                          .catch((e) => setError(e.message))
+                          .finally(() => setBookmarkBusy(false));
                       }}
                       style={{ width: 32, height: 34 }}
                     >
-                      <Flag size={18} color={palette.muted} />
+                      <Bookmark
+                        size={18}
+                        color={marked ? palette.accent : palette.muted}
+                        fill={marked ? palette.accent : "none"}
+                      />
                     </IconButton>
-                  ) : null}
-                </View>
-                <QuestionMedia
-                  passage={q.passage}
-                  figures={q.figures}
-                  assets={questionAssets}
-                />
-                <View style={{ marginBottom: 24 }}>
-                  {typeof q.nativeRef === "string" && !loaded ? (
-                    <Loading label="Opening question" />
-                  ) : null}
-                  <RichText
-                    text={q.question}
-                    html={q.questionHtml}
+                    {!review ? (
+                      <IconButton
+                        label={
+                          attempt.flagged[attempt.current]
+                            ? "Unflag question"
+                            : "Flag question"
+                        }
+                        active={attempt.flagged[attempt.current]}
+                        onPress={() => {
+                          const flagged = [...attempt.flagged];
+                          flagged[attempt.current] = !flagged[attempt.current];
+                          update({ flagged });
+                        }}
+                        style={{ width: 32, height: 34 }}
+                      >
+                        <Flag size={18} color={palette.muted} />
+                      </IconButton>
+                    ) : null}
+                  </View>
+                  <QuestionMedia
+                    passage={q.passage}
+                    figures={q.figures}
                     assets={questionAssets}
-                    size={18 * scale}
-                    serif
                   />
-                </View>
-                {theory && (!review || attempt.written[attempt.current]) ? (
-                  <View style={{ gap: 8, marginVertical: 18 }}>
-                    <Muted>
-                      {q.type === "theory"
-                        ? "Your working (optional)"
-                        : "Your answer"}
-                    </Muted>
-                    <TextInput
-                      multiline
-                      editable={!review && !hydrating}
-                      accessibilityLabel="Your answer"
-                      placeholder="Type your answer"
-                      placeholderTextColor={palette.faint}
-                      value={attempt.written[attempt.current] || ""}
-                      onChangeText={(text) => {
-                        const written = [...attempt.written];
-                        written[attempt.current] = text;
-                        update({ written });
-                      }}
-                      style={{
-                        minHeight: 100,
-                        borderWidth: 1,
-                        borderColor: palette.line,
-                        borderRadius: 8,
-                        padding: 12,
-                        color: palette.ink,
-                        fontFamily: fonts.body,
-                        fontSize: 16,
-                        textAlignVertical: "top",
-                      }}
+                  <View style={{ marginBottom: 24 }}>
+                    {typeof q.nativeRef === "string" && !loaded ? (
+                      <Loading label="Opening question" />
+                    ) : null}
+                    <RichText
+                      text={q.question}
+                      html={q.questionHtml}
+                      assets={questionAssets}
+                      size={18 * scale}
+                      serif
                     />
                   </View>
-                ) : null}
-                {!theory && !hydrating ? (
-                  <View style={{ gap: 10 }}>
-                    {q.options.map((option, i) => (
-                      <Pressable
-                        key={i}
-                        disabled={review || hydrating}
-                        accessibilityRole="radio"
-                        accessibilityState={{ selected: selected === i }}
-                        onPress={() => {
-                          const answers = [...attempt.answers];
-                          answers[attempt.current] = i;
-                          update({ answers });
+                  {theory && (!review || attempt.written[attempt.current]) ? (
+                    <View style={{ gap: 8, marginVertical: 18 }}>
+                      <Muted>
+                        {q.type === "theory"
+                          ? "Your working (optional)"
+                          : "Your answer"}
+                      </Muted>
+                      <TextInput
+                        multiline
+                        editable={!review && !hydrating}
+                        accessibilityLabel="Your answer"
+                        placeholder="Type your answer"
+                        placeholderTextColor={palette.faint}
+                        value={attempt.written[attempt.current] || ""}
+                        onChangeText={(text) => {
+                          const written = [...attempt.written];
+                          written[attempt.current] = text;
+                          update({ written });
                         }}
                         style={{
-                          minHeight: 61,
-                          paddingVertical: 12,
-                          paddingLeft: 10,
-                          paddingRight: 14,
-                          gap: 12,
-                          flexDirection: "row",
-                          alignItems: "center",
+                          minHeight: 100,
                           borderWidth: 1,
-                          borderRadius: 6,
-                          borderColor:
-                            selected === i
-                              ? palette.accent
-                              : review && key === i
-                                ? palette.done
-                                : palette.line,
-                          backgroundColor:
-                            selected === i ? palette.accentWash : palette.wash,
-                          borderStyle:
-                            review &&
-                            selected === i &&
-                            key !== null &&
-                            key !== i
-                              ? "dashed"
-                              : "solid",
+                          borderColor: palette.line,
+                          borderRadius: 8,
+                          padding: 12,
+                          color: palette.ink,
+                          fontFamily: fonts.body,
+                          fontSize: 16,
+                          textAlignVertical: "top",
                         }}
-                      >
-                        <View
+                      />
+                    </View>
+                  ) : null}
+                  {!theory && !hydrating ? (
+                    <View style={{ gap: 10 }}>
+                      {q.options.map((option, i) => (
+                        <Pressable
+                          key={i}
+                          disabled={review || hydrating}
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected: selected === i }}
+                          onPress={() => {
+                            const answers = [...attempt.answers];
+                            answers[attempt.current] = i;
+                            update({ answers });
+                          }}
                           style={{
-                            width: 29,
-                            height: 29,
+                            minHeight: 61,
+                            paddingVertical: 12,
+                            paddingLeft: 10,
+                            paddingRight: 14,
+                            gap: 12,
+                            flexDirection: "row",
+                            alignItems: "center",
                             borderWidth: 1,
+                            borderRadius: 6,
                             borderColor:
                               selected === i
                                 ? palette.accent
                                 : review && key === i
                                   ? palette.done
                                   : palette.line,
-                            borderRadius: 4,
-                            alignItems: "center",
-                            justifyContent: "center",
                             backgroundColor:
-                              review && key === i
-                                ? palette.done
-                                : selected === i
-                                  ? palette.accent
-                                  : "transparent",
+                              selected === i
+                                ? palette.accentWash
+                                : palette.wash,
+                            borderStyle:
+                              review &&
+                              selected === i &&
+                              key !== null &&
+                              key !== i
+                                ? "dashed"
+                                : "solid",
                           }}
                         >
-                          <Text
-                            style={{
-                              fontSize: 11,
-                              color:
-                                review && key === i
-                                  ? palette.onDone
-                                  : selected === i
-                                    ? palette.bg
-                                    : palette.muted,
-                            }}
-                          >
-                            {String.fromCharCode(65 + i)}
-                          </Text>
-                        </View>
-                        <View style={{ flex: 1, minWidth: 0 }}>
-                          <RichText
-                            text={option}
-                            html={q.optionsHtml?.[i]}
-                            assets={questionAssets}
-                            size={13 * scale}
-                          />
-                        </View>
-                        {review && key === i ? (
-                          <Check size={16} color={palette.done} />
-                        ) : review && selected === i && key !== null ? (
-                          <X size={16} color={palette.accent} />
-                        ) : selected === i ? (
                           <View
                             style={{
-                              width: 7,
-                              height: 7,
-                              borderRadius: 2,
-                              backgroundColor: palette.accent,
-                            }}
-                          />
-                        ) : null}
-                        {review && selected === i ? (
-                          <Muted
-                            style={{
-                              fontSize: 8,
-                              maxWidth: 45,
-                              textAlign: "right",
+                              width: 29,
+                              height: 29,
+                              borderWidth: 1,
+                              borderColor:
+                                selected === i
+                                  ? palette.accent
+                                  : review && key === i
+                                    ? palette.done
+                                    : palette.line,
+                              borderRadius: 4,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor:
+                                review && key === i
+                                  ? palette.done
+                                  : selected === i
+                                    ? palette.accent
+                                    : "transparent",
                             }}
                           >
-                            Your answer
-                          </Muted>
-                        ) : null}
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : null}
-                {q.type === "theory" && !reveal ? (
-                  <Button
-                    onPress={() => {
-                      const answers = [...attempt.answers];
-                      answers[attempt.current] = 0;
-                      update({ answers });
-                    }}
-                    style={{ marginTop: 32 }}
-                  >
-                    I’ve solved it — show answer
-                  </Button>
-                ) : null}
-                {reveal ? (
-                  <View
-                    style={{
-                      marginTop: 25,
-                      paddingTop: 20,
-                      borderTopWidth: 1,
-                      borderTopColor: palette.accent,
-                    }}
-                  >
-                    {q.topic ? (
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          gap: 8,
-                          marginBottom: 14,
-                        }}
-                      >
-                        <Muted>Topic</Muted>
-                        <Text
-                          style={{ fontSize: 12, fontFamily: fonts.semibold }}
-                        >
-                          {String(q.topic)}
-                        </Text>
-                      </View>
-                    ) : null}
-                    {theory && (q.answerText || q.answerHtml) ? (
-                      <>
-                        <Text
+                            <Text
+                              style={{
+                                fontSize: 11,
+                                color:
+                                  review && key === i
+                                    ? palette.onDone
+                                    : selected === i
+                                      ? palette.bg
+                                      : palette.muted,
+                              }}
+                            >
+                              {String.fromCharCode(65 + i)}
+                            </Text>
+                          </View>
+                          <View style={{ flex: 1, minWidth: 0 }}>
+                            <RichText
+                              text={option}
+                              html={q.optionsHtml?.[i]}
+                              assets={questionAssets}
+                              size={13 * scale}
+                            />
+                          </View>
+                          {review && key === i ? (
+                            <Check size={16} color={palette.done} />
+                          ) : review && selected === i && key !== null ? (
+                            <X size={16} color={palette.accent} />
+                          ) : selected === i ? (
+                            <View
+                              style={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: 2,
+                                backgroundColor: palette.accent,
+                              }}
+                            />
+                          ) : null}
+                          {review && selected === i ? (
+                            <Muted
+                              style={{
+                                fontSize: 8,
+                                maxWidth: 45,
+                                textAlign: "right",
+                              }}
+                            >
+                              Your answer
+                            </Muted>
+                          ) : null}
+                        </Pressable>
+                      ))}
+                    </View>
+                  ) : null}
+                  {q.type === "theory" && !reveal ? (
+                    <Button
+                      onPress={() => {
+                        const answers = [...attempt.answers];
+                        answers[attempt.current] = 0;
+                        update({ answers });
+                      }}
+                      style={{ marginTop: 32 }}
+                    >
+                      I’ve solved it — show answer
+                    </Button>
+                  ) : null}
+                  {reveal ? (
+                    <View
+                      style={{
+                        marginTop: 25,
+                        paddingTop: 20,
+                        borderTopWidth: 1,
+                        borderTopColor: palette.accent,
+                      }}
+                    >
+                      {q.topic ? (
+                        <View
                           style={{
-                            fontSize: 14,
-                            fontFamily: fonts.semibold,
-                            marginBottom: 18,
-                            color: palette.muted,
+                            flexDirection: "row",
+                            gap: 8,
+                            marginBottom: 14,
                           }}
                         >
-                          Source answer
-                        </Text>
-                        <RichText
-                          text={q.answerText || ""}
-                          html={q.answerHtml}
-                          assets={questionAssets}
-                          size={13}
-                        />
-                      </>
-                    ) : null}
-                    <RichText
-                      text={
-                        q.explanation ||
-                        (q.type === "theory" && !q.answerText
-                          ? "No answer was supplied for this question."
-                          : "")
-                      }
-                      html={q.explanationHtml}
-                      assets={questionAssets}
-                      size={13}
-                    />
-                  </View>
-                ) : null}
-              </>
-            )}
-          </ScrollView>
-        </QuestionSwipeSurface>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            gap: 8,
-            paddingTop: 12,
-            paddingBottom: Math.max(12, insets.bottom),
-            paddingHorizontal: 16,
-            borderTopWidth: 1,
-            borderTopColor: palette.line,
-          }}
-        >
-          <Button
-            kind="secondary"
-            disabled={
-              adjacentQuestion(orderedIndexes, attempt.current, -1) === null
-            }
-            onPress={() => {
-              const target = adjacentQuestion(
-                orderedIndexes,
-                attempt.current,
-                -1,
-              );
-              if (target !== null) go(target);
+                          <Muted>Topic</Muted>
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              fontFamily: fonts.semibold,
+                            }}
+                          >
+                            {String(q.topic)}
+                          </Text>
+                        </View>
+                      ) : null}
+                      {theory && (q.answerText || q.answerHtml) ? (
+                        <>
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontFamily: fonts.semibold,
+                              marginBottom: 18,
+                              color: palette.muted,
+                            }}
+                          >
+                            Source answer
+                          </Text>
+                          <RichText
+                            text={q.answerText || ""}
+                            html={q.answerHtml}
+                            assets={questionAssets}
+                            size={13}
+                          />
+                        </>
+                      ) : null}
+                      <RichText
+                        text={
+                          q.explanation ||
+                          (q.type === "theory" && !q.answerText
+                            ? "No answer was supplied for this question."
+                            : "")
+                        }
+                        html={q.explanationHtml}
+                        assets={questionAssets}
+                        size={13}
+                      />
+                    </View>
+                  ) : null}
+                </>
+              )}
+            </ScrollView>
+          </QuestionSwipeSurface>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              gap: 8,
+              paddingTop: 12,
+              paddingBottom: Math.max(12, insets.bottom),
+              paddingHorizontal: 16,
+              borderTopWidth: 1,
+              borderTopColor: palette.line,
             }}
           >
-            <ArrowLeft size={15} color={palette.ink} />
-            <Text style={{ fontSize: 11 }}>Previous</Text>
-          </Button>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open question navigator"
-            onPress={() => setNavigator(true)}
-            style={{ flexDirection: "row", gap: 5, alignItems: "center" }}
-          >
-            <Grid2X2 size={14} color={palette.muted} />
-            <Muted style={{ fontSize: 10 }}>
-              {number}/{total}
-            </Muted>
-          </Pressable>
-          <Button arrow onPress={advance}>
-            {number < total
-              ? "Next"
-              : following
-                ? "Next subject"
-                : review
-                  ? "Complete"
-                  : "Finish exam"}
-          </Button>
+            <Button
+              kind="secondary"
+              disabled={
+                adjacentQuestion(orderedIndexes, attempt.current, -1) === null
+              }
+              onPress={() => {
+                const target = adjacentQuestion(
+                  orderedIndexes,
+                  attempt.current,
+                  -1,
+                );
+                if (target !== null) go(target);
+              }}
+            >
+              <ArrowLeft size={15} color={palette.ink} />
+              <Text style={{ fontSize: 11 }}>Previous</Text>
+            </Button>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open question navigator"
+              onPress={() => setNavigator(true)}
+              style={{ flexDirection: "row", gap: 5, alignItems: "center" }}
+            >
+              <Grid2X2 size={14} color={palette.muted} />
+              <Muted style={{ fontSize: 10 }}>
+                {number}/{total}
+              </Muted>
+            </Pressable>
+            <Button arrow onPress={advance}>
+              {number < total
+                ? "Next"
+                : following
+                  ? "Next subject"
+                  : review
+                    ? "Complete"
+                    : "Finish exam"}
+            </Button>
+          </View>
         </View>
       </View>
-      {board ? (
-        <DrawingBoard
-          key={attempt.id + ":" + attempt.current}
-          attemptId={attempt.id}
-          questionIndex={attempt.current}
-          readOnly={review || attempt.status === "completed"}
-          flushRef={workingFlush}
-          onClose={() => setBoard(false)}
-        />
-      ) : null}
+      <View
+        style={
+          sideTools && (calculator || board)
+            ? {
+                position: "absolute",
+                top: insets.top,
+                bottom: 0,
+                right: insets.right,
+                width: 320,
+              }
+            : undefined
+        }
+      >
+        {calculator ? (
+          <Calculator side={sideTools} onClose={() => setCalculator(false)} />
+        ) : null}
+        {board ? (
+          <DrawingBoard
+            key={attempt.id + ":" + attempt.current}
+            side={sideTools}
+            attemptId={attempt.id}
+            questionIndex={attempt.current}
+            readOnly={review || attempt.status === "completed"}
+            flushRef={workingFlush}
+            onClose={() => setBoard(false)}
+          />
+        ) : null}
+      </View>
       {navigator ? (
         <Dialog
           title={q.subject + " questions"}
@@ -1051,32 +1227,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           </Button>
         </Dialog>
       ) : null}
-      {leaving ? (
-        <Dialog title="Leave this exam?" onClose={() => setLeaving(null)}>
-          <Muted>
-            Your answers are saved. You can resume from Past sessions. The exam
-            clock keeps running.
-          </Muted>
-          <Button
-            kind="secondary"
-            onPress={() => setLeaving(null)}
-            style={{ marginTop: 20 }}
-          >
-            Keep working
-          </Button>
-          <Button
-            onPress={() => {
-              const leave = leaving;
-              setLeaving(null);
-              leave();
-            }}
-            style={{ marginTop: 12 }}
-          >
-            Save and leave
-          </Button>
-        </Dialog>
-      ) : null}
-      {calculator ? <Calculator onClose={() => setCalculator(false)} /> : null}
+      {leaveDialog()}
     </Screen>
   );
 }

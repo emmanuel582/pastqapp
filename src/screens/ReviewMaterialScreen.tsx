@@ -49,8 +49,25 @@ export default function ReviewMaterialScreen({
             "vision-session",
             route.params.sessionId,
           ),
-          value = cached || (await visionSession(route.params.sessionId));
+          value = await visionSession(route.params.sessionId).catch((error) => {
+            if (
+              cached?.questions?.length &&
+              ["completed", "completed_with_errors", "confirmed"].includes(
+                cached.status,
+              )
+            )
+              return cached;
+            throw error;
+          });
         if (active) {
+          if (!value.questions?.length) {
+            navigation.replace("Processing", {
+              sessionId: route.params.sessionId,
+            });
+            return;
+          }
+          await records.write(owner, "vision-session", value.id, value);
+          if (!active) return;
           setSession(value);
           setQuestions(value.questions || []);
         }

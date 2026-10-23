@@ -110,7 +110,16 @@ test("per-subject selection keeps paper years and allocations separate", () => {
 });
 test("calculator handles precedence and rejects executable input", () => {
   assert.equal(calculate("2+3×4"), "14");
-  assert.equal(calculate("sin(30)"), "0.5");
+  for (const scientific of [
+    "sin(30)",
+    "cos(60)",
+    "sqrt(4)",
+    "2^3",
+    "10%",
+    "pi",
+  ])
+    assert.throws(() => calculate(scientific));
+  assert.equal(calculate("−2.5×(4+2)÷3"), "-5");
   assert.throws(() => calculate("globalThis.alert(1)"));
   assert.throws(() => calculate("1/0"));
 });

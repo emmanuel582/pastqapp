@@ -1,3 +1,10 @@
+import * as records from "../storage/records";
+import {
+  pushStatus,
+  connectPush,
+  disablePush,
+  testPush,
+} from "../services/remotePush";
 import React, { useEffect, useState } from "react";
 import { View, FlatList, AppState } from "react-native";
 import Bell from "lucide-react-native/icons/bell";
@@ -56,10 +63,17 @@ export default function NotificationsScreen({
               true,
             );
         if (!abort.signal.aborted) {
+          void records
+            .write(owner, "inbox-cache", String(offset), value)
+            .catch(() => {});
           setSnapshot(value);
           setError("");
         }
       } catch (e) {
+        const cached = await records
+          .read<Inbox>(owner, "inbox-cache", String(offset))
+          .catch(() => null);
+        if (cached && !abort.signal.aborted) setSnapshot(cached);
         if (!abort.signal.aborted)
           setError(
             e instanceof Error ? e.message : "Could not load notifications.",
@@ -81,6 +95,55 @@ export default function NotificationsScreen({
       sub.remove();
     };
   }, [owner, offset, revision]);
+  const [pushEnabled, setPushEnabled] = useState(false),
+    [pushBusy, setPushBusy] = useState(false),
+    [pushMessage, setPushMessage] = useState("");
+  useEffect(() => {
+    let alive = true;
+    void pushStatus(owner)
+      .then((value) => {
+        if (alive) setPushEnabled(value);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [owner, revision]);
+  async function changePush() {
+    setPushBusy(true);
+    setPushMessage("");
+    try {
+      if (pushEnabled) {
+        await disablePush(owner);
+        setPushEnabled(false);
+      } else {
+        await connectPush(owner);
+        setPushEnabled(true);
+      }
+    } catch (e) {
+      setPushMessage(
+        e instanceof Error
+          ? e.message
+          : "Could not update phone notifications. Try again.",
+      );
+    } finally {
+      setPushBusy(false);
+    }
+  }
+  async function sendPushTest() {
+    setPushBusy(true);
+    setPushMessage("");
+    try {
+      await testPush();
+      setPushMessage("Test queued. Lock your phone to check the notification.");
+    } catch (e) {
+      setPushMessage(
+        e instanceof Error ? e.message : "Could not send the test. Try again.",
+      );
+    } finally {
+      setPushBusy(false);
+    }
+  }
   async function mark(id: string) {
     setBusy(id);
     try {
@@ -126,6 +189,44 @@ export default function NotificationsScreen({
         }}
         ListHeaderComponent={
           <View>
+            <View
+              style={{
+                paddingBottom: 20,
+                marginBottom: 20,
+                borderBottomWidth: 1,
+                borderColor: palette.line,
+                gap: 12,
+              }}
+            >
+              <Text style={{ fontFamily: fonts.semibold }}>
+                Phone notifications
+              </Text>
+              <Muted>
+                Get upload completion alerts and messages from PastQ, even when
+                the app is closed.
+              </Muted>
+              <Button
+                kind="secondary"
+                disabled={pushBusy || owner === "guest"}
+                onPress={() => void changePush()}
+              >
+                {pushBusy
+                  ? "Updating…"
+                  : pushEnabled
+                    ? "Turn off phone notifications"
+                    : "Enable phone notifications"}
+              </Button>
+              {pushEnabled ? (
+                <Button
+                  kind="text"
+                  disabled={pushBusy}
+                  onPress={() => void sendPushTest()}
+                >
+                  Send a test notification
+                </Button>
+              ) : null}
+              {pushMessage ? <Muted>{pushMessage}</Muted> : null}
+            </View>
             {
               <>
                 {error ? <ErrorText>{error}</ErrorText> : null}

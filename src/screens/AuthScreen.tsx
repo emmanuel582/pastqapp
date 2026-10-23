@@ -5,7 +5,6 @@ import EyeOff from "lucide-react-native/icons/eye-off";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
 import Check from "lucide-react-native/icons/check";
 import Svg, { Path } from "react-native-svg";
-import * as Linking from "expo-linking";
 import AuthShell from "../components/AuthShell";
 import {
   Button,
@@ -15,7 +14,7 @@ import {
   ErrorText,
   IconButton,
 } from "../components/ui";
-import { requireAuth, signInGoogle } from "../services/auth";
+import { requireAuth, signInGoogle, authCallbackUrl } from "../services/auth";
 import { useApp } from "../state/AppContext";
 import type { Props } from "../navigation/types";
 import { fonts } from "../theme/tokens";
@@ -91,7 +90,7 @@ export default function AuthScreen({ route, navigation }: Props<"Auth">) {
       if (reset) {
         const { error } = await client.auth.resetPasswordForEmail(
           email.trim(),
-          { redirectTo: Linking.createURL("auth/callback") },
+          { redirectTo: authCallbackUrl() },
         );
         if (error) throw error;
         setSent(true);

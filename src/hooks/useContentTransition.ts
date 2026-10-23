@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Animated, Easing, Platform } from "react-native";
 import { useReducedMotion } from "./useReducedMotion";
 /** Finish the old view before moving the next one in; never animate layout or block local reads. */
@@ -20,6 +26,35 @@ export function useContentTransition() {
       if (frame.current !== undefined) cancelAnimationFrame(frame.current);
     };
   }, [opacity, y]);
+  const [committed, setCommitted] = useState<{
+    id: number;
+    direction: number;
+  } | null>(null);
+  useLayoutEffect(() => {
+    if (!committed || !live.current || committed.id !== generation.current)
+      return;
+    y.setValue(10 * committed.direction);
+    frame.current = requestAnimationFrame(() => {
+      frame.current = undefined;
+      if (!live.current || committed.id !== generation.current) return;
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 210,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: Platform.OS !== "web",
+        }),
+        Animated.timing(y, {
+          toValue: 0,
+          duration: 210,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: Platform.OS !== "web",
+        }),
+      ]).start(() => {
+        busy.current = false;
+      });
+    });
+  }, [committed, opacity, y]);
   const transition = useCallback(
     (commit: () => void, direction = 1) => {
       if (busy.current) return;
@@ -46,27 +81,7 @@ export function useContentTransition() {
           return;
         }
         commit();
-        y.setValue(10 * direction);
-        frame.current = requestAnimationFrame(() => {
-          frame.current = undefined;
-          if (!live.current) return;
-          Animated.parallel([
-            Animated.timing(opacity, {
-              toValue: 1,
-              duration: 210,
-              easing: Easing.out(Easing.cubic),
-              useNativeDriver: Platform.OS !== "web",
-            }),
-            Animated.timing(y, {
-              toValue: 0,
-              duration: 210,
-              easing: Easing.out(Easing.cubic),
-              useNativeDriver: Platform.OS !== "web",
-            }),
-          ]).start(() => {
-            busy.current = false;
-          });
-        });
+        setCommitted({ id, direction });
       });
     },
     [opacity, y, reduced],

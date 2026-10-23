@@ -1,5 +1,13 @@
 {
-  "checkedAt": "2026-10-22T16:01:02.536Z",
-  "status": "failed",
-  "error": "Sample material requires attention: paused · {\"followUps\":[{\"type\":\"paused\",\"message\":\"OpenRouter 401: {\\\"error\\\":{\\\"message\\\":\\\"User not found.\\\",\\\"code\\\":401}}\"}]}"
+  "checkedAt": "2026-10-23T12:15:52.779Z",
+  "status": "passed",
+  "questions": 3,
+  "subjects": [
+    "Biology",
+    "Mathematics"
+  ],
+  "privateUploadConfirmed": true,
+  "secondClientCanLoadMaterial": true,
+  "localPracticeCorrect": 3,
+  "scope": "Authenticated VPS API extraction/review/material availability plus local practice; physical camera, PDF and progress sync are separate checks."
 }

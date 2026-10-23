@@ -1,0 +1,39 @@
+export interface ProgressDatum {
+  id: string;
+  title: string;
+  percent: number | null;
+  completedAt: number;
+}
+export function progressPlot(items: ProgressDatum[], width: number) {
+  const valid = items
+    .filter(
+      (v) =>
+        Number.isFinite(v.percent) &&
+        v.percent !== null &&
+        v.percent >= 0 &&
+        v.percent <= 100 &&
+        Number.isFinite(v.completedAt),
+    )
+    .slice(-10);
+  const height = Math.max(176, Math.min(224, width * 0.55)),
+    left = 38,
+    right = Math.max(left, width - 14),
+    top = 15,
+    bottom = height - 28;
+  const points = valid.map((item, index) => ({
+    ...item,
+    percent: item.percent!,
+    x:
+      valid.length === 1
+        ? (left + right) / 2
+        : left + ((right - left) * index) / (valid.length - 1),
+    y: bottom - ((bottom - top) * item.percent!) / 100,
+  }));
+  return { width, height, left, right, top, bottom, points };
+}
+export function nearestProgressPoint(points: { x: number }[], x: number) {
+  let best = 0;
+  for (let i = 1; i < points.length; i++)
+    if (Math.abs(points[i].x - x) < Math.abs(points[best].x - x)) best = i;
+  return best;
+}

@@ -1,3 +1,4 @@
+import { disconnectPush } from "../services/remotePush";
 import { syncAccount } from "../services/sync";
 import { remoteHistory, type PracticeSummary } from "../services/history";
 import React, {
@@ -431,6 +432,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [profile, owner, session],
   );
   const signOut = useCallback(async () => {
+    // A failed/offline revoke stays in SecureStore and retries on the next foreground.
+    await disconnectPush().catch(() => {});
     if (supabase) {
       const { error } = await supabase.auth.signOut({ scope: "local" });
       if (error) throw error;

@@ -1,0 +1,8 @@
+FROM pastq-api:latest
+USER root
+COPY index.js /app/index.js
+COPY routes/reminders.js /app/routes/reminders.js
+COPY services/admin/notifications.js /app/services/admin/notifications.js
+COPY services/vision/store.js /app/services/vision/store.js
+COPY services/notifications/native.js /app/services/notifications/native.js
+USER node
