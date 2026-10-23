@@ -9,8 +9,8 @@
   "vpsReadiness": "ready",
   "imageComposer": "isolated browser check: choose image, title/body, all accounts, destination, audience review",
   "realStudentBroadcastSent": false,
-  "physicalPhonePushVerified": false,
-  "iosNativeImageCompilation": "pending EAS build",
+  "physicalPhonePushVerified": true,
+  "iosNativeImageCompilation": "iPhone 1.0.6 EAS build finished; app and image extension signed",
   "iosPrebuildOnWindows": "unsupported; native generation must run in EAS macOS build",
   "originalWebSourceHashesMatched": 183,
   "liveDeployedAdminAssetsVerified": true,
@@ -24,5 +24,12 @@
   "pushEligibleAccountsAtCheck": 1,
   "inboxOnlyAccountsAtCheck": 12,
   "fcmSendPermission": "Google validate_only request returned HTTP 200; no delivery",
-  "accountSyncCheck": "Still blocked: exam_sessions.answered_count is missing; local offline saves are retained"
+  "accountSyncCheck": "Still blocked: exam_sessions.answered_count is missing; local offline saves are retained",
+  "physicalPhonePushEvidence": {
+    "platform": "android",
+    "version": "1.0.6",
+    "checkedOn": "2026-10-24",
+    "source": "Owner reported the Send a test notification alert arrived after installing and enabling phone notifications",
+    "scope": "Single-device test alert; admin artwork broadcast, closed-app upload completion and iOS delivery remain pending"
+  }
 }

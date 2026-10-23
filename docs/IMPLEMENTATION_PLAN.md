@@ -70,5 +70,6 @@ Implement compact exam controls, one bottom question counter and no flags/progre
 - [x] Configure the dedicated Android FCM V1 identity privately in Expo and include public Firebase app configuration.
 - [x] Compile and sign Android 1.0.6; verify artifact size by HEAD without downloading the APK.
 - [x] Implement quiet iPhone provisional updates with opt-out and a separate banners/sound option.
-- [ ] Finish the new iOS image extension signing profile and compile the iPhone release.
-- [ ] Verify admin push and app-closed upload completion on installed Android/iPhone devices.
+- [x] Finish the new iOS image extension signing profile and compile the iPhone 1.0.6 release.
+- [x] Confirm a real Android 1.0.6 test alert arrives (owner-reported physical check).
+- [ ] Verify admin artwork push, iPhone delivery and app-closed upload completion on installed Android/iPhone devices.

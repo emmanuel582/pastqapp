@@ -13,7 +13,7 @@
   "artifactHeadStatus": 200,
   "downloadedToLaptop": false,
   "installation": "Install link shared privately in the task; omitted from public repository.",
-  "physicalDeviceAcceptance": "pending",
+  "physicalDeviceAcceptance": "Owner confirmed the test push arrived on Android 1.0.6; touch/offline/release profiling acceptance remains open",
   "nativeCompilationStarted": true,
   "configuredArchitectures": [
     "armeabi-v7a",
