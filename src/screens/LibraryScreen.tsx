@@ -84,6 +84,24 @@ export default function LibraryScreen({
     [searching, setSearching] = useState(false),
     [actionError, setActionError] = useState(""),
     [opening, setOpening] = useState(false);
+  function selectEnvironment(name: string | null) {
+    content.transition(
+      () => {
+        setEnvironment(name);
+        setQuery("");
+      },
+      name ? 1 : -1,
+    );
+  }
+  function browseMore(next: boolean) {
+    content.transition(
+      () => {
+        setExploring(next);
+        setQuery("");
+      },
+      next ? 1 : -1,
+    );
+  }
   useEffect(() => {
     let active = true;
     setQuestionMatches([]);
@@ -277,18 +295,11 @@ export default function LibraryScreen({
     return (
       <View style={{ flex: 1 }}>
         <Header
-          onBack={
-            environment
-              ? () => {
-                  setEnvironment(null);
-                  setQuery("");
-                }
-              : undefined
-          }
+          onBack={environment ? () => selectEnvironment(null) : undefined}
           title={environment || "Library"}
           style={{ minHeight: 60, paddingVertical: 10 }}
           right={
-            <Button kind="text" onPress={() => setExploring(true)}>
+            <Button kind="text" onPress={() => browseMore(true)}>
               <Text style={{ color: palette.accent, fontSize: 13 }}>
                 Find more
               </Text>
@@ -355,10 +366,7 @@ export default function LibraryScreen({
                 />
               ) : (
                 <Pressable
-                  onPress={() => {
-                    setEnvironment(item.name);
-                    setQuery("");
-                  }}
+                  onPress={() => selectEnvironment(item.name)}
                   style={{
                     minHeight: 112,
                     padding: 22,
@@ -395,7 +403,7 @@ export default function LibraryScreen({
                     }
                     icon={<BookOpen size={30} color={palette.muted} />}
                   >
-                    <Button arrow onPress={() => setExploring(true)}>
+                    <Button arrow onPress={() => browseMore(true)}>
                       Find an exam
                     </Button>
                     <Button
@@ -440,13 +448,7 @@ export default function LibraryScreen({
   return (
     <View style={{ flex: 1 }}>
       {preferences.preparation ? (
-        <Button
-          kind="text"
-          onPress={() => {
-            setExploring(false);
-            setQuery("");
-          }}
-        >
+        <Button kind="text" onPress={() => browseMore(false)}>
           Your downloaded exams
         </Button>
       ) : null}

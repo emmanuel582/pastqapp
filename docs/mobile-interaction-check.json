@@ -8,5 +8,6 @@
   ],
   "nativeDeviceAcceptance": "pending on signed builds",
   "tests": 47,
-  "typecheck": "passed"
+  "typecheck": "passed",
+  "followUp": "The same transition also covers downloaded exam-group open/back and browse/downloaded-list switches; requires the latest rebuilt APK."
 }
