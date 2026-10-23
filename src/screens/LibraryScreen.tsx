@@ -1,6 +1,7 @@
+import { useContentTransition } from "../hooks/useContentTransition";
 import QuestionSearchResults from "../components/QuestionSearchResults";
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Pressable, FlatList } from "react-native";
+import { View, Pressable, FlatList, Animated } from "react-native";
 import Upload from "lucide-react-native/icons/upload";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
 import ChevronRight from "lucide-react-native/icons/chevron-right";
@@ -71,6 +72,7 @@ export default function LibraryScreen({
     refreshLibrary,
     preferences,
   } = useApp();
+  const content = useContentTransition();
   const [tab, setTab] = useState<"browse" | "flat" | "downloaded">("browse"),
     [query, setQuery] = useState(""),
     [choice, setChoice] = useState<Category | null>(null),
@@ -294,142 +296,144 @@ export default function LibraryScreen({
             </Button>
           }
         />
-        <FlatList<Bundle | { name: string; bundles: Bundle[] }>
-          data={
-            environment
-              ? (
-                  groups.find((g) => g.name === environment)?.bundles || []
-                ).filter((b) => matchesBundle(b, needle))
-              : groups.filter(
-                  (g) =>
-                    !needle ||
-                    g.name.toLowerCase().includes(needle) ||
-                    g.bundles.some((b) =>
-                      b.title.toLowerCase().includes(needle),
-                    ),
-                )
-          }
-          keyExtractor={(item) => ("id" in item ? item.id : item.name)}
-          contentContainerStyle={{
-            padding: 22,
-            paddingTop: 16,
-            paddingBottom: 36,
-            maxWidth: 744,
-            width: "100%",
-            alignSelf: "center",
-          }}
-          ListHeaderComponent={
-            <View>
-              {
-                <>
-                  <SearchField
-                    value={query}
-                    onChangeText={setQuery}
-                    placeholder={
-                      environment
-                        ? "Find a publisher, subject or question"
-                        : "Find an exam, material or question"
-                    }
-                    style={{ marginBottom: 16 }}
-                  />
-                </>
-              }
-            </View>
-          }
-          renderItem={({ item }) =>
-            "id" in item ? (
-              <Row
-                title={item.manufacturer || "Saved material"}
-                detail={
-                  item.title +
-                  " · " +
-                  (item.question_count || item.questions.length) +
-                  " questions"
+        <Animated.View style={[{ flex: 1, minHeight: 0 }, content.style]}>
+          <FlatList<Bundle | { name: string; bundles: Bundle[] }>
+            data={
+              environment
+                ? (
+                    groups.find((g) => g.name === environment)?.bundles || []
+                  ).filter((b) => matchesBundle(b, needle))
+                : groups.filter(
+                    (g) =>
+                      !needle ||
+                      g.name.toLowerCase().includes(needle) ||
+                      g.bundles.some((b) =>
+                        b.title.toLowerCase().includes(needle),
+                      ),
+                  )
+            }
+            keyExtractor={(item) => ("id" in item ? item.id : item.name)}
+            contentContainerStyle={{
+              padding: 22,
+              paddingTop: 16,
+              paddingBottom: 36,
+              maxWidth: 744,
+              width: "100%",
+              alignSelf: "center",
+            }}
+            ListHeaderComponent={
+              <View>
+                {
+                  <>
+                    <SearchField
+                      value={query}
+                      onChangeText={setQuery}
+                      placeholder={
+                        environment
+                          ? "Find a publisher, subject or question"
+                          : "Find an exam, material or question"
+                      }
+                      style={{ marginBottom: 16 }}
+                    />
+                  </>
                 }
-                icon={<ExamArtwork identity={item} />}
-                onPress={() => open(item.id, item.title)}
-                style={{ paddingVertical: 24 }}
-              />
-            ) : (
-              <Pressable
-                onPress={() => {
-                  setEnvironment(item.name);
-                  setQuery("");
-                }}
-                style={{
-                  minHeight: 112,
-                  padding: 22,
-                  borderWidth: 1,
-                  borderColor: palette.line,
-                  borderRadius: 12,
-                  backgroundColor: palette.panel,
-                  flexDirection: "row",
-                  gap: 18,
-                  alignItems: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <ExamArtwork identity={item.name} />
-                <View style={{ flex: 1, gap: 6 }}>
-                  <Title size={22}>{item.name}</Title>
-                  <Muted style={{ fontSize: 11 }}>
-                    {item.bundles.length} saved{" "}
-                    {item.bundles.length === 1 ? "collection" : "collections"}
-                  </Muted>
-                </View>
-                <ArrowRight size={19} color={palette.accent} />
-              </Pressable>
-            )
-          }
-          ListEmptyComponent={
-            <View>
-              {
-                <Empty
-                  title={
-                    saved.length
-                      ? "No matching downloaded exams."
-                      : "No saved exams yet."
+              </View>
+            }
+            renderItem={({ item }) =>
+              "id" in item ? (
+                <Row
+                  title={item.manufacturer || "Saved material"}
+                  detail={
+                    item.title +
+                    " · " +
+                    (item.question_count || item.questions.length) +
+                    " questions"
                   }
-                  icon={<BookOpen size={30} color={palette.muted} />}
+                  icon={<ExamArtwork identity={item} />}
+                  onPress={() => open(item.id, item.title)}
+                  style={{ paddingVertical: 24 }}
+                />
+              ) : (
+                <Pressable
+                  onPress={() => {
+                    setEnvironment(item.name);
+                    setQuery("");
+                  }}
+                  style={{
+                    minHeight: 112,
+                    padding: 22,
+                    borderWidth: 1,
+                    borderColor: palette.line,
+                    borderRadius: 12,
+                    backgroundColor: palette.panel,
+                    flexDirection: "row",
+                    gap: 18,
+                    alignItems: "center",
+                    marginBottom: 12,
+                  }}
                 >
-                  <Button arrow onPress={() => setExploring(true)}>
-                    Find an exam
-                  </Button>
-                  <Button
-                    kind="text"
-                    onPress={() => navigation.navigate("Upload")}
+                  <ExamArtwork identity={item.name} />
+                  <View style={{ flex: 1, gap: 6 }}>
+                    <Title size={22}>{item.name}</Title>
+                    <Muted style={{ fontSize: 11 }}>
+                      {item.bundles.length} saved{" "}
+                      {item.bundles.length === 1 ? "collection" : "collections"}
+                    </Muted>
+                  </View>
+                  <ArrowRight size={19} color={palette.accent} />
+                </Pressable>
+              )
+            }
+            ListEmptyComponent={
+              <View>
+                {
+                  <Empty
+                    title={
+                      saved.length
+                        ? "No matching downloaded exams."
+                        : "No saved exams yet."
+                    }
+                    icon={<BookOpen size={30} color={palette.muted} />}
                   >
-                    Add material
-                  </Button>
-                </Empty>
-              }
-            </View>
-          }
-          ListFooterComponent={
-            <View>
-              <QuestionSearchResults
-                query={query}
-                matches={questionMatches}
-                searching={searching}
-                error={actionError}
-                opening={opening}
-                enabled={saved.length > 0}
-                onOpen={(match) => void openQuestion(match)}
-              />
-              <>
-                {saved.length ? (
-                  <Button
-                    kind="text"
-                    onPress={() => navigation.navigate("Upload")}
-                    style={{ marginTop: 24 }}
-                  >
-                    Add your own material
-                  </Button>
-                ) : null}
-              </>
-            </View>
-          }
-        />
+                    <Button arrow onPress={() => setExploring(true)}>
+                      Find an exam
+                    </Button>
+                    <Button
+                      kind="text"
+                      onPress={() => navigation.navigate("Upload")}
+                    >
+                      Add material
+                    </Button>
+                  </Empty>
+                }
+              </View>
+            }
+            ListFooterComponent={
+              <View>
+                <QuestionSearchResults
+                  query={query}
+                  matches={questionMatches}
+                  searching={searching}
+                  error={actionError}
+                  opening={opening}
+                  enabled={saved.length > 0}
+                  onOpen={(match) => void openQuestion(match)}
+                />
+                <>
+                  {saved.length ? (
+                    <Button
+                      kind="text"
+                      onPress={() => navigation.navigate("Upload")}
+                      style={{ marginTop: 24 }}
+                    >
+                      Add your own material
+                    </Button>
+                  ) : null}
+                </>
+              </View>
+            }
+          />
+        </Animated.View>
         {downloadDialog}
       </View>
     );
@@ -461,122 +465,146 @@ export default function LibraryScreen({
           </Button>
         }
       />
-      <FlatList
-        keyboardShouldPersistTaps="handled"
-        ListFooterComponent={
-          <QuestionSearchResults
-            query={query}
-            matches={questionMatches}
-            searching={searching}
-            error={actionError}
-            opening={opening}
-            enabled={saved.length > 0}
-            onOpen={(match) => void openQuestion(match)}
-          />
-        }
-        data={entries}
-        keyExtractor={(item) => item.kind + item.id}
-        initialNumToRender={12}
-        maxToRenderPerBatch={10}
-        windowSize={7}
-        contentContainerStyle={{
-          paddingHorizontal: 22,
-          paddingTop: 16,
-          paddingBottom: 35,
-          width: "100%",
-          maxWidth: 1144,
-          alignSelf: "center",
-        }}
-        ListHeaderComponent={
-          <View>
-            {
-              <>
-                <SearchField
-                  value={query}
-                  onChangeText={setQuery}
-                  placeholder="Search a school, subject or test"
-                />
-                <Tabs
-                  value={tab}
-                  onChange={setTab}
-                  options={[
-                    { id: "browse", label: "Explore" },
-                    { id: "flat", label: "All materials" },
-                    {
-                      id: "downloaded",
-                      label: "Saved" + (saved.length ? " " + saved.length : ""),
+      <Animated.View style={[{ flex: 1, minHeight: 0 }, content.style]}>
+        <FlatList
+          keyboardShouldPersistTaps="handled"
+          ListFooterComponent={
+            <QuestionSearchResults
+              query={query}
+              matches={questionMatches}
+              searching={searching}
+              error={actionError}
+              opening={opening}
+              enabled={saved.length > 0}
+              onOpen={(match) => void openQuestion(match)}
+            />
+          }
+          data={entries}
+          keyExtractor={(item) => item.kind + item.id}
+          initialNumToRender={12}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          contentContainerStyle={{
+            paddingHorizontal: 22,
+            paddingTop: 16,
+            paddingBottom: 35,
+            width: "100%",
+            maxWidth: 1144,
+            alignSelf: "center",
+          }}
+          ListHeaderComponent={
+            <View>
+              {
+                <>
+                  <SearchField
+                    value={query}
+                    onChangeText={setQuery}
+                    placeholder="Search a school, subject or test"
+                  />
+                  <Tabs
+                    value={tab}
+                    onChange={(value) =>
+                      content.transition(() => setTab(value))
+                    }
+                    options={[
+                      { id: "browse", label: "Explore" },
+                      { id: "flat", label: "All materials" },
+                      {
+                        id: "downloaded",
+                        label:
+                          "Saved" + (saved.length ? " " + saved.length : ""),
+                      },
+                    ]}
+                  />
+                  {libraryStatus === "loading" &&
+                  tab !== "downloaded" &&
+                  !materials.length ? (
+                    <Skeleton kind="catalog" />
+                  ) : null}
+                  {libraryStatus === "error" && tab !== "downloaded" ? (
+                    <>
+                      <ErrorText>
+                        {libraryError || "Your library couldn’t load."}
+                      </ErrorText>
+                      <Button kind="text" onPress={() => void refreshLibrary()}>
+                        Try again
+                      </Button>
+                    </>
+                  ) : null}
+                  <View style={{ height: 20 }} />
+                </>
+              }
+            </View>
+          }
+          renderItem={({ item }) =>
+            item.kind === "category" ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{
+                  expanded: choice === item.category || !!needle,
+                }}
+                onPress={() =>
+                  content.transition(
+                    () => {
+                      setChoice(
+                        choice === item.category ? null : item.category,
+                      );
+                      setExpanded([]);
                     },
-                  ]}
-                />
-                {libraryStatus === "loading" &&
-                tab !== "downloaded" &&
-                !materials.length ? (
-                  <Skeleton kind="catalog" />
-                ) : null}
-                {libraryStatus === "error" && tab !== "downloaded" ? (
-                  <>
-                    <ErrorText>
-                      {libraryError || "Your library couldn’t load."}
-                    </ErrorText>
-                    <Button kind="text" onPress={() => void refreshLibrary()}>
-                      Try again
-                    </Button>
-                  </>
-                ) : null}
-                <View style={{ height: 20 }} />
-              </>
-            }
-          </View>
-        }
-        renderItem={({ item }) =>
-          item.kind === "category" ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{
-                expanded: choice === item.category || !!needle,
-              }}
-              onPress={() =>
-                setChoice(choice === item.category ? null : item.category)
-              }
-              style={{
-                borderWidth: 1,
-                borderColor: palette.line,
-                borderRadius: 12,
-                minHeight: 76,
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                flexDirection: "row",
-                gap: 14,
-                alignItems: "center",
-                backgroundColor: palette.panel,
-                marginBottom: 10,
-              }}
-            >
-              <StudyArt type={item.category} />
-              <Text
-                style={{ fontSize: 13, fontFamily: fonts.semibold, flex: 1 }}
+                    choice === item.category ? -1 : 1,
+                  )
+                }
+                style={{
+                  borderWidth: 1,
+                  borderColor: palette.line,
+                  borderRadius: 12,
+                  minHeight: 76,
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                  flexDirection: "row",
+                  gap: 14,
+                  alignItems: "center",
+                  backgroundColor: palette.panel,
+                  marginBottom: 10,
+                }}
               >
-                {item.title}
-              </Text>
-              {choice === item.category ? (
-                <ChevronDown size={17} color={palette.muted} />
-              ) : (
-                <ChevronRight size={17} color={palette.muted} />
-              )}
-            </Pressable>
-          ) : item.kind === "org" ? (
-            <Row
-              title={item.org.name}
-              detail={item.org.examTypes.length + " collections"}
-              icon={<ExamArtwork identity={item.org} />}
-              onPress={() =>
-                setExpanded((old) =>
-                  old.includes(item.id)
-                    ? old.filter((id) => id !== item.id)
-                    : [...old, item.id],
-                )
-              }
-              right={
+                <StudyArt type={item.category} />
+                <Text
+                  style={{ fontSize: 13, fontFamily: fonts.semibold, flex: 1 }}
+                >
+                  {item.title}
+                </Text>
+                {choice === item.category ? (
+                  <ChevronDown size={17} color={palette.muted} />
+                ) : (
+                  <ChevronRight size={17} color={palette.muted} />
+                )}
+              </Pressable>
+            ) : item.kind === "org" ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderBottomWidth: 1,
+                  borderBottomColor: palette.line,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Row
+                    title={item.org.name}
+                    detail={item.org.examTypes.length + " collections"}
+                    icon={<ExamArtwork identity={item.org} />}
+                    onPress={() =>
+                      setExpanded((old) =>
+                        old.includes(item.id)
+                          ? old.filter((id) => id !== item.id)
+                          : [...old, item.id],
+                      )
+                    }
+                    style={{ borderBottomWidth: 0 }}
+                    right={<ChevronRight size={19} color={palette.muted} />}
+                  />
+                </View>
                 <IconButton
                   label={"Download " + item.org.name}
                   onPress={() =>
@@ -596,81 +624,96 @@ export default function LibraryScreen({
                 >
                   <Download size={19} color={palette.muted} />
                 </IconButton>
-              }
-            />
-          ) : item.kind === "exam" ? (
-            <Muted
-              style={{ paddingTop: 16, paddingBottom: 8, paddingLeft: 18 }}
-            >
-              {item.title}
-            </Muted>
-          ) : item.kind === "material" ? (
-            <Row
-              title={item.material.title || item.material.name}
-              detail={(item.material.questionCount || 0) + " questions"}
-              icon={<ExamArtwork identity={item.material} />}
-              onPress={() =>
-                open(
-                  item.material.bundleId,
-                  item.material.title || item.material.name,
-                )
-              }
-              style={{ marginLeft: 18 }}
-            />
-          ) : (
-            <Row
-              title={item.bundle.title}
-              detail={
-                (item.bundle.question_count ||
-                  item.bundle.questions?.length ||
-                  0) +
-                " questions" +
-                (saved.some((b) => b.id === item.id) ? " · Ready offline" : "")
-              }
-              icon={<ExamArtwork identity={item.bundle} />}
-              onPress={() => open(item.id, item.bundle.title)}
-              right={
-                saved.some((b) => b.id === item.id) ? (
+              </View>
+            ) : item.kind === "exam" ? (
+              <Muted
+                style={{ paddingTop: 16, paddingBottom: 8, paddingLeft: 18 }}
+              >
+                {item.title}
+              </Muted>
+            ) : item.kind === "material" ? (
+              <Row
+                title={item.material.title || item.material.name}
+                detail={(item.material.questionCount || 0) + " questions"}
+                icon={<ExamArtwork identity={item.material} />}
+                onPress={() =>
+                  open(
+                    item.material.bundleId,
+                    item.material.title || item.material.name,
+                  )
+                }
+                style={{ marginLeft: 18 }}
+              />
+            ) : (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderBottomWidth: 1,
+                  borderBottomColor: palette.line,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Row
+                    title={item.bundle.title}
+                    detail={
+                      (item.bundle.question_count ||
+                        item.bundle.questions?.length ||
+                        0) +
+                      " questions" +
+                      (saved.some((b) => b.id === item.id)
+                        ? " · Ready offline"
+                        : "")
+                    }
+                    icon={<ExamArtwork identity={item.bundle} />}
+                    onPress={() => open(item.id, item.bundle.title)}
+                    style={{ borderBottomWidth: 0 }}
+                    right={
+                      saved.some((b) => b.id === item.id) ? null : (
+                        <Download size={20} color={palette.muted} />
+                      )
+                    }
+                  />
+                </View>
+                {saved.some((b) => b.id === item.id) ? (
                   <Button
                     arrow
                     onPress={() => open(item.id, item.bundle.title)}
                   >
                     Start
                   </Button>
-                ) : (
-                  <Download size={20} color={palette.muted} />
-                )
-              }
-            />
-          )
-        }
-        ListEmptyComponent={
-          <View>
-            {libraryStatus === "loading" ||
-            searching ||
-            questionMatches.length ? null : (
-              <Empty
-                title={
-                  needle
-                    ? "No matching materials."
-                    : tab === "downloaded"
-                      ? "No saved materials yet."
-                      : "No materials here yet."
-                }
-                icon={<BookOpen size={28} color={palette.muted} />}
-              >
-                <Button
-                  kind="text"
-                  arrow
-                  onPress={() => navigation.navigate("Upload")}
+                ) : null}
+              </View>
+            )
+          }
+          ListEmptyComponent={
+            <View>
+              {libraryStatus === "loading" ||
+              searching ||
+              questionMatches.length ? null : (
+                <Empty
+                  title={
+                    needle
+                      ? "No matching materials."
+                      : tab === "downloaded"
+                        ? "No saved materials yet."
+                        : "No materials here yet."
+                  }
+                  icon={<BookOpen size={28} color={palette.muted} />}
                 >
-                  Add material
-                </Button>
-              </Empty>
-            )}
-          </View>
-        }
-      />
+                  <Button
+                    kind="text"
+                    arrow
+                    onPress={() => navigation.navigate("Upload")}
+                  >
+                    Add material
+                  </Button>
+                </Empty>
+              )}
+            </View>
+          }
+        />
+      </Animated.View>
       {downloadDialog}
     </View>
   );

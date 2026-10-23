@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-23T02:17:39.582Z",
+  "checkedAt": "2026-10-23T02:24:24.799Z",
   "status": "passed",
   "typecheck": "passed",
   "tests": {
@@ -9,13 +9,13 @@
   "webSourceFilesUnchanged": 183,
   "platforms": {
     "ios": {
-      "bundle": "_expo/static/js/ios/index-c091cf437d0b767fc1c519d283414e6d.hbc",
-      "bytes": 5296225,
+      "bundle": "_expo/static/js/ios/index-124a527be6f847bffaae5973b586601c.hbc",
+      "bytes": 5294878,
       "assets": 57
     },
     "android": {
-      "bundle": "_expo/static/js/android/index-99840af2030d03b8640fa260a43952a9.hbc",
-      "bytes": 5302655,
+      "bundle": "_expo/static/js/android/index-6c685ae4f7fdc40a4707aab255648b2a.hbc",
+      "bytes": 5305267,
       "assets": 58
     }
   },

@@ -3,7 +3,7 @@
     "name": "PastQ",
     "slug": "focalpoint",
     "scheme": "pastq",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -12,8 +12,10 @@
       "bundleIdentifier": "com.pastq.study",
       "infoPlist": {
         "NSCameraUsageDescription": "Photograph your question papers to study them in PastQ.",
-        "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice."
-      }
+        "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "2"
     },
     "android": {
       "package": "com.pastq.study",
@@ -24,7 +26,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
-      }
+      },
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",
@@ -67,6 +70,15 @@
           "backgroundColor": "#151515",
           "image": "./assets/icon.png",
           "imageWidth": 160
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
         }
       ]
     ],

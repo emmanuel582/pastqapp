@@ -1,0 +1,15 @@
+{
+  "id": "af27f7db-ca4e-42cc-987e-5140bed9b167",
+  "status": "FINISHED",
+  "platform": "ANDROID",
+  "buildProfile": "preview",
+  "distribution": "INTERNAL",
+  "appVersion": "1.0.0",
+  "versionCode": "1",
+  "sourceCommit": "2e14428fca807afc535282a031170fd7fdb4d4e1",
+  "completedAt": "2026-10-23T02:38:37.906Z",
+  "buildUrl": "https://expo.dev/accounts/emmanuelwritecode/projects/focalpoint/builds/af27f7db-ca4e-42cc-987e-5140bed9b167",
+  "apkUrl": "https://expo.dev/artifacts/eas/ca5L93mjJN6C37XKqkgumVZfiejEUgEX887ReSXo6Ik.apk",
+  "localApk": "build/PastQ-1.0.0-android.apk",
+  "bytes": 128075718
+}

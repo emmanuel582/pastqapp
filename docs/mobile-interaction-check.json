@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-23T05:56:08.139Z",
+  "environment": "390x844 browser fixture, not a physical device",
+  "observations": [
+    "Swipe left advanced Mathematics to Physics",
+    "Swipe right returned to Mathematics with selected answer retained",
+    "Category opens and closes with fade/translation, compact Library heading retained"
+  ],
+  "nativeDeviceAcceptance": "pending on signed builds",
+  "tests": 47,
+  "typecheck": "passed"
+}

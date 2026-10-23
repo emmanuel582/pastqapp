@@ -2,9 +2,9 @@
 
 ## Confirmed
 
-- TypeScript and 40 tests passed in the final checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
+- TypeScript and 47 tests passed in the latest checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
 - Both Android and iOS production Hermes bundles exported successfully. Bundle size fell from 7.3MB to approximately 5.3MB per platform after importing only used icons; original exam artwork dropped from 1.18MB to 83KB. Final bundle file sizes are recorded in build-check.json. Export success is not a compiled/signed binary or physical-device runtime test.
-- The SDK 57 local dependency compatibility check passed in offline mode against Expo's installed version map. Online validation timed out during a network change.
+- The final SDK 57 online dependency compatibility check passed after applying the recommended Expo, notification and sharing patch updates.
 - All 183 original web source files matched the initial hashes.
 - Live VPS readiness/catalog/public download SHA-256 checks passed earlier; docs/vps-check.json contains the evidence. Later laptop requests timed out after the network changed; the user reported the health page opening independently. The later failed checks must not be represented as successful.
 - Authorized live QA account signup and Other learner onboarding completed through the mobile browser preview using the existing Supabase provider.
@@ -21,7 +21,7 @@ The VPS health endpoint is reachable again. The authorized synthetic personal-te
 ## Release gates still open
 
 - Physical iPhone and Android QA: native camera/document permissions, rich diagrams/math, keyboard, background/killed-app resume, offline restart, themes, screen readers, deep links and local notifications.
-- Signing/build credentials and physical native builds; no store or TestFlight release yet. Expo project linkage completed as requested: emmanuelwritecode/focalpoint, ID 2a3c3ccd-bfc5-48af-9615-f33b8de210f6, using EAS CLI 25.3.0.
+- Physical device acceptance remains open. The first signed Android native build completed successfully (docs/android-build.json); the updated phone APK and physical-iPhone build are tracked separately. No store or TestFlight release yet. Expo project linkage completed as requested: emmanuelwritecode/focalpoint, ID 2a3c3ccd-bfc5-48af-9615-f33b8de210f6, using EAS CLI 25.3.0.
 - Standalone OAuth/password-recovery redirect allowlist.
 - Native remote push integration/credentials; VPS web push is not native push.
 - Automatic cross-device syncing of detailed papers/bookmarks/checkpoints has no existing backend contract; private compatible backups provide transfer.
@@ -51,3 +51,9 @@ The last registry audit reported 23 production advisories (15 high, 8 moderate);
 - The Android preview profile creates a standalone APK with real public API/account settings supplied by the existing EAS project’s preview environment and design fixtures disabled. Actual cloud build outcome is recorded separately after compilation.
 
 Completed-session browser QA also reopened the saved result from daily history and displayed the actual retained drawing under Saved working, with editing controls absent. A separate delete confirmation was checked without deleting prior browser QA sessions.
+
+## Phone build and interaction refinement
+
+- 390x844 browser fixture QA confirmed a real leftward drag advances to the next subject, a rightward drag returns, and the selected answer stays saved. Native gesture recognition now handles horizontal intent alongside native vertical scrolling; cancellation, multiple pointers, active tools and stale questions cannot trigger navigation. Physical-device gesture acceptance remains pending.
+- Library categories fade out before the new collection view slides in. Reduced-motion settings bypass the effect. Category expansion/collapse and separate download controls were checked through actual UI input.
+- Preview releases omit the development launcher. The Android preview targets ARM32/ARM64 phones and enables release code/resource shrinking. Actual binary size will be recorded from the completed cloud artifact, without downloading it to this laptop. Native Google setup remains deferred at the user’s request.
