@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-23T06:27:28.795Z",
+  "platform": "IOS",
+  "profile": "preview",
+  "appVersion": "1.0.1",
+  "bundleIdentifier": "com.pastq.study",
+  "expoProject": "@emmanuelwritecode/focalpoint",
+  "status": "BLOCKED_SIGNING",
+  "easMessage": "No credentials set up yet!",
+  "required": "Apple distribution certificate and internal provisioning profile including the test iPhone, saved for this exact Expo project",
+  "nativeCompilationStarted": false,
+  "latestBuildAttempt": "EAS still reports no credentials suitable for internal distribution before native compilation",
+  "sourceCommit": "b6d8e8bddc5f81783f95535629862c6384dbef61"
+}

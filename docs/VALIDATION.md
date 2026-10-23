@@ -29,17 +29,17 @@ The VPS health endpoint is reachable again. The authorized synthetic personal-te
 
 ## Dependency audit
 
-The last registry audit reported 23 production advisories (15 high, 8 moderate); a later full dependency install reported 24 including development dependencies in Expo/Metro tooling dependency chains. Direct vulnerable roots include braces <=3.0.3 and node-forge <=1.4.0; those were also the latest available registry versions when checked. Do not apply npm audit fix --force: its proposed Expo 44 / React Native 0.72 downgrade breaks the SDK 57 requirement. The JSON report is saved as dependency-audit.json. Reassess upstream patches before release; no vulnerability-free claim is made.
+The latest production dependency audit reports 15 high advisories, all propagated through the Expo/Metro/React Native tooling chains from braces <=3.0.3 and node-forge <=1.4.0. The registry suggests incompatible downgrades to Expo 44 / React Native 0.72 for several chains; those are not applied to this SDK 57 app. The audit is not clean, and physical release acceptance remains separate from passing build/test checks.
 
 ## Mobile experience follow-up — 23 October
 
 - Baseline committed first (9f0dbac) and pushed to the requested emmanuel582/pastqapp repository before publishing the subsequent mobile improvements. Credentials, QA account details, source-reference copies, caches and generated bundles are excluded.
-- Added deliberate horizontal CBT gestures, ordered cross-subject navigation and reduced-motion-aware native animation. Swipe bounds do not wrap or submit. Vertical and diagonal drags, taps and multi-touch are rejected by domain tests. Browser mouse dragging did not advance; physical touch acceptance is still required.
+- Added deliberate horizontal CBT gestures, ordered cross-subject navigation and reduced-motion-aware native animation. Swipe bounds do not wrap or submit. Vertical and diagonal drags, taps and multi-touch are rejected by domain tests. Browser left/right dragging now advances and returns with saved choices; physical touch acceptance is still required.
 - Native reminder tests exercise the actual adapter with mocked OS scheduling: permission denial preserves the old plan, partial scheduling rolls back, provisional iOS permission works, account cleanup is scoped, foreground CBT is quiet and a permission-dialog race cannot cancel a newly enabled plan. Notification taps only accept matching-owner, whitelisted destinations. Device delivery and cold-start behaviour remain physical checks.
 - Reminder plans renew on app resume/day changes and study completion; previous owner requests and delivered reminders are removed on cleanup. This is local OS scheduling, not native remote push registration or VPS delivery.
 - Library, Discover and Preferences now have compact, distinct headers; Home keeps the original wordmark. The 390×844 fixture walkthrough checked these headers, moved forward/back across subjects, retained the selected Mathematics answer and submitted two answered/one skipped questions. The result was 33%, one correct, one incorrect, one skipped; the topic table matched those counts. No new browser console errors appeared. This local fixture check does not prove live service sync.
 - Processing stops polling while paused or awaiting input, avoids overlapping requests, restarts after explicit recovery and shows service failures without misleading photo replacement actions.
-- Final TypeScript, 40 regression tests, all 183 source-integrity checks and iOS/Android Hermes exports passed. No new runtime package was added for gestures or reminder improvements.
+- Latest TypeScript, 47 regression tests and all 183 source-integrity checks passed. Prior iOS/Android Hermes exports passed; the current Android native builds validate the new gesture-handler integration.
 
 ## Offline-first follow-up — 23 October
 
@@ -57,3 +57,11 @@ Completed-session browser QA also reopened the saved result from daily history a
 - 390x844 browser fixture QA confirmed a real leftward drag advances to the next subject, a rightward drag returns, and the selected answer stays saved. Native gesture recognition now handles horizontal intent alongside native vertical scrolling; cancellation, multiple pointers, active tools and stale questions cannot trigger navigation. Physical-device gesture acceptance remains pending.
 - Library categories fade out before the new collection view slides in. Reduced-motion settings bypass the effect. Category expansion/collapse and separate download controls were checked through actual UI input.
 - Preview releases omit the development launcher. The Android preview targets ARM32/ARM64 phones and enables release code/resource shrinking. Actual binary size will be recorded from the completed cloud artifact, without downloading it to this laptop. Native Google setup remains deferred at the user’s request.
+
+Downloaded-exam category opening/back and switching between the full library and saved groups were also checked through the 390x844 fixture UI after the final animation change. The real iPhone preview bundle returned HTTP 200 from the refreshed local Expo server.
+
+## Final Android APK — 23 October
+
+EAS build 63ff8e4a-7a26-4aa6-893d-afeaebed906b finished from source b6d8e8bddc5f81783f95535629862c6384dbef61 with BUILD SUCCESSFUL in 6m 55s. Version 1.0.1 / versionCode 2 is 60726094 bytes by an HTTP HEAD response (200), 52.6% smaller than the first universal APK. The binary was not downloaded to this laptop and has not yet been physically installed by this agent. Size/build evidence is in android-phone-build.json; installation URLs are omitted from the public repository. Both normal and downloaded library transitions were checked through real browser UI input; physical gesture/notification acceptance is still pending.
+
+iOS was retried after the user reported completing setup. EAS still found no suitable internal-distribution credentials; the credentials screen for this exact project showed no configured credentials. No iOS native compilation started. Apple signing must be saved against @emmanuelwritecode/focalpoint / com.pastq.study before the physical-iPhone build can proceed.

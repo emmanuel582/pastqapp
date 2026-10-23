@@ -1,13 +1,15 @@
 {
-  "checkedAt": "2026-10-23T05:56:08.139Z",
+  "checkedAt": "2026-10-23T06:20:04.839Z",
   "environment": "390x844 browser fixture, not a physical device",
   "observations": [
     "Swipe left advanced Mathematics to Physics",
     "Swipe right returned to Mathematics with selected answer retained",
-    "Category opens and closes with fade/translation, compact Library heading retained"
+    "Category opens and closes with fade/translation, compact Library heading retained",
+    "Preparation environment enabled through Preferences; saved UTME group opened and Back returned to the group list",
+    "Find more opened full Explore; Your downloaded exams returned to saved groups"
   ],
   "nativeDeviceAcceptance": "pending on signed builds",
   "tests": 47,
   "typecheck": "passed",
-  "followUp": "The same transition also covers downloaded exam-group open/back and browse/downloaded-list switches; requires the latest rebuilt APK."
+  "sourceCommit": "b6d8e8bddc5f81783f95535629862c6384dbef61"
 }
