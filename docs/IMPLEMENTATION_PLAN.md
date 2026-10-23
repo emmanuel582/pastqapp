@@ -54,9 +54,21 @@ Separate ready-to-run project, pinned lockfile, setup/env examples, EAS developm
 - [x] Add native reminder tap handling, lifecycle renewal, account cleanup, scheduling rollback and CBT foreground suppression.
 - [x] Reduce repeated exam scans and stop redundant/overlapping paused processing polls.
 - [x] Repeat a browser student walkthrough, regression tests, source-integrity check and native exports.
-- [ ] Correct VPS provider authentication and apply the shared migration; rerun the prepared live checks.
+- [x] Correct VPS extraction-provider authentication and verify the synthetic personal upload.
+- [ ] Apply the shared Supabase progress/history migration and rerun account-sync checks.
 - [ ] Accept native swipes/notifications on both phones, configure remote push delivery and complete device release profiling/signing.
 
 ## Student experience follow-up — 24 October
 
 Implement compact exam controls, one bottom question counter and no flags/progress strip. Make finish/result summaries open filtered question numbers and jump to the selected saved question, using green/red plus textual status without revealing answers in active exams. Keep the movable calculator. Animate the real deadline clock, simplify Preferences to five labelled scores and remove repeated sync banners while preserving the local outbox. Validate at 320/390 pixels, run regression/source checks, then compile signed Android/iOS previews and record physical acceptance separately.
+
+## Admin phone announcements — 24 October
+
+- [x] Publish the separate admin image drop area and phone/browser delivery reporting.
+- [x] Verify real admin Google login, image upload, all-account audience preview and native JPEG artwork serving without sending a campaign.
+- [x] Deploy persistent native image delivery and recipient status queries with isolated tests and rollback backups.
+- [x] Configure the dedicated Android FCM V1 identity privately in Expo and include public Firebase app configuration.
+- [x] Compile and sign Android 1.0.6; verify artifact size by HEAD without downloading the APK.
+- [x] Implement quiet iPhone provisional updates with opt-out and a separate banners/sound option.
+- [ ] Finish the new iOS image extension signing profile and compile the iPhone release.
+- [ ] Verify admin push and app-closed upload completion on installed Android/iPhone devices.

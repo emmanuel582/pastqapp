@@ -17,5 +17,10 @@
   "androidFcmCredential": "assigned in EAS; authenticated with Google",
   "unusedKeyCleanup": "owner approved; deletion confirmed",
   "publicAndroidConfiguration": "verified project and package",
-  "iosQuietRegistration": "implemented and regression tested; native acceptance pending"
+  "iosQuietRegistration": "implemented and regression tested; native acceptance pending",
+  "androidNativeBuild": "1.0.6 finished; artifact HEAD verified",
+  "liveComposerCheck": "Google admin login, actual image upload, real all-account preview, JPEG artwork HTTP 200; no send",
+  "allAccountsAtCheck": 13,
+  "pushEligibleAccountsAtCheck": 1,
+  "inboxOnlyAccountsAtCheck": 12
 }
