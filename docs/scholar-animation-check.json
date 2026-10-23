@@ -17,10 +17,16 @@
     "Pause/resume and speed slider 50%, 100%, 200%",
     "Left/right directional controls",
     "Animated mobile download dialog displayed decoded 192px frame",
-    "Repeated dialog open/close without console errors"
+    "Repeated dialog open/close without console errors",
+    "Rapid action changes preserve the currently blended tester image"
   ],
   "limitations": [
     "Existing illustrated key poses are preserved; no new in-between artwork generated",
     "Physical-device smoothness and notifications still need acceptance on installed builds"
+  ],
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame",
+    "https://docs.expo.dev/versions/latest/sdk/image/",
+    "https://docs.expo.dev/build/internal-distribution/"
   ]
 }

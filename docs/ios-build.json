@@ -1,11 +1,19 @@
 {
-  "checkedAt": "2026-10-23T10:43:33.418Z",
+  "id": "bd8f46bf-0ad4-4ae1-aaa9-7253656fc875",
+  "status": "FINISHED",
   "platform": "IOS",
-  "profile": "preview",
+  "buildProfile": "preview",
+  "distribution": "INTERNAL",
   "appVersion": "1.0.2",
+  "buildNumber": "3",
+  "sourceCommit": "93e4006c54fe6d0db52340eec378cc374f72d576",
+  "completedAt": "2026-10-23T10:52:25.614Z",
+  "bytes": 15028822,
+  "artifactHeadStatus": 200,
+  "downloadedToLaptop": false,
+  "installation": "Install link shared privately in the task; omitted from public repository.",
+  "physicalDeviceAcceptance": "pending",
   "bundleIdentifier": "com.pastq.study",
-  "expoProject": "@emmanuelwritecode/focalpoint",
-  "status": "SIGNING_READY_BUILD_PENDING",
-  "nativeCompilationStarted": false,
-  "evidence": "User completed EAS signing: active ad hoc provisioning profile containing the test iPhone; awaiting independent build acceptance"
+  "signing": "EAS-managed ad hoc profile; registered test iPhone included",
+  "nativeCompilationStarted": true
 }

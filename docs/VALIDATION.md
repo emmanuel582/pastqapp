@@ -2,7 +2,7 @@
 
 ## Confirmed
 
-- TypeScript and 47 tests passed in the latest checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
+- TypeScript and 54 tests passed in the latest checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
 - Both Android and iOS production Hermes bundles exported successfully. Bundle size fell from 7.3MB to approximately 5.3MB per platform after importing only used icons; original exam artwork dropped from 1.18MB to 83KB. Final bundle file sizes are recorded in build-check.json. Export success is not a compiled/signed binary or physical-device runtime test.
 - The final SDK 57 online dependency compatibility check passed after applying the recommended Expo, notification and sharing patch updates.
 - All 183 original web source files matched the initial hashes.
@@ -65,3 +65,11 @@ Downloaded-exam category opening/back and switching between the full library and
 EAS build 63ff8e4a-7a26-4aa6-893d-afeaebed906b finished from source b6d8e8bddc5f81783f95535629862c6384dbef61 with BUILD SUCCESSFUL in 6m 55s. Version 1.0.1 / versionCode 2 is 60726094 bytes by an HTTP HEAD response (200), 52.6% smaller than the first universal APK. The binary was not downloaded to this laptop and has not yet been physically installed by this agent. Size/build evidence is in android-phone-build.json; installation URLs are omitted from the public repository. Both normal and downloaded library transitions were checked through real browser UI input; physical gesture/notification acceptance is still pending.
 
 iOS was retried after the user reported completing setup. EAS still found no suitable internal-distribution credentials; the credentials screen for this exact project showed no configured credentials. No iOS native compilation started. Apple signing must be saved against @emmanuelwritecode/focalpoint / com.pastq.study before the physical-iPhone build can proceed.
+
+## Scholar playback and signed iPhone preview — 23 October
+
+The original 260 ms tester tick was replaced with timestamp-driven, action-specific cadence and bounded crossfades, with correct portrait proportions for bonus images. Rapid action changes retain the currently blended image. The mobile app shares predecoded pose images, releases its image references after the final mascot unmounts, pauses timers on screen blur/background, preserves remaining holds across resume, and starts contextual gestures promptly. Existing art and layout are preserved.
+
+TypeScript, 54 mobile tests and 3 tester timing tests pass. All 12 tester actions, speed changes, directional selection, pause/resume, and repeated mobile download-dialog mounting were checked in the browser with no console warnings/errors. All 183 original application source hashes still match; the user-requested tester changes are outside those application sources.
+
+Both internal builds completed from 93e4006c54fe6d0db52340eec378cc374f72d576: Android 5b0b9c05-a71d-466c-9164-ca82b0e27aa9 (BUILD SUCCESSFUL in 6m 58s) and iOS bd8f46bf-0ad4-4ae1-aaa9-7253656fc875. Artifact HEAD requests returned HTTP 200; download sizes are 60730866 bytes for Android and 15028822 bytes for iOS. No binary was downloaded to this laptop. EAS accepted the Apple distribution certificate and ad hoc profile containing the test iPhone, resolving the earlier signing blocker. Installation URLs and device identifiers are omitted from public records. Physical-device smoothness/notification acceptance and the documented live backend corrections remain outstanding.
