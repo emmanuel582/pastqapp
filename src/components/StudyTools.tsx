@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { View, Pressable, useWindowDimensions } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import X from "lucide-react-native/icons/x";
+import { View, Pressable } from "react-native";
 import { useApp } from "../state/AppContext";
-import { Text, Muted, IconButton } from "./ui";
+import { Text } from "./ui";
 import { calculate } from "../domain/examSession";
 import { fonts } from "../theme/tokens";
 const keys = [
@@ -28,16 +26,8 @@ const keys = [
   ".",
   ")",
 ];
-export function Calculator({
-  onClose,
-  side = false,
-}: {
-  onClose: () => void;
-  side?: boolean;
-}) {
-  const { palette } = useApp(),
-    { height } = useWindowDimensions(),
-    insets = useSafeAreaInsets();
+export function Calculator() {
+  const { palette } = useApp();
   const [expression, setExpression] = useState(""),
     [result, setResult] = useState("0"),
     [error, setError] = useState(""),
@@ -73,27 +63,16 @@ export function Calculator({
   return (
     <View
       style={{
-        height: side ? "100%" : Math.min(350, Math.max(240, height * 0.43)),
-        width: side ? 320 : undefined,
-        paddingHorizontal: 16,
-        paddingBottom: Math.max(8, insets.bottom),
-        borderTopWidth: 1,
+        flex: 1,
+        minHeight: 0,
+        paddingTop: 8,
+        paddingHorizontal: 10,
+        paddingBottom: 0,
+        borderTopWidth: 0,
         borderColor: palette.line,
         backgroundColor: palette.panel,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", height: 38 }}>
-        <Text style={{ fontSize: 12, fontFamily: fonts.semibold, flex: 1 }}>
-          Calculator
-        </Text>
-        <IconButton
-          label="Close calculator"
-          onPress={onClose}
-          style={{ width: 44, height: 38 }}
-        >
-          <X size={18} color={palette.muted} />
-        </IconButton>
-      </View>
       <View
         style={{
           paddingHorizontal: 12,

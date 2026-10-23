@@ -85,3 +85,9 @@ Both internal builds completed from 93e4006c54fe6d0db52340eec378cc374f72d576: An
 - The VPS was backed up, checked for active extraction, and updated with only the notification source patch. Automatic approval rejected copying the full production directory; the replacement staging build copied an explicit source allowlist onto the existing image and left secrets in place. Health and authenticated-device route checks pass after deployment.
 - The replacement extraction key is stored only on the VPS. No provider key, signing material, device identifier or direct binary URL is part of the public change.
 - iOS APNs push credentials are attached to the EAS project. Android Firebase/FCM setup and physical-device push receipts remain pending. Supabase callback allowlisting is being handled by the owner; shared history sync still requires the prepared migration.
+
+## Movable calculator update — 1.0.4
+
+The calculator floats above the question: move it by its title bar, resize it from the bottom-right handle, or reset its size and position. Its frame survives closing/reopening during the current exam, and the calculator stays mounted across question changes. Bounds constrain all handles to the usable screen after rotation. Drag/resize animated values update the panel without rendering the exam or keypad on each frame. The working paper keeps its existing docked layout.
+
+Verification: 68 mobile tests pass, including phone/tablet/landscape bounds and independent move/resize geometry. Browser interaction at 390×844 verified real dragging, corner resizing, 2+3=5 after resizing and question changes without moving the calculator; 844×390 verified the panel remains reachable after rotation. Physical iOS/Android touch acceptance remains pending installation of this build.

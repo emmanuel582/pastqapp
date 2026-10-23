@@ -49,7 +49,9 @@ import ExamClock from "../components/ExamClock";
 import RichText from "../components/RichText";
 import QuestionMedia from "../components/QuestionMedia";
 import QuestionReport from "../components/QuestionReport";
-import { Calculator, DrawingBoard } from "../components/StudyTools";
+import { DrawingBoard } from "../components/StudyTools";
+import FloatingCalculator from "../components/FloatingCalculator";
+import type { ToolFrame } from "../domain/floatingTool";
 import { readAttempt, saveAttempt, toggleBookmark } from "../storage/practice";
 import {
   attemptSummary,
@@ -88,6 +90,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     [leaving, setLeaving] = useState<(() => void) | null>(null),
     [busy, setBusy] = useState(false),
     [bookmarkBusy, setBookmarkBusy] = useState(false);
+  const calculatorFrame = useRef<ToolFrame | null>(null);
   const latest = useRef<Attempt | null>(null),
     submitLock = useRef(false),
     questionNavigation = useRef(false),
@@ -415,7 +418,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   return (
     <Screen
       style={
-        sideTools && (calculator || board)
+        sideTools && board
           ? { paddingRight: 320 + insets.right, paddingLeft: insets.left }
           : undefined
       }
@@ -1064,7 +1067,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
       </View>
       <View
         style={
-          sideTools && (calculator || board)
+          sideTools && board
             ? {
                 position: "absolute",
                 top: insets.top,
@@ -1075,9 +1078,6 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             : undefined
         }
       >
-        {calculator ? (
-          <Calculator side={sideTools} onClose={() => setCalculator(false)} />
-        ) : null}
         {board ? (
           <DrawingBoard
             key={attempt.id + ":" + attempt.current}
@@ -1090,6 +1090,12 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           />
         ) : null}
       </View>
+      {calculator ? (
+        <FloatingCalculator
+          savedFrame={calculatorFrame}
+          onClose={() => setCalculator(false)}
+        />
+      ) : null}
       {navigator ? (
         <Dialog
           title={q.subject + " questions"}
