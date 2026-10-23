@@ -25,3 +25,8 @@ docs/iphone-preview-qr.png
 docs/network-check.json
 coverage/
 *.tsbuildinfo
+
+# Private Android delivery credentials (public google-services.json is separate)
+*service-account*.json
+*adminsdk*.json
+fcm-*.json

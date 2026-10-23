@@ -1,4 +1,4 @@
-import { nativeReachable, enqueueNative, dispatchNative, nativeCampaignStats } from '../notifications/native.js';
+import { nativeReachable, enqueueNative, dispatchNative, nativeCampaignStats, nativeCampaignRecipients } from '../notifications/native.js';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID, createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -38,6 +38,12 @@ export async function saveImage(buffer, actor) {
   fs.writeFileSync(path.join(dir, `${id}.webp`), image, { mode: 0o644 });
   db().prepare('INSERT INTO images VALUES(?,?,?)').run(id, actor, new Date().toISOString());
   return { id, path: `/api/reminders/images/${id}`, bytes: image.length };
+}
+export async function pushImage(id) {
+ const source=imagePath(id); if(!source) fail('Image not found.',404);
+ const filename=source.replace(/\.webp$/,'.jpg');
+ if(!fs.existsSync(filename)) { const buffer=await sharp(source).flatten({background:'#ffffff'}).jpeg({quality:82}).toBuffer(); fs.writeFileSync(filename,buffer,{mode:0o644}); }
+ return filename;
 }
 export function validateMessage(input) {
   const title = typeof input?.title === 'string' ? input.title.trim() : '', body = typeof input?.body === 'string' ? input.body.trim() : '';
@@ -87,8 +93,10 @@ export function listCampaigns(offset = 0, limit = 20) {
 export function campaignRecipients(id,offset=0,limit=20){
   const campaign=db().prepare("SELECT id,status,message,audience,sent_at FROM campaigns WHERE id=? AND status!='draft'").get(id);
   if(!campaign)fail('Notification not found.',404);
+  const nativeByUser = new Map();
+  for (const row of nativeCampaignRecipients(id)) { const rows=nativeByUser.get(row.user_id)||[]; rows.push({status:row.status,count:row.count}); nativeByUser.set(row.user_id,rows); }
   return {campaign:{...campaign,message:JSON.parse(campaign.message),audience:JSON.parse(campaign.audience)},
-    items:db().prepare('SELECT user_id,read_at,push_status,push_sent,push_failed FROM recipients WHERE campaign_id=? ORDER BY user_id LIMIT ? OFFSET ?').all(id,limit,offset),
+    items:db().prepare('SELECT user_id,read_at,push_status,push_sent,push_failed FROM recipients WHERE campaign_id=? ORDER BY user_id LIMIT ? OFFSET ?').all(id,limit,offset).map(row=>({...row,nativePush:nativeByUser.get(row.user_id)||[]})),
     total:db().prepare('SELECT count(*) AS n FROM recipients WHERE campaign_id=?').get(id).n};
 }
 export function inbox(userId, offset = 0, limit = 20) {
@@ -123,7 +131,7 @@ export async function dispatchCampaigns({ send = sendPush, origin = process.env.
       for (let offset = 0; offset < recipients.length; offset += 5) await Promise.all(recipients.slice(offset, offset + 5).map(async ({ user_id }) => {
         const owner = sessionOwnerKey(user_id);
         if (!message.push || !reachable(user_id)) { db().prepare("UPDATE recipients SET push_status='skipped' WHERE campaign_id=? AND user_id=?").run(campaign.id, user_id); return; }
-        const native = enqueueNative(owner,'campaign:'+campaign.id+':'+owner,{title:message.title,body:message.body,data:{kind:'inbox',campaignId:campaign.id}});
+        const native = enqueueNative(owner,'campaign:'+campaign.id+':'+owner,{title:message.title,body:message.body,data:{kind:'inbox',campaignId:campaign.id},...(message.imageId ? {image: `${origin.replace(/\/$/, '')}/api/reminders/images/${message.imageId}/push.jpg`} : {})});
         db().prepare("UPDATE recipients SET push_status='sending' WHERE campaign_id=? AND user_id=?").run(campaign.id,user_id);
         let sent = 0, failed = 0;
         for (const device of (pushConfiguration() && reminders.readSettings(owner).enabled ? reminders.subscriptions(owner) : [])) {

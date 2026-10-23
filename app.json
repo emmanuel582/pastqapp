@@ -3,7 +3,7 @@
     "name": "PastQ",
     "slug": "focalpoint",
     "scheme": "pastq",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -15,7 +15,8 @@
         "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "6"
+      "buildNumber": "7",
+      "appleTeamId": "4F385JKS7J"
     },
     "android": {
       "package": "com.pastq.study",
@@ -27,7 +28,8 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
       },
-      "versionCode": 6
+      "versionCode": 7,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -80,7 +82,8 @@
             "enableShrinkResourcesInReleaseBuilds": true
           }
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "reactCompiler": true

@@ -19,3 +19,7 @@ export function observePushToken(
 ): () => void {
   return () => {};
 }
+
+export async function quietPush(): Promise<boolean> {
+  return false;
+}

@@ -1,19 +1,19 @@
 {
-  "id": "bd8f46bf-0ad4-4ae1-aaa9-7253656fc875",
+  "id": "a862210c-1097-4e34-bbde-b3eb35be5596",
   "status": "FINISHED",
   "platform": "IOS",
   "buildProfile": "preview",
   "distribution": "INTERNAL",
-  "appVersion": "1.0.2",
-  "buildNumber": "3",
-  "sourceCommit": "93e4006c54fe6d0db52340eec378cc374f72d576",
-  "completedAt": "2026-10-23T10:52:25.614Z",
-  "bytes": 15028822,
+  "appVersion": "1.0.5",
+  "buildNumber": "6",
+  "sourceCommit": "c2a14d063e74ca83c82bf1e2db2988dff0eb5399",
+  "completedAt": "2026-10-23T16:27:21.846Z",
+  "bytes": 15060387,
   "artifactHeadStatus": 200,
   "downloadedToLaptop": false,
   "installation": "Install link shared privately in the task; omitted from public repository.",
   "physicalDeviceAcceptance": "pending",
+  "nativeCompilationStarted": true,
   "bundleIdentifier": "com.pastq.study",
-  "signing": "EAS-managed ad hoc profile; registered test iPhone included",
-  "nativeCompilationStarted": true
+  "signing": "EAS-managed ad hoc profile; registered test iPhone included"
 }

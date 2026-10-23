@@ -94,3 +94,16 @@ export function notificationDestination(
     return { screen: "ReviewMaterial", sessionId: data.sessionId };
   return null;
 }
+
+export function campaignDestination(
+  path: string,
+):
+  | { screen: "Main"; tab: "home" | "library" | "preferences" }
+  | { screen: "History" }
+  | { screen: "Notifications" } {
+  if (path === "/") return { screen: "Main", tab: "home" };
+  if (path === "/library") return { screen: "Main", tab: "library" };
+  if (path === "/profile") return { screen: "Main", tab: "preferences" };
+  if (path === "/history") return { screen: "History" };
+  return { screen: "Notifications" };
+}

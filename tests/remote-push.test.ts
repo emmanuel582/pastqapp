@@ -9,6 +9,7 @@ function fixture() {
     prefs = new Map<string, any>(),
     calls: any[] = [],
     prompts: boolean[] = [];
+  let quietAvailable = false;
   let owner = "alice",
     allowed = true,
     online = true,
@@ -46,6 +47,19 @@ function fixture() {
         if (name === "expo-crypto") return { randomUUID };
         if (name === "expo-notifications")
           return {
+            IosAuthorizationStatus: {
+              NOT_DETERMINED: 0,
+              AUTHORIZED: 2,
+              PROVISIONAL: 3,
+            },
+            getPermissionsAsync: async () => ({
+              granted: allowed,
+              ios: { status: quietAvailable ? 0 : 2 },
+            }),
+            requestPermissionsAsync: async (options: any) => {
+              assert.equal(options.ios.allowProvisional, true);
+              return { granted: true, ios: { status: 3 } };
+            },
             getExpoPushTokenAsync: async (options: any) => {
               tokenRequests.push(options);
               if (!options.devicePushToken)
@@ -106,6 +120,9 @@ function fixture() {
   );
   return {
     api,
+    setQuietAvailable(value: boolean) {
+      quietAvailable = value;
+    },
     secure,
     prefs,
     calls,
@@ -194,4 +211,20 @@ test("iOS registration events reuse the supplied native token without an endless
   assert.equal(f.tokenRequests.length, 3);
   assert.equal(f.tokenRequests[2].devicePushToken.data, "native-rotated");
   stop();
+});
+
+test("new iPhone installs can register quiet provisional updates without a full permission prompt, and respect opt-out", async () => {
+  const f = fixture();
+  f.setQuietAvailable(true);
+  await f.api.refreshPush("alice");
+  assert.equal(f.prefs.get("alice").enabled, true);
+  assert.ok(
+    f.calls.some((v: any) => v.path === "/api/reminders/native-device"),
+  );
+  assert.equal(f.prompts.filter(Boolean).length, 0);
+  await f.api.disablePush("alice");
+  const count = f.calls.length;
+  await f.api.refreshPush("alice");
+  assert.equal(f.calls.length, count);
+  assert.equal(f.prefs.get("alice").enabled, false);
 });

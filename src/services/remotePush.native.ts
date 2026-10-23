@@ -107,6 +107,24 @@ async function register(
 }
 export function connectPush(owner: string): Promise<void> {
   return serial(async () => {
+    if (await quietPush()) {
+      await ensureOwner(owner);
+      const result = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowSound: true,
+          allowBadge: false,
+          allowProvisional: false,
+        },
+      });
+      if (
+        !result.granted ||
+        result.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+      )
+        throw Error(
+          "Enable notification alerts in your iPhone settings for banners and sound.",
+        );
+    }
     await register(owner, true);
     await records.write(owner, "remote-push", "current", { enabled: true });
   });
@@ -132,11 +150,38 @@ export function refreshPush(
     const d = await device();
     if (d.owner && d.owner !== owner) await revoke(d);
     if (owner === "guest") return;
-    const value = await records.read<{ enabled: boolean }>(
+    let value = await records.read<{ enabled: boolean }>(
       owner,
       "remote-push",
       "current",
     );
+    if (
+      !value &&
+      Platform.OS === "ios" &&
+      Constants.executionEnvironment !== "storeClient"
+    ) {
+      await ensureOwner(owner);
+      let result = await Notifications.getPermissionsAsync();
+      if (
+        result.ios?.status ===
+        Notifications.IosAuthorizationStatus.NOT_DETERMINED
+      )
+        result = await Notifications.requestPermissionsAsync({
+          ios: {
+            allowProvisional: true,
+            allowAlert: true,
+            allowSound: true,
+            allowBadge: false,
+          },
+        });
+      if (
+        result.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+      ) {
+        await ensureOwner(owner);
+        value = { enabled: true };
+        await records.write(owner, "remote-push", "current", value);
+      }
+    }
     if (value?.enabled) {
       if (await permission(false)) await register(owner, false, deviceToken);
       else if (d.owner === owner) await revoke(d);
@@ -158,4 +203,12 @@ export function observePushToken(
     listener(token);
   });
   return () => sub.remove();
+}
+
+export async function quietPush(): Promise<boolean> {
+  if (Platform.OS !== "ios") return false;
+  return (
+    (await Notifications.getPermissionsAsync()).ios?.status ===
+    Notifications.IosAuthorizationStatus.PROVISIONAL
+  );
 }

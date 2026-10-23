@@ -7,6 +7,9 @@ import { pushConfiguration, validateSubscription, sendTestReminder } from '../se
 import * as store from '../services/reminders/store.js';
 import * as notifications from '../services/admin/notifications.js';
 const router = Router();
+router.get('/images/:id/push.jpg',rateLimit({limit:180,keyPrefix:'notification-artwork'}),async(req,res,next)=>{
+ try { const filename=await notifications.pushImage(req.params.id); res.type('jpeg').set('Cache-Control','public, max-age=86400').set('Cross-Origin-Resource-Policy','cross-origin').sendFile(filename,error=>{if(error)next(error);}); } catch(error){next(error);}
+});
 router.get('/images/:id',rateLimit({limit:180,keyPrefix:'notification-images'}),(req,res,next)=>{
   const filename=notifications.imagePath(req.params.id);
   if(!filename)return res.status(404).json({error:'Image not found.'});

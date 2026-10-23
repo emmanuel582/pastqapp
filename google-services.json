@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1081502964642",
+    "project_id": "pastq-4c772",
+    "storage_bucket": "pastq-4c772.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1081502964642:android:96c3c754e25bbadc1570fb",
+        "android_client_info": {
+          "package_name": "com.pastq.study"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtpNNmdYpFUpcLFuoNA6c5qvvWKY9IHCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

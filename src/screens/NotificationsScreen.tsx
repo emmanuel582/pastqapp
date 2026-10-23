@@ -1,6 +1,8 @@
+import { campaignDestination } from "../domain/notifications";
 import * as records from "../storage/records";
 import {
   pushStatus,
+  quietPush,
   connectPush,
   disablePush,
   testPush,
@@ -95,14 +97,18 @@ export default function NotificationsScreen({
       sub.remove();
     };
   }, [owner, offset, revision]);
+  const [pushQuiet, setPushQuiet] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false),
     [pushBusy, setPushBusy] = useState(false),
     [pushMessage, setPushMessage] = useState("");
   useEffect(() => {
     let alive = true;
-    void pushStatus(owner)
-      .then((value) => {
-        if (alive) setPushEnabled(value);
+    void Promise.all([pushStatus(owner), quietPush()])
+      .then(([enabled, quiet]) => {
+        if (alive) {
+          setPushEnabled(enabled);
+          setPushQuiet(quiet);
+        }
       })
       .catch(() => {});
     return () => {
@@ -216,6 +222,34 @@ export default function NotificationsScreen({
                     ? "Turn off phone notifications"
                     : "Enable phone notifications"}
               </Button>
+              {pushEnabled && pushQuiet ? (
+                <View style={{ gap: 10 }}>
+                  <Muted>
+                    iPhone updates arrive quietly in Notification Centre. Turn
+                    on alerts for banners and sound.
+                  </Muted>
+                  <Button
+                    kind="text"
+                    disabled={pushBusy}
+                    onPress={() => {
+                      setPushBusy(true);
+                      setPushMessage("");
+                      void connectPush(owner)
+                        .then(async () => setPushQuiet(await quietPush()))
+                        .catch((e) =>
+                          setPushMessage(
+                            e instanceof Error
+                              ? e.message
+                              : "Could not enable alerts.",
+                          ),
+                        )
+                        .finally(() => setPushBusy(false));
+                    }}
+                  >
+                    Enable banners and sound
+                  </Button>
+                </View>
+              ) : null}
               {pushEnabled ? (
                 <Button
                   kind="text"
@@ -304,7 +338,10 @@ export default function NotificationsScreen({
                   arrow
                   onPress={() => {
                     void mark(item.id);
-                    navigation.navigate("Main", { tab: "library" });
+                    const target = campaignDestination(item.deepLink);
+                    if (target.screen === "Main")
+                      navigation.navigate("Main", { tab: target.tab });
+                    else navigation.navigate(target.screen);
                   }}
                 >
                   Open in PastQ

@@ -146,6 +146,9 @@ export function enqueueNative(owner, eventId, content, now = Date.now()) {
         channelId: "updates",
         ttl: 86400,
         data: { ...content.data, owner: device.user_id, eventId },
+        ...(content.image
+          ? { richContent: { image: content.image }, mutableContent: true }
+          : {}),
       };
       if (Buffer.byteLength(JSON.stringify(payload)) > 4000)
         fail("Notification is too long.");
@@ -214,6 +217,13 @@ export function nativeCampaignStats(id) {
   return db()
     .prepare(
       "SELECT status,count(*) AS count FROM deliveries WHERE event_id LIKE ? GROUP BY status",
+    )
+    .all("campaign:" + id + ":%");
+}
+export function nativeCampaignRecipients(id) {
+  return db()
+    .prepare(
+      "SELECT json_extract(payload,'$.data.owner') AS user_id,status,count(*) AS count FROM deliveries WHERE event_id LIKE ? GROUP BY user_id,status",
     )
     .all("campaign:" + id + ":%");
 }

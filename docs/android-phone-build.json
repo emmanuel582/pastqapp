@@ -1,27 +1,23 @@
 {
-  "id": "5b0b9c05-a71d-466c-9164-ca82b0e27aa9",
+  "id": "9038a5b7-bd4e-4e15-a963-9515dc6f5e62",
   "status": "FINISHED",
   "platform": "ANDROID",
   "buildProfile": "preview",
   "distribution": "INTERNAL",
-  "appVersion": "1.0.2",
-  "buildNumber": "3",
-  "sourceCommit": "93e4006c54fe6d0db52340eec378cc374f72d576",
-  "completedAt": "2026-10-23T10:53:54.715Z",
-  "bytes": 60730866,
+  "appVersion": "1.0.5",
+  "buildNumber": "6",
+  "sourceCommit": "c2a14d063e74ca83c82bf1e2db2988dff0eb5399",
+  "completedAt": "2026-10-23T16:58:43.014Z",
+  "bytes": 60784406,
   "artifactHeadStatus": 200,
   "downloadedToLaptop": false,
   "installation": "Install link shared privately in the task; omitted from public repository.",
   "physicalDeviceAcceptance": "pending",
-  "versionCode": "3",
+  "nativeCompilationStarted": true,
+  "versionCode": "6",
   "configuredArchitectures": [
     "armeabi-v7a",
     "arm64-v8a"
   ],
-  "sizeReductionPercent": 52.6,
-  "verification": {
-    "gradle": "BUILD SUCCESSFUL in 6m 58s",
-    "artifact": "HTTP HEAD 200",
-    "physicalInstallation": "pending"
-  }
+  "sizeReductionPercent": 52.5
 }

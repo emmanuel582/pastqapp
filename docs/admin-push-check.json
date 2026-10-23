@@ -1,0 +1,21 @@
+{
+  "checkedOn": "2026-10-24",
+  "adminCommit": "f25bc0968d39dab445239a9f0f213f6656535925",
+  "adminDeployment": "Vercel success",
+  "adminTests": 7,
+  "mobileTests": 73,
+  "queueTests": 5,
+  "vpsIsolatedTests": 5,
+  "vpsReadiness": "ready",
+  "imageComposer": "isolated browser check: choose image, title/body, all accounts, destination, audience review",
+  "realStudentBroadcastSent": false,
+  "physicalPhonePushVerified": false,
+  "iosNativeImageCompilation": "pending EAS build",
+  "iosPrebuildOnWindows": "unsupported; native generation must run in EAS macOS build",
+  "originalWebSourceHashesMatched": 183,
+  "liveDeployedAdminAssetsVerified": true,
+  "androidFcmCredential": "assigned in EAS; authenticated with Google",
+  "unusedKeyCleanup": "owner approved; deletion confirmed",
+  "publicAndroidConfiguration": "verified project and package",
+  "iosQuietRegistration": "implemented and regression tested; native acceptance pending"
+}
