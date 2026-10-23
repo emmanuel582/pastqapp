@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import ProgressChart from "../components/ProgressChart";
+import AccountOptions from "../components/AccountOptions";
 import History from "lucide-react-native/icons/rotate-ccw-clock";
 import Bookmark from "lucide-react-native/icons/bookmark";
 import Database from "lucide-react-native/icons/database";
@@ -42,7 +43,8 @@ export default function PreferencesScreen({
     remoteSessions,
     deletedSessions,
   } = useApp();
-  const [showEmail, setShowEmail] = useState(false);
+  const [showEmail, setShowEmail] = useState(false),
+    [accountMenu, setAccountMenu] = useState(false);
   const window = useWindowDimensions();
   const completed = mergeHistory(attempts, remoteSessions, deletedSessions),
     scores = completed
@@ -250,7 +252,19 @@ export default function PreferencesScreen({
             style={{ minHeight: 88, paddingVertical: 20 }}
           />
         </View>
+        <Button
+          kind="text"
+          onPress={() => setAccountMenu(true)}
+          style={{ alignSelf: "center", marginTop: 12 }}
+        >
+          Account options
+        </Button>
       </Content>
+      <AccountOptions
+        open={accountMenu}
+        onClose={() => setAccountMenu(false)}
+        navigation={navigation}
+      />
       {showEmail ? (
         <View style={[StyleSheet.absoluteFill, { zIndex: 60 }]}>
           <Pressable

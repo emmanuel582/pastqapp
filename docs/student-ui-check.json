@@ -24,7 +24,8 @@
     "reviewCompleteReturn": "returns to result boxes",
     "swipes": "left next, right previous; answer preserved",
     "calculator": "drag, resize and 2+3=5; question remained 1 of 3",
-    "smallPhoneAlignment": "320px stat labels aligned"
+    "smallPhoneAlignment": "320px stat labels aligned",
+    "accountOptions": "password/About/Help/Sign out reachable; sign-out confirmation cancelled; compact email unchanged"
   },
   "removed": [
     "Profile preference row",
