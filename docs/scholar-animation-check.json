@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-10-23T10:43:33.398Z",
+  "appVersion": "1.0.2",
+  "typecheck": "passed",
+  "mobileTests": 54,
+  "testerTimingTests": 3,
+  "webSourceFilesUnchanged": 183,
+  "changes": [
+    "Action-specific timestamp-driven tester playback",
+    "Correct bonus image aspect ratio and retina canvas backing size",
+    "Native pose decoding shared across mounted mascots and released after last user",
+    "Absolute pose deadlines with bounded fades and pause/resume on focus/AppState",
+    "Immediate study/thinking intent instead of an initial idle loop"
+  ],
+  "browserChecks": [
+    "All 12 tester actions selected",
+    "Pause/resume and speed slider 50%, 100%, 200%",
+    "Left/right directional controls",
+    "Animated mobile download dialog displayed decoded 192px frame",
+    "Repeated dialog open/close without console errors"
+  ],
+  "limitations": [
+    "Existing illustrated key poses are preserved; no new in-between artwork generated",
+    "Physical-device smoothness and notifications still need acceptance on installed builds"
+  ]
+}

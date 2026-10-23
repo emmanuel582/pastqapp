@@ -1,14 +1,11 @@
 {
-  "checkedAt": "2026-10-23T06:27:28.795Z",
+  "checkedAt": "2026-10-23T10:43:33.418Z",
   "platform": "IOS",
   "profile": "preview",
-  "appVersion": "1.0.1",
+  "appVersion": "1.0.2",
   "bundleIdentifier": "com.pastq.study",
   "expoProject": "@emmanuelwritecode/focalpoint",
-  "status": "BLOCKED_SIGNING",
-  "easMessage": "No credentials set up yet!",
-  "required": "Apple distribution certificate and internal provisioning profile including the test iPhone, saved for this exact Expo project",
+  "status": "SIGNING_READY_BUILD_PENDING",
   "nativeCompilationStarted": false,
-  "latestBuildAttempt": "EAS still reports no credentials suitable for internal distribution before native compilation",
-  "sourceCommit": "b6d8e8bddc5f81783f95535629862c6384dbef61"
+  "evidence": "User completed EAS signing: active ad hoc provisioning profile containing the test iPhone; awaiting independent build acceptance"
 }
