@@ -49,7 +49,7 @@ The live account test found exam_sessions.answered_count missing. Apply backend/
 
 ## Mobile interactions
 
-Swipe left across the CBT question area for the next question; swipe right for the previous one. This follows the visible subject order, preserves answers and never submits an exam. Vertical reading, taps, multi-touch and open tools do not navigate. Reduced-motion settings are respected.
+Swipe left across the CBT question area for the next question; swipe right for the previous one. This follows the visible subject order, preserves answers and never submits an exam. Vertical reading, taps, multi-touch, calculator dragging/resizing and drawing do not change questions. Swipe the uncovered question area to navigate while a tool is open. Reduced-motion settings are respected.
 
 Home retains the PastQ wordmark. Library, Discover and Preferences use their own compact titles without repeating the main heading.
 
@@ -73,7 +73,7 @@ EAS preview and production profiles are in eas.json. The preview profile builds 
 
 Use Expo Go for local development. A custom development client requires installing expo-dev-client and configuring a separate development build profile. Google sign-in still uses the existing browser OAuth flow; native Google registration was explicitly deferred. Email sign-in remains inside the app.
 
-Allow pastq://auth/callback in the existing Supabase redirect settings before accepting standalone OAuth/recovery. Expo Go callbacks differ; verify the actual callback URL on each device. Remote native push needs a development build, project push credentials and a native server delivery integration. Existing web push subscriptions cannot deliver native APNs/FCM notifications. Local reminders and the VPS inbox are implemented separately.
+Allow pastq://auth/callback in the existing Supabase redirect settings before accepting standalone OAuth/recovery. Expo Go callbacks differ; verify the actual callback URL on each device. Remote push requires an installed native build. The VPS delivery integration and iPhone APNs key are configured; Android Firebase/FCM credentials and physical delivery acceptance remain pending. Existing web push subscriptions cannot deliver native APNs/FCM notifications. Local reminders and the VPS inbox work separately.
 
 Scholar playback predecodes the existing bundled key poses, shares the decoded set across mounted mascot views, bounds native image fades to less than half the remaining pose hold, and pauses pose timers on navigation blur or app background. Context changes start their study/thinking gesture without an initial idle loop. The supplied scholar tester was also updated locally with action-specific display-clock timing, correct bonus-image proportions, pause/resume and retina canvas rendering. Artwork and the original application source remain unchanged. Validation is in docs/scholar-animation-check.json.
 
@@ -85,3 +85,13 @@ The shared download/upload cancellation check now supports React Native's AbortS
 The calculator uses basic arithmetic only. Exam tools dock below questions in portrait and alongside them in landscape; question changes and explicit exits wait for the working paper to save. The welcome bitmap has a sharper transparent version with its old second-face overlay removed.
 
 The VPS native notification patch is deployed. iPhone push credentials are configured in EAS; Android Firebase setup and physical-device delivery acceptance remain pending. See backend/NATIVE_PUSH.md. Google uses the secure OS authorization session and requests pastq://auth/callback; that exact callback must be allowed in the shared Supabase project. EAS release profiles explicitly disable design fixtures.
+
+## Version 1.0.4 changes
+
+The calculator is a movable, resizable floating panel. Drag its title bar to reposition it, drag the bottom-right corner to resize, or use reset to restore the default frame. Its size/position are retained when reopened in the current exam, and screen rotation keeps its controls reachable. Calculator gestures are separate from question navigation. The drawing board retains its existing docked layout. TypeScript and 68 mobile tests pass; browser drag, resize, arithmetic and rotation checks passed. Physical touch acceptance remains pending.
+
+## Version 1.0.5 changes
+
+Exam controls use one compact icon row on the right. The progress strip, flag controls and duplicate top counter are removed; the bottom number control opens the whole paper. Finish-dialog Answered/Remaining boxes open the matching question numbers. Result boxes open correct, wrong or unanswered numbers, and selecting one opens that exact saved question. Correct answers are green, wrong answers red, with labels and symbols. Theory/unknown keys remain ungraded.
+
+The clock hand ticks with the real deadline-based countdown, which catches up after backgrounding and expires once. Preferences has no Profile row and shows five real scored tests as labelled bars with date, percentage and correct/total details. Repeated sync banners are removed from Preferences/history; durable local records, retry queues and pull-to-refresh remain. This UI change does not repair the outstanding shared database migration.

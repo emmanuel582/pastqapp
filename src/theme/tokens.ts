@@ -24,6 +24,10 @@ export const dark = {
   accentWash: "rgba(199,146,125,0.08)",
   backdrop: "#00000080",
   paperDot: "#45423f",
+  correct: "#77d9a1",
+  correctWash: "#77d9a118",
+  incorrect: "#ff9797",
+  incorrectWash: "#ff979718",
 };
 export const light: Palette = {
   ...dark,
@@ -51,6 +55,10 @@ export const light: Palette = {
   accentWash: "rgba(177,76,65,0.08)",
   backdrop: "#2e2a2759",
   paperDot: "#d9caba",
+  correct: "#167541",
+  correctWash: "#e6f5ec",
+  incorrect: "#ba3038",
+  incorrectWash: "#fcebed",
 };
 export type Palette = Omit<typeof dark, "scheme"> & {
   scheme: "dark" | "light";

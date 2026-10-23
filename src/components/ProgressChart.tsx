@@ -1,13 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Pressable, PanResponder } from "react-native";
-import Svg, { Line, Polyline, Circle, Text as SvgText } from "react-native-svg";
+import React, { useMemo, useState } from "react";
+import { View, Pressable } from "react-native";
+import Svg, { Line, Rect, Text as SvgText } from "react-native-svg";
 import { useApp } from "../state/AppContext";
 import { Text, Muted } from "./ui";
-import {
-  progressPlot,
-  nearestProgressPoint,
-  type ProgressDatum,
-} from "../domain/progressChart";
+import { progressPlot, type ProgressDatum } from "../domain/progressChart";
 import { fonts } from "../theme/tokens";
 export default function ProgressChart({ items }: { items: ProgressDatum[] }) {
   const { palette } = useApp();
@@ -15,34 +11,9 @@ export default function ProgressChart({ items }: { items: ProgressDatum[] }) {
     [selected, setSelected] = useState<string | null>(null);
   const plot = useMemo(() => progressPlot(items, width), [items, width]),
     points = plot.points;
-  const index = Math.max(
-      0,
-      selected ? points.findIndex((v) => v.id === selected) : points.length - 1,
-    ),
-    active = points[index];
-  const context = useRef({ points, index });
-  context.current = { points, index };
-  useEffect(() => {
-    if (selected && !points.some((v) => v.id === selected)) setSelected(null);
-  }, [points, selected]);
-  const origin = useRef(0);
-  const pan = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponderCapture: (_, g) =>
-          Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-        onPanResponderGrant: (e) => {
-          origin.current = e.nativeEvent.pageX - e.nativeEvent.locationX;
-          pick(e.nativeEvent.locationX);
-        },
-        onPanResponderMove: (_e, g) => pick(g.moveX - origin.current),
-      }),
-    [],
-  );
-  function pick(x: number) {
-    const rows = context.current.points;
-    if (rows.length) setSelected(rows[nearestProgressPoint(rows, x)].id);
-  }
+  const active =
+      points.find((p) => p.id === selected) || points[points.length - 1],
+    index = active ? points.indexOf(active) : -1;
   const date = (at: number) =>
     new Date(at).toLocaleDateString(undefined, {
       day: "numeric",
@@ -50,154 +21,129 @@ export default function ProgressChart({ items }: { items: ProgressDatum[] }) {
     });
   return (
     <View onLayout={(e) => setWidth(Math.round(e.nativeEvent.layout.width))}>
-      {width > 80 && points.length ? (
+      <Text style={{ fontFamily: fonts.semibold, fontSize: 13 }}>
+        Your last {points.length || 5} scored test
+        {points.length === 1 ? "" : "s"}
+      </Text>
+      <Muted style={{ fontSize: 11, marginTop: 3, marginBottom: 10 }}>
+        Each bar is one test. Taller bars mean higher scores.
+      </Muted>
+      {width > 80 && active ? (
         <>
-          <View
-            accessible
-            accessibilityRole="adjustable"
-            accessibilityLabel="Session scores. Swipe left or right to select a session."
-            accessibilityValue={{
-              min: 1,
-              max: points.length,
-              now: index + 1,
-              text:
-                active.percent +
-                " percent, " +
-                active.title +
-                ", " +
-                date(active.completedAt),
-            }}
-            accessibilityActions={[
-              { name: "increment", label: "Next session" },
-              { name: "decrement", label: "Previous session" },
-            ]}
-            onAccessibilityAction={(e) => {
-              const next = Math.min(
-                points.length - 1,
-                Math.max(
-                  0,
-                  index + (e.nativeEvent.actionName === "increment" ? 1 : -1),
-                ),
-              );
-              setSelected(points[next].id);
-            }}
-            {...pan.panHandlers}
-          >
-            <Pressable
-              accessible={false}
-              onPress={(e) => pick(e.nativeEvent.locationX)}
-            >
-              <Svg pointerEvents="none" width={width} height={plot.height}>
-                {[0, 25, 50, 75, 100].map((n) => {
-                  const y = plot.bottom - ((plot.bottom - plot.top) * n) / 100;
-                  return (
-                    <React.Fragment key={n}>
-                      <Line
-                        x1={plot.left}
-                        x2={plot.right}
-                        y1={y}
-                        y2={y}
-                        stroke={palette.line}
-                        strokeDasharray="3 4"
-                      />
-                      <SvgText
-                        x={plot.left - 7}
-                        y={y + 4}
-                        textAnchor="end"
-                        fill={palette.muted}
-                        fontSize={11}
-                      >
-                        {n}%
-                      </SvgText>
-                    </React.Fragment>
-                  );
-                })}
-                <Polyline
-                  points={points.map((p) => p.x + "," + p.y).join(" ")}
-                  fill="none"
-                  stroke={palette.accent}
-                  strokeWidth={2}
-                />
-                <Line
-                  x1={active.x}
-                  x2={active.x}
-                  y1={plot.top}
-                  y2={plot.bottom}
-                  stroke={palette.muted}
-                  strokeDasharray="3 4"
-                />
-                {points.map((p, i) => (
-                  <Circle
-                    key={p.id}
-                    cx={p.x}
-                    cy={p.y}
-                    r={i === index ? 5 : 3}
-                    fill={i === index ? palette.accent : palette.panel}
-                    stroke={palette.accent}
-                    strokeWidth={2}
+          <View style={{ height: plot.height }}>
+            <Svg pointerEvents="none" width={width} height={plot.height}>
+              {[0, 50, 100].map((n) => {
+                const y = plot.bottom - ((plot.bottom - plot.top) * n) / 100;
+                return (
+                  <React.Fragment key={n}>
+                    <Line
+                      x1={plot.left}
+                      x2={plot.right}
+                      y1={y}
+                      y2={y}
+                      stroke={palette.line}
+                    />
+                    <SvgText
+                      x={plot.left - 6}
+                      y={y + 4}
+                      textAnchor="end"
+                      fill={palette.muted}
+                      fontSize={10}
+                    >
+                      {n}%
+                    </SvgText>
+                  </React.Fragment>
+                );
+              })}
+              {points.map((p, i) => (
+                <React.Fragment key={p.id}>
+                  <Rect
+                    x={p.x - plot.barWidth / 2}
+                    y={Math.min(plot.bottom - 2, p.y)}
+                    width={plot.barWidth}
+                    height={Math.max(2, plot.bottom - p.y)}
+                    rx={3}
+                    fill={palette.accent}
+                    opacity={i === index ? 1 : 0.5}
                   />
-                ))}
-                <SvgText
-                  x={plot.left}
-                  y={plot.height - 5}
-                  fill={palette.muted}
-                  fontSize={10}
-                >
-                  {date(points[0].completedAt)}
-                </SvgText>
-                {points.length > 1 ? (
                   <SvgText
-                    x={plot.right}
-                    y={plot.height - 5}
-                    textAnchor="end"
-                    fill={palette.muted}
-                    fontSize={10}
+                    x={p.x}
+                    y={Math.max(15, p.y - 8)}
+                    textAnchor="middle"
+                    fill={i === index ? palette.ink : palette.muted}
+                    fontSize={11}
+                    fontWeight={i === index ? "bold" : "normal"}
                   >
-                    {date(points[points.length - 1].completedAt)}
+                    {p.percent}%
                   </SvgText>
-                ) : null}
-              </Svg>
-            </Pressable>
+                  <SvgText
+                    x={p.x}
+                    y={plot.height - 7}
+                    textAnchor="middle"
+                    fill={i === index ? palette.ink : palette.muted}
+                    fontSize={11}
+                  >
+                    {i + 1}
+                  </SvgText>
+                </React.Fragment>
+              ))}
+            </Svg>
+            {points.map((p, i) => (
+              <Pressable
+                key={p.id}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  "Test " +
+                  (i + 1) +
+                  ", " +
+                  p.percent +
+                  " percent, " +
+                  p.title +
+                  ", " +
+                  date(p.completedAt)
+                }
+                accessibilityState={{ selected: p.id === active.id }}
+                onPress={() => setSelected(p.id)}
+                style={{
+                  position: "absolute",
+                  left: plot.left + plot.slot * i,
+                  top: 0,
+                  width: plot.slot,
+                  height: plot.height,
+                }}
+              />
+            ))}
           </View>
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              marginTop: 8,
+              borderTopWidth: 1,
+              borderColor: palette.line,
+              paddingTop: 12,
+              marginTop: 4,
+              gap: 4,
             }}
           >
-            <View style={{ flex: 1, gap: 3 }}>
-              <Text
-                numberOfLines={1}
-                style={{ fontSize: 12, fontFamily: fonts.semibold }}
-              >
-                {active.title}
-              </Text>
-              <Muted style={{ fontSize: 10 }}>
-                {new Date(active.completedAt).toLocaleString(undefined, {
-                  day: "numeric",
-                  month: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}{" "}
-                · Tap or slide to inspect
-              </Muted>
-            </View>
             <Text
+              style={{ fontSize: 14, fontFamily: fonts.semibold }}
               accessibilityLiveRegion="polite"
-              style={{
-                fontSize: 22,
-                fontFamily: fonts.mono,
-                color: palette.accent,
-              }}
             >
-              {active.percent}%
+              Test {index + 1}: {active.percent}%
+              {Number.isFinite(active.correct) &&
+              Number.isFinite(active.total) &&
+              active.total! > 0
+                ? " · " + active.correct + " of " + active.total + " correct"
+                : ""}
             </Text>
+            <Text numberOfLines={2} style={{ fontSize: 12 }}>
+              {active.title}
+            </Text>
+            <Muted style={{ fontSize: 11 }}>
+              {date(active.completedAt)} · Tap a bar to see that test
+            </Muted>
           </View>
         </>
       ) : (
-        <Muted>Complete an objective session to see scores.</Muted>
+        <Muted>Finish a marked test to see your scores here.</Muted>
       )}
     </View>
   );

@@ -21,7 +21,7 @@ test("score chart resizes without clipping labels/points, keeps zero scores and 
     assert.equal(nearestProgressPoint(p.points, p.right), 2);
     assert.equal(nearestProgressPoint(p.points, p.left), 0);
   }
-  assert.equal(progressPlot([items[0]], 300).points[0].x, (38 + 286) / 2);
+  assert.equal(progressPlot([items[0]], 300).points[0].x, (32 + 296) / 2);
 });
 test("score chart excludes ungraded/invalid records and limits the view to real recent sessions", () => {
   const items = Array.from({ length: 12 }, (_, i) => ({
@@ -38,6 +38,27 @@ test("score chart excludes ungraded/invalid records and limits the view to real 
     ],
     300,
   );
-  assert.equal(p.points.length, 10);
-  assert.equal(p.points[0].id, "2");
+  assert.equal(p.points.length, 5);
+  assert.equal(p.points[0].id, "7");
+});
+
+test("test bars are chronological, labelled and fit inside each responsive slot", () => {
+  const data = [100, 0, 55, 20, 75]
+    .map((percent, i) => ({
+      id: String(i),
+      title: "Test",
+      percent,
+      completedAt: i,
+    }))
+    .reverse();
+  for (const width of [180, 250, 390, 700]) {
+    const p = progressPlot(data, width);
+    assert.equal(p.points[0].id, "0");
+    for (const point of p.points) {
+      assert.ok(point.x - p.barWidth / 2 >= p.left);
+      assert.ok(point.x + p.barWidth / 2 <= p.right);
+    }
+    assert.equal(p.points[1].percent, 0);
+    assert.equal(p.points[0].percent, 100);
+  }
 });

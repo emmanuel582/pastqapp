@@ -11,7 +11,6 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  FlatList,
   BackHandler,
   useWindowDimensions,
 } from "react-native";
@@ -23,7 +22,6 @@ import Bookmark from "lucide-react-native/icons/bookmark";
 import BookOpen from "lucide-react-native/icons/book-open";
 import CalculatorIcon from "lucide-react-native/icons/calculator";
 import Check from "lucide-react-native/icons/check";
-import Flag from "lucide-react-native/icons/flag";
 import Grid2X2 from "lucide-react-native/icons/grid-2x2";
 import Minus from "lucide-react-native/icons/minus";
 import Plus from "lucide-react-native/icons/plus";
@@ -44,6 +42,12 @@ import {
   Empty,
 } from "../components/ui";
 import QuestionSwipeSurface from "../components/QuestionSwipeSurface";
+import QuestionNumbers from "../components/QuestionNumbers";
+import {
+  reviewQuestions,
+  outcomeLabel,
+  type ReviewFilter,
+} from "../domain/review";
 import { adjacentQuestion } from "../domain/swipe";
 import ExamClock from "../components/ExamClock";
 import RichText from "../components/RichText";
@@ -65,7 +69,6 @@ import { answerIndex } from "../domain/examSession";
 import {
   subjectQuestionGroups,
   subjectQuestionPosition,
-  subjectAnsweredCount,
 } from "../domain/subjectNavigation";
 import { syncHistory } from "../services/history";
 import * as records from "../storage/records";
@@ -80,13 +83,16 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   const [attempt, setAttempt] = useState<Attempt | null>(null),
     [error, setError] = useState(""),
     [navigator, setNavigator] = useState(false),
+    [navigatorFilter, setNavigatorFilter] = useState<
+      "all" | "answered" | "skipped"
+    >("all"),
     [finish, setFinish] = useState(false),
     [calculator, setCalculator] = useState(false),
     [board, setBoard] = useState(false),
     [scale, setScale] = useState(1),
-    [reviewFilter, setReviewFilter] = useState<
-      "all" | "incorrect" | "skipped" | "saved"
-    >("all"),
+    [reviewFilter, setReviewFilter] = useState<ReviewFilter>(
+      route.params.reviewFilter || "all",
+    ),
     [leaving, setLeaving] = useState<(() => void) | null>(null),
     [busy, setBusy] = useState(false),
     [bookmarkBusy, setBookmarkBusy] = useState(false);
@@ -130,7 +136,16 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   useEffect(() => {
     let active = true;
     void readAttempt(owner, route.params.attemptId)
-      .then((a) => {
+      .then((saved) => {
+        const index = route.params.questionIndex;
+        const a =
+          saved &&
+          review &&
+          Number.isInteger(index) &&
+          index! >= 0 &&
+          index! < saved.questions.length
+            ? { ...saved, current: index! }
+            : saved;
         if (active) {
           latest.current = a;
           setAttempt(a);
@@ -140,7 +155,10 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     return () => {
       active = false;
     };
-  }, [owner, route.params.attemptId]);
+  }, [owner, route.params.attemptId, route.params.questionIndex]);
+  useEffect(() => {
+    setReviewFilter(route.params.reviewFilter || "all");
+  }, [route.params.reviewFilter]);
   usePreventRemove(
     !review && (!attempt ? !error : attempt.status === "active"),
     ({ data }) => setLeaving(() => () => navigation.dispatch(data.action)),
@@ -259,32 +277,27 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     () => (attempt ? attemptSummary(attempt) : null),
     [attempt?.questions, attempt?.answers, attempt?.written],
   );
-  const reviewIndexes = useMemo(
-    () =>
-      attempt
-        ? attempt.questions.flatMap((q, i) =>
-            !review ||
-            reviewFilter === "all" ||
-            (reviewFilter === "incorrect" &&
-              answerIndex(q) !== null &&
-              attempt.answers[i] != null &&
-              attempt.answers[i] !== answerIndex(q)) ||
-            (reviewFilter === "skipped" && !questionAnswered(attempt, i)) ||
-            (reviewFilter === "saved" &&
-              bookmarkIds.has(bookmarkIdentity(attempt.bundleId, q)))
-              ? [i]
-              : [],
-          )
-        : [],
-    [
-      attempt?.questions,
-      attempt?.answers,
-      attempt?.written,
-      review,
-      reviewFilter,
-      bookmarks,
-    ],
-  );
+  const reviewIndexes = useMemo(() => {
+    if (!attempt) return [];
+    const rows = reviewQuestions(
+      attempt,
+      !review || reviewFilter === "saved" ? "all" : reviewFilter,
+    );
+    return review && reviewFilter === "saved"
+      ? rows.filter((i) =>
+          bookmarkIds.has(
+            bookmarkIdentity(attempt.bundleId, attempt.questions[i]),
+          ),
+        )
+      : rows;
+  }, [
+    attempt?.questions,
+    attempt?.answers,
+    attempt?.written,
+    review,
+    reviewFilter,
+    bookmarkIds,
+  ]);
   const reviewIndexSet = useMemo(() => new Set(reviewIndexes), [reviewIndexes]);
   const grouped = useMemo(
     () =>
@@ -378,21 +391,30 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     indexes = grouped.get(q.subject) || [],
     number = subjectQuestionPosition(indexes, attempt.current),
     total = indexes.length,
-    answered = subjectAnsweredCount(indexes, attempt.answers, attempt.written),
     following = subjects[subjects.indexOf(q.subject) + 1],
     summary = totals!,
-    marked = bookmarkIds.has(bookmarkIdentity(attempt.bundleId, q));
+    marked = bookmarkIds.has(bookmarkIdentity(attempt.bundleId, q)),
+    navigatorIndexes = orderedIndexes.filter(
+      (i) =>
+        review ||
+        navigatorFilter === "all" ||
+        (navigatorFilter === "answered"
+          ? questionAnswered(attempt, i)
+          : !questionAnswered(attempt, i)),
+    );
   async function go(index: number) {
-    if (questionNavigation.current) return;
+    if (questionNavigation.current || !attempt!.questions[index]) return false;
     questionNavigation.current = true;
     try {
       await workingFlush.current?.();
       subjectPositions.current.set(q.subject, attempt!.current);
       update({ current: index });
+      return true;
     } catch {
       setError(
         "Your working could not be saved. Retry before changing questions.",
       );
+      return false;
     } finally {
       questionNavigation.current = false;
     }
@@ -410,7 +432,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   function advance() {
     const next = adjacentQuestion(orderedIndexes, attempt!.current, 1);
     if (next !== null) go(next);
-    else if (review) navigation.navigate("Main", { tab: "library" });
+    else if (review) navigation.goBack();
     else setFinish(true);
   }
   const theory = q.type === "theory" || q.type === "short_answer",
@@ -439,10 +461,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         <Wordmark />
         <View style={{ flex: 1 }} />
         {review ? (
-          <Button
-            kind="secondary"
-            onPress={() => navigation.navigate("Main", { tab: "library" })}
-          >
+          <Button kind="secondary" onPress={() => navigation.goBack()}>
             <Check size={17} color={palette.ink} />
             <Text style={{ fontFamily: fonts.mono }}>Complete</Text>
           </Button>
@@ -508,23 +527,38 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         ))}
       </ScrollView>
       {review ? (
-        <View
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            paddingHorizontal: 16,
-            gap: 6,
-            paddingVertical: 10,
+            flexGrow: 0,
             borderBottomWidth: 1,
-            borderBottomColor: palette.line,
+            borderColor: palette.line,
+          }}
+          contentContainerStyle={{
+            flexDirection: "row",
+            paddingHorizontal: 12,
+            gap: 4,
+            paddingVertical: 6,
           }}
         >
-          {(["all", "incorrect", "skipped", "saved"] as const).map((filter) => (
+          {(
+            [
+              "all",
+              "correct",
+              "incorrect",
+              "skipped",
+              ...(summary.ungraded ? ["reviewed" as const] : []),
+              "saved",
+            ] as const
+          ).map((filter) => (
             <Pressable
               key={filter}
+              accessibilityRole="button"
+              accessibilityState={{ selected: filter === reviewFilter }}
               onPress={() => setReviewFilter(filter)}
               style={{
-                paddingHorizontal: 12,
+                paddingHorizontal: 10,
                 paddingVertical: 8,
                 minHeight: 40,
                 borderRadius: 8,
@@ -534,60 +568,86 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             >
               <Text
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   color: filter === reviewFilter ? palette.ink : palette.muted,
                 }}
               >
-                {filter[0].toUpperCase() + filter.slice(1)}
+                {filter === "incorrect"
+                  ? "Wrong"
+                  : filter === "skipped"
+                    ? "Unanswered"
+                    : filter === "reviewed"
+                      ? "Not marked"
+                      : filter[0].toUpperCase() + filter.slice(1)}
               </Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
       ) : null}
-      <View style={{ height: 2, backgroundColor: palette.wash }}>
-        <View
-          style={{
-            height: 2,
-            width: ((total ? (answered / total) * 100 : 0) +
-              "%") as `${number}%`,
-            backgroundColor: palette.accent,
-          }}
-        />
-      </View>
       <View
         style={{
           flexDirection: "row",
+          justifyContent: "flex-end",
           alignItems: "center",
-          paddingVertical: 8,
-          paddingHorizontal: 16,
-          gap: 14,
-          minHeight: 50,
+          paddingHorizontal: 8,
+          paddingVertical: 2,
+          minHeight: 48,
           borderBottomWidth: 1,
-          borderBottomColor: palette.line,
+          borderColor: palette.line,
           backgroundColor: palette.examRail,
         }}
       >
-        <Pressable
-          onPress={() => setNavigator(true)}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            minHeight: 44,
-            paddingHorizontal: 9,
-            borderWidth: 1,
-            borderColor: palette.line,
-            borderRadius: 6,
-          }}
+        <IconButton
+          label="Decrease question text"
+          disabled={scale <= 0.9}
+          onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
+          style={{ width: 44, height: 44 }}
         >
-          <Grid2X2 size={16} color={palette.muted} />
-          <Text style={{ fontFamily: fonts.mono, fontSize: 12 }}>{number}</Text>
-          <Muted style={{ fontSize: 9 }}>of {total}</Muted>
-        </Pressable>
-        <View style={{ height: 20, width: 1, backgroundColor: palette.line }} />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Toggle calculator"
+          <Minus size={15} color={palette.muted} />
+        </IconButton>
+        <IconButton
+          label="Increase question text"
+          disabled={scale >= 1.4}
+          onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
+          style={{ width: 44, height: 44 }}
+        >
+          <Plus size={15} color={palette.muted} />
+        </IconButton>
+        <IconButton
+          label={marked ? "Remove saved question" : "Save question"}
+          active={marked}
+          disabled={bookmarkBusy || hydrating}
+          onPress={() => {
+            setBookmarkBusy(true);
+            void toggleBookmark(
+              owner,
+              {
+                id: attempt.bundleId,
+                title: attempt.title,
+                assets: questionAssets,
+              },
+              q,
+            )
+              .then(refreshPractice)
+              .catch((e) => setError(e.message))
+              .finally(() => setBookmarkBusy(false));
+          }}
+          style={{ width: 44, height: 44 }}
+        >
+          <Bookmark
+            size={17}
+            color={marked ? palette.accent : palette.muted}
+            fill={marked ? palette.accent : "none"}
+          />
+        </IconButton>
+        <QuestionReport
+          bundleId={attempt.bundleId}
+          version={attempt.version}
+          question={q}
+        />
+        <IconButton
+          label="Toggle calculator"
+          active={calculator}
           onPress={() => {
             void (async () => {
               try {
@@ -599,40 +659,31 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
               }
             })();
           }}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 5,
-            minHeight: 44,
-          }}
+          style={{ width: 44, height: 44 }}
         >
-          <CalculatorIcon size={17} color={palette.muted} />
-          <Muted style={{ fontSize: 10 }}>Calculator</Muted>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Toggle working paper"
+          <CalculatorIcon
+            size={17}
+            color={calculator ? palette.accent : palette.muted}
+          />
+        </IconButton>
+        <IconButton
+          label="Toggle working paper"
+          active={board}
           onPress={() => {
             setCalculator(false);
-            if (board) {
+            if (board)
               void workingFlush
                 .current?.()
                 .then(() => setBoard(false))
                 .catch(() =>
                   setError("Save your working before closing the board."),
                 );
-            } else setBoard(true);
+            else setBoard(true);
           }}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 5,
-            minHeight: 44,
-          }}
+          style={{ width: 44, height: 44 }}
         >
-          <PenLine size={17} color={palette.muted} />
-          <Muted style={{ fontSize: 10 }}>Working</Muted>
-        </Pressable>
+          <PenLine size={17} color={board ? palette.accent : palette.muted} />
+        </IconButton>
       </View>
       <View style={{ flex: 1, minHeight: 0 }}>
         {questionError ? (
@@ -696,81 +747,31 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                 <Empty title="No matching questions." />
               ) : (
                 <>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "flex-end",
-                      gap: 3,
-                      marginBottom: 16,
-                    }}
-                  >
-                    <QuestionReport
-                      bundleId={attempt.bundleId}
-                      version={attempt.version}
-                      question={q}
-                    />
-                    <IconButton
-                      label="Decrease question text"
-                      disabled={scale <= 0.9}
-                      onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
-                      style={{ width: 32, height: 34 }}
-                    >
-                      <Minus size={15} color={palette.muted} />
-                    </IconButton>
-                    <IconButton
-                      label="Increase question text"
-                      disabled={scale >= 1.4}
-                      onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
-                      style={{ width: 32, height: 34 }}
-                    >
-                      <Plus size={15} color={palette.muted} />
-                    </IconButton>
-                    <IconButton
-                      label={marked ? "Remove saved question" : "Save question"}
-                      active={marked}
-                      disabled={bookmarkBusy || hydrating}
-                      onPress={() => {
-                        setBookmarkBusy(true);
-                        void toggleBookmark(
-                          owner,
-                          {
-                            id: attempt.bundleId,
-                            title: attempt.title,
-                            assets: questionAssets,
-                          },
-                          q,
-                        )
-                          .then(refreshPractice)
-                          .catch((e) => setError(e.message))
-                          .finally(() => setBookmarkBusy(false));
+                  {review ? (
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: fonts.semibold,
+                        marginBottom: 14,
+                        color:
+                          questionOutcome(attempt, attempt.current) ===
+                          "correct"
+                            ? palette.correct
+                            : questionOutcome(attempt, attempt.current) ===
+                                "incorrect"
+                              ? palette.incorrect
+                              : palette.muted,
                       }}
-                      style={{ width: 32, height: 34 }}
                     >
-                      <Bookmark
-                        size={18}
-                        color={marked ? palette.accent : palette.muted}
-                        fill={marked ? palette.accent : "none"}
-                      />
-                    </IconButton>
-                    {!review ? (
-                      <IconButton
-                        label={
-                          attempt.flagged[attempt.current]
-                            ? "Unflag question"
-                            : "Flag question"
-                        }
-                        active={attempt.flagged[attempt.current]}
-                        onPress={() => {
-                          const flagged = [...attempt.flagged];
-                          flagged[attempt.current] = !flagged[attempt.current];
-                          update({ flagged });
-                        }}
-                        style={{ width: 32, height: 34 }}
-                      >
-                        <Flag size={18} color={palette.muted} />
-                      </IconButton>
-                    ) : null}
-                  </View>
+                      {questionOutcome(attempt, attempt.current) === "correct"
+                        ? "✓ "
+                        : questionOutcome(attempt, attempt.current) ===
+                            "incorrect"
+                          ? "× "
+                          : "— "}
+                      {outcomeLabel[questionOutcome(attempt, attempt.current)]}
+                    </Text>
+                  ) : null}
                   <QuestionMedia
                     passage={q.passage}
                     figures={q.figures}
@@ -828,6 +829,14 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                           key={i}
                           disabled={review || hydrating}
                           accessibilityRole="radio"
+                          accessibilityLabel={[
+                            String.fromCharCode(65 + i),
+                            option,
+                            review && key === i ? "Correct answer" : "",
+                            review && selected === i ? "Your answer" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
                           accessibilityState={{ selected: selected === i }}
                           onPress={() => {
                             const answers = [...attempt.answers];
@@ -845,22 +854,22 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                             borderWidth: 1,
                             borderRadius: 6,
                             borderColor:
-                              selected === i
-                                ? palette.accent
-                                : review && key === i
-                                  ? palette.done
-                                  : palette.line,
+                              review && key === i
+                                ? palette.correct
+                                : review && selected === i && key !== null
+                                  ? palette.incorrect
+                                  : selected === i
+                                    ? palette.accent
+                                    : palette.line,
                             backgroundColor:
-                              selected === i
-                                ? palette.accentWash
-                                : palette.wash,
-                            borderStyle:
-                              review &&
-                              selected === i &&
-                              key !== null &&
-                              key !== i
-                                ? "dashed"
-                                : "solid",
+                              review && key === i
+                                ? palette.correctWash
+                                : review && selected === i && key !== null
+                                  ? palette.incorrectWash
+                                  : selected === i
+                                    ? palette.accentWash
+                                    : palette.wash,
+                            borderStyle: "solid",
                           }}
                         >
                           <View
@@ -869,20 +878,24 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                               height: 29,
                               borderWidth: 1,
                               borderColor:
-                                selected === i
-                                  ? palette.accent
-                                  : review && key === i
-                                    ? palette.done
-                                    : palette.line,
+                                review && key === i
+                                  ? palette.correct
+                                  : review && selected === i && key !== null
+                                    ? palette.incorrect
+                                    : selected === i
+                                      ? palette.accent
+                                      : palette.line,
                               borderRadius: 4,
                               alignItems: "center",
                               justifyContent: "center",
                               backgroundColor:
                                 review && key === i
-                                  ? palette.done
-                                  : selected === i
-                                    ? palette.accent
-                                    : "transparent",
+                                  ? palette.correctWash
+                                  : review && selected === i && key !== null
+                                    ? palette.incorrectWash
+                                    : selected === i
+                                      ? palette.accent
+                                      : "transparent",
                             }}
                           >
                             <Text
@@ -890,10 +903,12 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                                 fontSize: 11,
                                 color:
                                   review && key === i
-                                    ? palette.onDone
-                                    : selected === i
-                                      ? palette.bg
-                                      : palette.muted,
+                                    ? palette.correct
+                                    : review && selected === i && key !== null
+                                      ? palette.incorrect
+                                      : selected === i
+                                        ? palette.bg
+                                        : palette.muted,
                               }}
                             >
                               {String.fromCharCode(65 + i)}
@@ -908,9 +923,9 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                             />
                           </View>
                           {review && key === i ? (
-                            <Check size={16} color={palette.done} />
+                            <Check size={16} color={palette.correct} />
                           ) : review && selected === i && key !== null ? (
-                            <X size={16} color={palette.accent} />
+                            <X size={16} color={palette.incorrect} />
                           ) : selected === i ? (
                             <View
                               style={{
@@ -924,8 +939,8 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                           {review && selected === i ? (
                             <Muted
                               style={{
-                                fontSize: 8,
-                                maxWidth: 45,
+                                fontSize: 10,
+                                maxWidth: 55,
                                 textAlign: "right",
                               }}
                             >
@@ -1045,12 +1060,16 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Open question navigator"
-              onPress={() => setNavigator(true)}
+              onPress={() => {
+                setNavigatorFilter("all");
+                setNavigator(true);
+              }}
               style={{ flexDirection: "row", gap: 5, alignItems: "center" }}
             >
               <Grid2X2 size={14} color={palette.muted} />
               <Muted style={{ fontSize: 10 }}>
-                {number}/{total}
+                {review ? attempt.current + 1 : number}/
+                {review ? attempt.questions.length : total}
               </Muted>
             </Pressable>
             <Button arrow onPress={advance}>
@@ -1097,82 +1116,62 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         />
       ) : null}
       {navigator ? (
-        <Dialog
-          title={q.subject + " questions"}
-          onClose={() => setNavigator(false)}
-        >
-          <Muted>
-            {answered} of {total} answered
-          </Muted>
-          <Muted style={{ fontSize: 9, marginVertical: 20 }}>
-            Answered Unanswered ⚑ Flagged
-          </Muted>
-          <FlatList
-            data={indexes}
-            numColumns={5}
-            keyExtractor={(i) => String(i)}
-            style={{ maxHeight: 350 }}
-            renderItem={({ item, index }) => (
-              <Pressable
-                accessibilityLabel={"Question " + (index + 1)}
-                onPress={() => {
-                  go(item);
-                  setNavigator(false);
-                }}
-                style={{
-                  width: "18%",
-                  margin: "1%",
-                  height: 44,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderWidth: 1,
-                  borderColor:
-                    attempt.current === item ? palette.accent : palette.line,
-                  borderRadius: 5,
-                  backgroundColor: questionAnswered(attempt, item)
-                    ? palette.done
-                    : palette.control,
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: fonts.mono,
-                    color: questionAnswered(attempt, item)
-                      ? palette.onDone
-                      : palette.ink,
-                  }}
+        <Dialog title="Question numbers" onClose={() => setNavigator(false)}>
+          <Muted>Tap a number to open that question.</Muted>
+          {!review ? (
+            <View style={{ flexDirection: "row", gap: 6, marginTop: 10 }}>
+              {(["all", "answered", "skipped"] as const).map((filter) => (
+                <Button
+                  key={filter}
+                  kind={navigatorFilter === filter ? "secondary" : "text"}
+                  onPress={() => setNavigatorFilter(filter)}
                 >
-                  {index + 1}
-                  {attempt.flagged[item] ? " ⚑" : ""}
-                </Text>
-              </Pressable>
-            )}
-          />
-          <Button
-            kind="secondary"
-            disabled={answered === total}
-            onPress={() => {
-              const next = [
-                ...indexes.slice(number),
-                ...indexes.slice(0, number),
-              ].find((i) => !questionAnswered(attempt, i));
-              if (next !== undefined) go(next);
-              setNavigator(false);
+                  {filter === "skipped"
+                    ? "Unanswered"
+                    : filter[0].toUpperCase() + filter.slice(1)}
+                </Button>
+              ))}
+            </View>
+          ) : null}
+          <QuestionNumbers
+            attempt={attempt}
+            indexes={navigatorIndexes}
+            review={review}
+            current={attempt.current}
+            onSelect={(i) => {
+              void go(i).then((ok) => {
+                if (ok) setNavigator(false);
+              });
             }}
-            style={{ marginTop: 20 }}
-          >
-            Next unanswered
-          </Button>
+          />
+          {!review ? (
+            <Button
+              kind="secondary"
+              disabled={!summary.skipped}
+              onPress={() => {
+                const offset = orderedIndexes.indexOf(attempt.current) + 1;
+                const next = [
+                  ...orderedIndexes.slice(offset),
+                  ...orderedIndexes.slice(0, offset),
+                ].find((i) => !questionAnswered(attempt, i));
+                if (next !== undefined)
+                  void go(next).then((ok) => {
+                    if (ok) setNavigator(false);
+                  });
+              }}
+              style={{ marginTop: 14 }}
+            >
+              Next unanswered
+            </Button>
+          ) : null}
           <Button
             onPress={() => {
               setNavigator(false);
-              review
-                ? navigation.navigate("Main", { tab: "library" })
-                : setFinish(true);
+              review ? navigation.goBack() : setFinish(true);
             }}
             style={{ marginTop: 12 }}
           >
-            {review ? "Complete review" : "Finish exam"}
+            {review ? "Close review" : "Finish exam"}
           </Button>
         </Dialog>
       ) : null}
@@ -1199,20 +1198,42 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             }}
           >
             {[
-              { value: summary.answered, label: "Answered" },
-              { value: summary.skipped, label: "Remaining" },
               {
-                value: attempt.flagged.filter(Boolean).length,
-                label: "Flagged",
+                value: summary.answered,
+                label: "Answered",
+                filter: "answered" as const,
+              },
+              {
+                value: summary.skipped,
+                label: "Remaining",
+                filter: "skipped" as const,
               },
             ].map((item) => (
-              <View
+              <Pressable
                 key={item.label}
-                style={{ flex: 1, alignItems: "center", gap: 5 }}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  "Show " +
+                  item.value +
+                  " " +
+                  item.label.toLowerCase() +
+                  " questions"
+                }
+                onPress={() => {
+                  setNavigatorFilter(item.filter);
+                  setFinish(false);
+                  setNavigator(true);
+                }}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  gap: 5,
+                  paddingVertical: 8,
+                }}
               >
                 <Title size={28}>{item.value}</Title>
                 <Muted style={{ fontSize: 10 }}>{item.label}</Muted>
-              </View>
+              </Pressable>
             ))}
           </View>
           <Button

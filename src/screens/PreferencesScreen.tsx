@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { View, Pressable, StyleSheet } from "react-native";
+import { View, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import ProgressChart from "../components/ProgressChart";
-import UserRound from "lucide-react-native/icons/user-round";
 import History from "lucide-react-native/icons/rotate-ccw-clock";
 import Bookmark from "lucide-react-native/icons/bookmark";
 import Database from "lucide-react-native/icons/database";
@@ -21,7 +20,6 @@ import {
   Muted,
   Button,
   Row,
-  ErrorText,
 } from "../components/ui";
 import StudySwitch from "../components/StudySwitch";
 import Scholar from "../components/Scholar";
@@ -42,18 +40,20 @@ export default function PreferencesScreen({
     preferences,
     setPreferences,
     remoteSessions,
-    syncNow,
-    syncError,
     deletedSessions,
   } = useApp();
   const [showEmail, setShowEmail] = useState(false);
+  const window = useWindowDimensions();
   const completed = mergeHistory(attempts, remoteSessions, deletedSessions),
     scores = completed
       .map((a) => a.percent)
-      .filter((v): v is number => v !== null),
+      .filter(
+        (v): v is number =>
+          v !== null && Number.isFinite(v) && v >= 0 && v <= 100,
+      ),
     recent = completed
       .filter((a) => a.percent !== null)
-      .slice(0, 10)
+      .slice(0, 5)
       .reverse(),
     initials = (profile?.full_name || "Student")
       .split(/\s+/)
@@ -62,7 +62,6 @@ export default function PreferencesScreen({
       .join("")
       .toUpperCase();
   const settings = [
-    { title: "Profile", Icon: UserRound, screen: "Profile" as const },
     { title: "Past sessions", Icon: History, screen: "History" as const },
     { title: "Saved questions", Icon: Bookmark, screen: "Saved" as const },
     { title: "Storage & backup", Icon: Database, screen: "Storage" as const },
@@ -167,7 +166,7 @@ export default function PreferencesScreen({
             }}
           >
             <Text style={{ fontSize: 17, fontFamily: fonts.semibold }}>
-              Your progress
+              Your study progress
             </Text>
             <View
               style={{
@@ -178,9 +177,9 @@ export default function PreferencesScreen({
               }}
             >
               {[
-                { title: "Sessions", value: completed.length },
+                { title: "Tests done", value: completed.length },
                 {
-                  title: "Average",
+                  title: "Average score",
                   value: scores.length
                     ? Math.round(
                         scores.reduce((a, b) => a + b, 0) / scores.length,
@@ -188,12 +187,14 @@ export default function PreferencesScreen({
                     : "—",
                 },
                 {
-                  title: "Best",
+                  title: "Best score",
                   value: scores.length ? Math.max(...scores) + "%" : "—",
                 },
               ].map((stat, i) => (
                 <View key={stat.title} style={{ flex: 1, gap: 4 }}>
-                  <Muted>{stat.title}</Muted>
+                  <Muted style={{ minHeight: window.width < 360 ? 36 : 18 }}>
+                    {stat.title}
+                  </Muted>
                   <Title
                     size={26}
                     style={{ color: i === 2 ? palette.accent : palette.ink }}
@@ -221,14 +222,6 @@ export default function PreferencesScreen({
             </Button>
           </View>
         )}
-        {syncError ? (
-          <>
-            <ErrorText>{syncError}</ErrorText>
-            <Button kind="text" onPress={() => void syncNow()}>
-              Retry sync
-            </Button>
-          </>
-        ) : null}
         <View style={{ marginTop: 18 }}>
           {settings.map(({ title, detail, Icon, screen }, index) => (
             <View key={title} style={{ marginTop: index === 2 ? 24 : 0 }}>

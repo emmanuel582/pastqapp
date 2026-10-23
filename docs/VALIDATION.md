@@ -2,7 +2,7 @@
 
 ## Confirmed
 
-- TypeScript and 66 tests passed in the latest checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
+- TypeScript and 71 tests passed in the latest checks. Tests include real SQLite schema/query behavior using the actual native bank implementation, owner isolation, staging/commit, revision retention, search/hydration, timer restart, unknown keys, theory totals, topic filters, backup ownership, history merge, and opaque analytics contracts.
 - Both Android and iOS production Hermes bundles exported successfully. Bundle size fell from 7.3MB to approximately 5.3MB per platform after importing only used icons; original exam artwork dropped from 1.18MB to 83KB. Final bundle file sizes are recorded in build-check.json. Export success is not a compiled/signed binary or physical-device runtime test.
 - The final SDK 57 online dependency compatibility check passed after applying the recommended Expo, notification and sharing patch updates.
 - All 183 original web source files matched the initial hashes.
@@ -23,7 +23,7 @@ The VPS credential was corrected and the previously paused authorized synthetic 
 - Physical iPhone and Android QA: native camera/document permissions, rich diagrams/math, keyboard, background/killed-app resume, offline restart, themes, screen readers, deep links and local notifications.
 - Physical device acceptance remains open. The first signed Android native build completed successfully (docs/android-build.json); the updated phone APK and physical-iPhone build are tracked separately. No store or TestFlight release yet. Expo project linkage completed as requested: emmanuelwritecode/focalpoint, ID 2a3c3ccd-bfc5-48af-9615-f33b8de210f6, using EAS CLI 25.3.0.
 - Standalone OAuth/password-recovery redirect allowlist.
-- Native remote push integration/credentials; VPS web push is not native push.
+- Android Firebase/FCM credentials and physical remote-push delivery acceptance; the VPS native delivery integration and iPhone APNs key are configured.
 - Automatic cross-device syncing of detailed papers/bookmarks/checkpoints has no existing backend contract; private compatible backups provide transfer.
 - Device profiling for cold start, scrolling frame times, peak memory, large banks, binary size and battery. Performance design has been implemented, but no device numbers or guaranteed 60fps claim is made.
 
@@ -91,3 +91,11 @@ Both internal builds completed from 93e4006c54fe6d0db52340eec378cc374f72d576: An
 The calculator floats above the question: move it by its title bar, resize it from the bottom-right handle, or reset its size and position. Its frame survives closing/reopening during the current exam, and the calculator stays mounted across question changes. Bounds constrain all handles to the usable screen after rotation. Drag/resize animated values update the panel without rendering the exam or keypad on each frame. The working paper keeps its existing docked layout.
 
 Verification: 68 mobile tests pass, including phone/tablet/landscape bounds and independent move/resize geometry. Browser interaction at 390×844 verified real dragging, corner resizing, 2+3=5 after resizing and question changes without moving the calculator; 844×390 verified the panel remains reachable after rotation. Physical iOS/Android touch acceptance remains pending installation of this build.
+
+## Student experience update — 24 October, version 1.0.5
+
+- 71 mobile tests and TypeScript pass. New checks cover review filtering across correct/wrong/unanswered/theory questions, original question-number identity, deadline catch-up after missed seconds/background suspension, once-only expiration and a fresh timer after a new deadline. Responsive bar tests keep genuine zero/100 scores and choose only the latest five valid dated sessions.
+- A 390×844 browser walkthrough answered one question correctly, one incorrectly and left one unanswered. Finish → Remaining opened only question 3, and pressing it jumped directly to Use of English. Submission produced 33%, one correct, one wrong and one unanswered. Wrong → question 2 opened Physics with the original selected wrong option red and the key green. The timer visibly changed from 20:00 to 19:48 and later 19:28 against its saved deadline.
+- Preferences shows five labelled bars, including genuine zero scores; tapping a zero bar displayed 0 of 3 correct. The Profile row and repeated sync notices are absent. A 320-pixel check identified wrapped stat captions, now given equal label height for aligned numbers.
+- The calculator remains draggable/resizable and its gesture surface is separate from the question. The original 183 web source hashes remain unchanged. Physical native touch/runtime acceptance is still required.
+- The live account sync check still fails on missing exam_sessions.answered_count. Suppressing a repetitive offline banner does not mean cloud sync is verified; local storage and pending retries are preserved. Android remote push still needs Firebase/FCM setup; iOS physical push delivery and standalone callback allowlisting remain separate acceptance gates.

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import { View, Pressable } from "react-native";
 import Svg, { Path, Circle } from "react-native-svg";
 import BookOpen from "lucide-react-native/icons/book-open";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
@@ -15,9 +15,12 @@ import {
   Muted,
   Button,
   Loading,
+  Dialog,
   ErrorText,
 } from "../components/ui";
 import TopicTable from "../components/TopicTable";
+import QuestionNumbers from "../components/QuestionNumbers";
+import { reviewQuestions, type AnswerFilter } from "../domain/review";
 import Scholar from "../components/Scholar";
 import { readAttempt, saveAttempt } from "../storage/practice";
 import { attemptSummary, createAttempt } from "../domain/attempt";
@@ -29,6 +32,7 @@ import type { Props } from "../navigation/types";
 export default function ResultsScreen({ route, navigation }: Props<"Results">) {
   const { owner, palette, refreshPractice } = useApp();
   const [attempt, setAttempt] = useState<Attempt | null>(null),
+    [reviewGroup, setReviewGroup] = useState<AnswerFilter | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -195,31 +199,110 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
               borderTopColor: palette.line,
             }}
           >
-            {[
-              { value: summary.correct, label: "Correct" },
-              { value: summary.incorrect, label: "Incorrect" },
-              { value: summary.skipped, label: "Skipped" },
-              { value: formatTime(timeTaken), label: "Time taken" },
-              ...(summary.ungraded
-                ? [{ value: summary.ungraded, label: "Not auto-marked" }]
-                : []),
-            ].map((item) => (
-              <View key={item.label} style={{ gap: 4 }}>
-                <Text style={{ fontFamily: fonts.mono, fontSize: 16 }}>
+            {(
+              [
+                {
+                  value: summary.correct,
+                  label: "Correct",
+                  filter: "correct",
+                  color: palette.correct,
+                  wash: palette.correctWash,
+                },
+                {
+                  value: summary.incorrect,
+                  label: "Wrong",
+                  filter: "incorrect",
+                  color: palette.incorrect,
+                  wash: palette.incorrectWash,
+                },
+                {
+                  value: summary.skipped,
+                  label: "Unanswered",
+                  filter: "skipped",
+                  color: palette.ink,
+                  wash: palette.wash,
+                },
+                {
+                  value: formatTime(timeTaken),
+                  label: "Time taken",
+                  filter: null,
+                  color: palette.ink,
+                  wash: palette.wash,
+                },
+                ...(summary.ungraded
+                  ? [
+                      {
+                        value: summary.ungraded,
+                        label: "Not auto-marked",
+                        filter: "reviewed",
+                        color: palette.ink,
+                        wash: palette.wash,
+                      },
+                    ]
+                  : []),
+              ] as {
+                value: number | string;
+                label: string;
+                filter: AnswerFilter | null;
+                color: string;
+                wash: string;
+              }[]
+            ).map((item) => (
+              <Pressable
+                key={item.label}
+                accessibilityRole={item.filter ? "button" : undefined}
+                disabled={!item.filter}
+                accessibilityLabel={
+                  item.filter
+                    ? "Review " +
+                      item.value +
+                      " " +
+                      item.label.toLowerCase() +
+                      " questions"
+                    : "Time taken " + item.value
+                }
+                onPress={() => setReviewGroup(item.filter)}
+                style={({ pressed }) => ({
+                  minWidth: "44%",
+                  flexGrow: 1,
+                  gap: 4,
+                  padding: 12,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor:
+                    item.filter === "correct" || item.filter === "incorrect"
+                      ? item.color
+                      : palette.line,
+                  backgroundColor: item.wash,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.mono,
+                    fontSize: 22,
+                    color: item.color,
+                  }}
+                >
                   {item.value}
                 </Text>
-                <Muted style={{ fontSize: 9 }}>{item.label}</Muted>
-              </View>
+                <Text style={{ fontSize: 12, color: item.color }}>
+                  {item.label === "Correct"
+                    ? "✓ "
+                    : item.label === "Wrong"
+                      ? "× "
+                      : ""}
+                  {item.label}
+                </Text>
+              </Pressable>
             ))}
           </View>
+          <Muted style={{ fontSize: 11, marginTop: 12 }}>
+            Tap a result box to see its question numbers.
+          </Muted>
           <Button
             kind="secondary"
-            onPress={() =>
-              navigation.navigate("Exam", {
-                attemptId: attempt.id,
-                review: true,
-              })
-            }
+            onPress={() => setReviewGroup("all")}
             style={{ marginTop: 22 }}
           >
             <BookOpen size={18} color={palette.ink} />
@@ -314,6 +397,39 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
         </View>
         {error ? <ErrorText>{error}</ErrorText> : null}
       </Content>
+      {reviewGroup ? (
+        <Dialog
+          title={
+            reviewGroup === "correct"
+              ? "Correct answers"
+              : reviewGroup === "incorrect"
+                ? "Wrong answers"
+                : reviewGroup === "skipped"
+                  ? "Unanswered questions"
+                  : reviewGroup === "reviewed"
+                    ? "Not auto-marked"
+                    : "Your answers"
+          }
+          onClose={() => setReviewGroup(null)}
+        >
+          <Muted>Tap a question number to review your answer.</Muted>
+          <QuestionNumbers
+            attempt={attempt}
+            indexes={reviewQuestions(attempt, reviewGroup)}
+            review
+            onSelect={(questionIndex) => {
+              const filter = reviewGroup;
+              setReviewGroup(null);
+              navigation.navigate("Exam", {
+                attemptId: attempt.id,
+                review: true,
+                questionIndex,
+                reviewFilter: filter,
+              });
+            }}
+          />
+        </Dialog>
+      ) : null}
     </Screen>
   );
 }

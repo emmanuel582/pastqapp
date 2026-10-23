@@ -1,0 +1,37 @@
+{
+  "appVersion": "1.0.5",
+  "checkedAt": "2026-10-23T16:05:44.945Z",
+  "mobileTests": 71,
+  "typecheck": "passed",
+  "originalWebSourceFilesUnchanged": 183,
+  "environment": "browser fixture and Node/native-adapter domain tests",
+  "physicalDeviceAcceptance": "pending",
+  "walkthrough": {
+    "answeredCorrect": 1,
+    "answeredWrong": 1,
+    "unanswered": 1,
+    "scorePercent": 33,
+    "finishRemainingJump": "question 3, Use of English",
+    "resultWrongJump": "question 2, Physics",
+    "correctColour": "green",
+    "wrongColour": "red",
+    "realCountdownObserved": [
+      "20:00",
+      "19:48",
+      "19:28"
+    ],
+    "zeroScoreChartSelection": "0 of 3 correct",
+    "reviewCompleteReturn": "returns to result boxes",
+    "swipes": "left next, right previous; answer preserved",
+    "calculator": "drag, resize and 2+3=5; question remained 1 of 3",
+    "smallPhoneAlignment": "320px stat labels aligned"
+  },
+  "removed": [
+    "Profile preference row",
+    "exam progress strip",
+    "flag controls",
+    "duplicate top question counter",
+    "repetitive Preferences/history sync banners"
+  ],
+  "cloudSync": "Blocked: exam_sessions.answered_count missing; local records and retry queues retained"
+}

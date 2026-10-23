@@ -33,7 +33,6 @@ export default function HistoryScreen({ navigation }: Props<"History">) {
       refreshPractice,
       remoteSessions,
       syncNow,
-      syncError,
       deletedSessions,
     } = useApp(),
     [discard, setDiscard] = useState<AttemptHeader | null>(null),
@@ -81,14 +80,6 @@ export default function HistoryScreen({ navigation }: Props<"History">) {
         }}
         ListHeaderComponent={
           <View>
-            {syncError ? (
-              <>
-                <Muted style={{ fontSize: 12 }}>{syncError}</Muted>
-                <Button kind="text" onPress={() => void syncNow()}>
-                  Retry sync
-                </Button>
-              </>
-            ) : null}
             {
               <>
                 {active.length ? (

@@ -56,3 +56,7 @@ Separate ready-to-run project, pinned lockfile, setup/env examples, EAS developm
 - [x] Repeat a browser student walkthrough, regression tests, source-integrity check and native exports.
 - [ ] Correct VPS provider authentication and apply the shared migration; rerun the prepared live checks.
 - [ ] Accept native swipes/notifications on both phones, configure remote push delivery and complete device release profiling/signing.
+
+## Student experience follow-up — 24 October
+
+Implement compact exam controls, one bottom question counter and no flags/progress strip. Make finish/result summaries open filtered question numbers and jump to the selected saved question, using green/red plus textual status without revealing answers in active exams. Keep the movable calculator. Animate the real deadline clock, simplify Preferences to five labelled scores and remove repeated sync banners while preserving the local outbox. Validate at 320/390 pixels, run regression/source checks, then compile signed Android/iOS previews and record physical acceptance separately.

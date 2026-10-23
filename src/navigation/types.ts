@@ -10,7 +10,12 @@ export type Routes = {
   Main: { tab?: MainTab } | undefined;
   Setup: { bundleId: string };
   Download: { ids: string[]; title: string; mode?: "all" | "select" };
-  Exam: { attemptId: string; review?: boolean };
+  Exam: {
+    attemptId: string;
+    review?: boolean;
+    questionIndex?: number;
+    reviewFilter?: import("../domain/review").ReviewFilter;
+  };
   Results: { attemptId: string };
   Upload: undefined;
   Manual: undefined;
