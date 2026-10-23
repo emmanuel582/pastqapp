@@ -1,0 +1,8 @@
+{
+  "checkedOn": "2026-10-24",
+  "status": 200,
+  "validateOnly": true,
+  "delivered": false,
+  "permission": "cloudmessaging.messages.create",
+  "project": "pastq-4c772"
+}
