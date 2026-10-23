@@ -214,7 +214,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     ]),
   );
   function update(value: Partial<Attempt>) {
-    if (!latest.current) return;
+    if (!latest.current || (!review && submitLock.current)) return;
     const next = { ...latest.current, ...value };
     latest.current = next;
     setAttempt(next);
@@ -403,10 +403,17 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           : !questionAnswered(attempt, i)),
     );
   async function go(index: number) {
-    if (questionNavigation.current || !attempt!.questions[index]) return false;
+    if (
+      busy ||
+      submitLock.current ||
+      questionNavigation.current ||
+      !attempt!.questions[index]
+    )
+      return false;
     questionNavigation.current = true;
     try {
       await workingFlush.current?.();
+      if (submitLock.current) return false;
       subjectPositions.current.set(q.subject, attempt!.current);
       update({ current: index });
       return true;
@@ -798,7 +805,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                       </Muted>
                       <TextInput
                         multiline
-                        editable={!review && !hydrating}
+                        editable={!review && !hydrating && !busy}
                         accessibilityLabel="Your answer"
                         placeholder="Type your answer"
                         placeholderTextColor={palette.faint}
@@ -827,7 +834,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                       {q.options.map((option, i) => (
                         <Pressable
                           key={i}
-                          disabled={review || hydrating}
+                          disabled={review || hydrating || busy}
                           accessibilityRole="radio"
                           accessibilityLabel={[
                             String.fromCharCode(65 + i),
@@ -1211,6 +1218,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             ].map((item) => (
               <Pressable
                 key={item.label}
+                disabled={busy}
                 accessibilityRole="button"
                 accessibilityLabel={
                   "Show " +
