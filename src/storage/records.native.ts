@@ -57,36 +57,54 @@ export async function write(
     ),
   );
 }
+export type RecordChange =
+  | { kind: string; id: string; value: unknown }
+  | { kind: string; id?: string; remove: true };
+export async function commit(
+  owner: string,
+  changes: RecordChange[],
+): Promise<void> {
+  const db = await database();
+  await mutate(() =>
+    db.withExclusiveTransactionAsync(async (tx) => {
+      for (const row of changes) {
+        if ("remove" in row) {
+          if (row.id === undefined)
+            await tx.runAsync(
+              "DELETE FROM records WHERE owner=? AND kind=?",
+              owner,
+              row.kind,
+            );
+          else
+            await tx.runAsync(
+              "DELETE FROM records WHERE owner=? AND kind=? AND id=?",
+              owner,
+              row.kind,
+              row.id,
+            );
+        } else
+          await tx.runAsync(
+            "INSERT INTO records(owner,kind,id,value,updated) VALUES(?,?,?,?,?) ON CONFLICT(owner,kind,id) DO UPDATE SET value=excluded.value,updated=excluded.updated",
+            owner,
+            row.kind,
+            row.id,
+            JSON.stringify(row.value),
+            Date.now(),
+          );
+      }
+    }),
+  );
+}
 export async function remove(
   owner: string,
   kind: string,
   id: string,
 ): Promise<void> {
-  await mutate(async () =>
-    (await database()).runAsync(
-      "DELETE FROM records WHERE owner=? AND kind=? AND id=?",
-      owner,
-      kind,
-      id,
-    ),
-  );
+  await commit(owner, [{ kind, id, remove: true }]);
 }
 export async function restore(
   owner: string,
   rows: { kind: string; id: string; value: unknown }[],
 ) {
-  const db = await database();
-  await mutate(() =>
-    db.withExclusiveTransactionAsync(async (tx) => {
-      for (const row of rows)
-        await tx.runAsync(
-          "INSERT INTO records(owner,kind,id,value,updated) VALUES(?,?,?,?,?) ON CONFLICT(owner,kind,id) DO UPDATE SET value=excluded.value,updated=excluded.updated",
-          owner,
-          row.kind,
-          row.id,
-          JSON.stringify(row.value),
-          Date.now(),
-        );
-    }),
-  );
+  await commit(owner, rows);
 }

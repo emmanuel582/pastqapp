@@ -1,21 +1,21 @@
 {
-  "checkedAt": "2026-10-22T16:14:37.273Z",
+  "checkedAt": "2026-10-23T02:17:39.582Z",
   "status": "passed",
   "typecheck": "passed",
   "tests": {
-    "passed": 40,
+    "passed": 47,
     "failed": 0
   },
   "webSourceFilesUnchanged": 183,
   "platforms": {
     "ios": {
-      "bundle": "_expo/static/js/ios/index-5d132f34bf460a75e174007452979623.hbc",
-      "bytes": 5263725,
+      "bundle": "_expo/static/js/ios/index-c091cf437d0b767fc1c519d283414e6d.hbc",
+      "bytes": 5296225,
       "assets": 57
     },
     "android": {
-      "bundle": "_expo/static/js/android/index-32f70782610abf3350408e29efc2639b.hbc",
-      "bytes": 5270003,
+      "bundle": "_expo/static/js/android/index-99840af2030d03b8640fa260a43952a9.hbc",
+      "bytes": 5302655,
       "assets": 58
     }
   },

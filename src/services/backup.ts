@@ -1,3 +1,5 @@
+import { workingKind } from "../storage/working";
+import type { WorkingPaper } from "../domain/working";
 import * as Crypto from "expo-crypto";
 import { resolveQuestion } from "../storage/bank";
 import * as records from "../storage/records";
@@ -10,7 +12,21 @@ export async function exportBackup(owner: string) {
   for (const header of headers)
     attempts.push(await readAttempt(owner, header.id));
   const papers = [];
+  const workingPapers = [];
   for (const attempt of attempts) {
+    for (
+      let questionIndex = 0;
+      questionIndex < attempt.questions.length;
+      questionIndex++
+    ) {
+      const paper = await records.read<WorkingPaper>(
+        owner,
+        workingKind(attempt.id),
+        String(questionIndex),
+      );
+      if (paper)
+        workingPapers.push({ attemptId: attempt.id, questionIndex, paper });
+    }
     const questions = [],
       assets = { ...attempt.assets };
     for (const source of attempt.questions) {
@@ -64,6 +80,7 @@ export async function exportBackup(owner: string) {
       ),
     })),
     papers,
+    workingPapers,
     bookmarks: await Promise.all(
       (await listBookmarks(owner)).map(async (mark) => ({
         ...mark,
@@ -103,9 +120,12 @@ export async function exportBackup(owner: string) {
 }
 export async function importBackup(owner: string, text: string) {
   const value = validateBackup(JSON.parse(text), owner),
-    rows: { kind: string; id: string; value: unknown }[] = [];
+    rows: records.RecordChange[] = [];
+  const imported = new Set<string>();
   for (const a of value.attempts) {
     if (await records.read(owner, "attempt", a.id)) continue;
+    imported.add(a.id);
+    rows.push({ kind: "attempt-deleted", id: a.id, remove: true });
     const { questions, assets, ...header } = a;
     if (a.status === "completed")
       rows.push({ kind: "history-outbox", id: a.id, value: { id: a.id } });
@@ -125,6 +145,13 @@ export async function importBackup(owner: string, text: string) {
   for (const b of value.bookmarks)
     if (!(await records.read(owner, "bookmark", b.id)))
       rows.push({ kind: "bookmark", id: b.id, value: b });
-  await records.restore(owner, rows);
+  for (const item of value.workingPapers)
+    if (imported.has(item.attemptId))
+      rows.push({
+        kind: workingKind(item.attemptId),
+        id: String(item.questionIndex),
+        value: item.paper,
+      });
+  await records.commit(owner, rows);
   return { sessions: value.attempts.length, bookmarks: value.bookmarks.length };
 }

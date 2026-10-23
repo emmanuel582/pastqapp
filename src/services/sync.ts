@@ -57,6 +57,12 @@ async function syncReminders(owner: string) {
       const d = new Date(a.completedAt!);
       return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
     });
-    await scheduleReminders(owner, remote.settings, remote.preview, studied);
+    await scheduleReminders(
+      owner,
+      remote.settings,
+      remote.preview,
+      studied,
+      false,
+    );
   }
 }

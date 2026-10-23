@@ -1,3 +1,4 @@
+import { cachedStudySession } from "../domain/offline";
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
 import { AppState } from "react-native";
@@ -6,11 +7,18 @@ import * as WebBrowser from "expo-web-browser";
 import { secureStorage } from "./secure";
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL,
   key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+export const authStorageKey = url
+  ? "sb-" + new URL(url).hostname.split(".")[0] + "-auth-token"
+  : "pastq-auth-token";
+export async function readCachedStudySession() {
+  return cachedStudySession(await secureStorage.getItem(authStorageKey));
+}
 export const supabase =
   url && key
     ? createClient(url, key, {
         auth: {
           storage: secureStorage,
+          storageKey: authStorageKey,
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: false,

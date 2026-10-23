@@ -5,6 +5,7 @@ export async function scheduleReminders(
   settings: ReminderSettings,
   _preview?: { title: string; body: string; targetTime: string },
   _days?: string[],
+  _requestPermission = true,
 ) {
   if (settings.enabled)
     throw new Error("Open the iOS or Android app to enable device reminders.");

@@ -1,3 +1,4 @@
+import { validateWorkingPaper, type WorkingPaper } from "./working";
 import type { Attempt, Bookmark, Question } from "./types";
 import { attemptSummary, bookmarkIdentity } from "./attempt";
 export interface Backup {
@@ -7,6 +8,11 @@ export interface Backup {
   createdAt: string;
   attempts: Attempt[];
   bookmarks: Bookmark[];
+  workingPapers: {
+    attemptId: string;
+    questionIndex: number;
+    paper: WorkingPaper;
+  }[];
 }
 function validQuestion(q: unknown): q is Question {
   if (!q || typeof q !== "object") return false;
@@ -122,7 +128,27 @@ export function validateBackup(raw: unknown, owner: string): Backup {
       typeof b.note !== "string"
     )
       throw new Error("The backup contains an invalid saved question.");
+  const workingPapers = value.workingPapers || [];
+  if (!Array.isArray(workingPapers) || workingPapers.length > 50000)
+    throw Error("Invalid saved working in this backup.");
+  const workingIds = new Set<string>();
+  const sessions = new Map(attempts.map((a) => [a.id, a]));
+  for (const item of workingPapers) {
+    const attempt = sessions.get(item?.attemptId),
+      key = JSON.stringify([item?.attemptId, item?.questionIndex]);
+    if (
+      !attempt ||
+      !Number.isInteger(item.questionIndex) ||
+      item.questionIndex < 0 ||
+      item.questionIndex >= attempt.questions.length ||
+      workingIds.has(key)
+    )
+      throw Error("The backup contains working for an invalid question.");
+    validateWorkingPaper(item.paper);
+    workingIds.add(key);
+  }
   return {
+    workingPapers,
     format: "pastq-native-study-backup",
     version: 1,
     owner,

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, FlatList } from "react-native";
+import { View, SectionList } from "react-native";
 import BookOpen from "lucide-react-native/icons/book-open";
 import Trash2 from "lucide-react-native/icons/trash";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
@@ -17,8 +17,12 @@ import {
   Empty,
   ErrorText,
 } from "../components/ui";
-import { discardAttempt, type AttemptHeader } from "../storage/practice";
-import { mergeHistory, type HistoryItem } from "../domain/history";
+import {
+  discardAttempt,
+  deleteAttempt,
+  type AttemptHeader,
+} from "../storage/practice";
+import { mergeHistory, historyDays, type HistoryItem } from "../domain/history";
 import { fonts } from "../theme/tokens";
 import type { Props } from "../navigation/types";
 export default function HistoryScreen({ navigation }: Props<"History">) {
@@ -30,19 +34,35 @@ export default function HistoryScreen({ navigation }: Props<"History">) {
       remoteSessions,
       syncNow,
       syncError,
+      deletedSessions,
     } = useApp(),
     [discard, setDiscard] = useState<AttemptHeader | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [cloud, setCloud] = useState<HistoryItem | null>(null),
+    [remove, setRemove] = useState<HistoryItem | null>(null),
     [refreshing, setRefreshing] = useState(false);
   const active = attempts.filter((a) => a.status === "active"),
-    completed = mergeHistory(attempts, remoteSessions);
+    completed = mergeHistory(attempts, remoteSessions, deletedSessions);
   return (
     <Screen>
       <Header title="Past sessions" onBack={() => navigation.goBack()} />
-      <FlatList
-        data={completed}
+      <SectionList
+        sections={historyDays(completed)}
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section }) => (
+          <Muted
+            style={{
+              fontSize: 13,
+              fontFamily: fonts.semibold,
+              paddingTop: 18,
+              paddingBottom: 6,
+            }}
+          >
+            {section.title} · {section.data.length} session
+            {section.data.length === 1 ? "" : "s"}
+          </Muted>
+        )}
         refreshing={refreshing}
         onRefresh={() => {
           setRefreshing(true);
@@ -63,7 +83,7 @@ export default function HistoryScreen({ navigation }: Props<"History">) {
           <View>
             {syncError ? (
               <>
-                <ErrorText>{syncError}</ErrorText>
+                <Muted style={{ fontSize: 12 }}>{syncError}</Muted>
                 <Button kind="text" onPress={() => void syncNow()}>
                   Retry sync
                 </Button>
@@ -132,32 +152,59 @@ export default function HistoryScreen({ navigation }: Props<"History">) {
           </View>
         }
         renderItem={({ item }) => (
-          <Row
-            title={item.title}
-            detail={
-              new Date(item.completedAt!).toLocaleDateString(undefined, {
-                day: "numeric",
-                month: "short",
-              }) +
-              (item.local ? " · Review answers" : " · Synced from your account")
-            }
-            icon={<BookOpen size={22} color={palette.muted} />}
-            onPress={() =>
-              item.local
-                ? navigation.navigate("Results", { attemptId: item.id })
-                : setCloud(item)
-            }
-            right={
-              <View
-                style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
-              >
-                <Text style={{ fontFamily: fonts.semibold }}>
-                  {item.percent === null ? "Completed" : item.percent + "%"}
-                </Text>
-                <ArrowRight size={17} color={palette.muted} />
-              </View>
-            }
-          />
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              borderBottomWidth: 1,
+              borderBottomColor: palette.line,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <Row
+                title={item.title}
+                detail={
+                  new Date(item.completedAt).toLocaleTimeString(undefined, {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  }) +
+                  (item.local
+                    ? " · Review answers"
+                    : " · Synced from your account")
+                }
+                icon={<BookOpen size={22} color={palette.muted} />}
+                onPress={() =>
+                  item.local
+                    ? navigation.navigate("Results", { attemptId: item.id })
+                    : setCloud(item)
+                }
+                style={{ borderBottomWidth: 0 }}
+                right={
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <Text style={{ fontFamily: fonts.semibold }}>
+                      {item.percent === null ? "Completed" : item.percent + "%"}
+                    </Text>
+                    <ArrowRight size={15} color={palette.muted} />
+                  </View>
+                }
+              />
+            </View>
+            <IconButton
+              label={"Delete session " + item.title}
+              onPress={() => {
+                setRemove(item);
+                setError("");
+              }}
+            >
+              <Trash2 size={17} color={palette.muted} />
+            </IconButton>
+          </View>
         )}
         ListEmptyComponent={
           <View>
@@ -195,6 +242,45 @@ export default function HistoryScreen({ navigation }: Props<"History">) {
           </Muted>
           <Button style={{ marginTop: 20 }} onPress={() => setCloud(null)}>
             Done
+          </Button>
+        </Dialog>
+      ) : null}
+      {remove ? (
+        <Dialog
+          title="Delete this saved session?"
+          onClose={() => {
+            if (!busy) setRemove(null);
+          }}
+        >
+          <Muted>
+            Saved answers and working for this session will be removed from this
+            device. Downloaded papers and account summaries on other devices
+            stay saved.
+          </Muted>
+          {error ? <ErrorText>{error}</ErrorText> : null}
+          <Button
+            kind="secondary"
+            disabled={busy}
+            onPress={() => setRemove(null)}
+            style={{ marginTop: 22 }}
+          >
+            Keep session
+          </Button>
+          <Button
+            busy={busy}
+            onPress={() => {
+              setBusy(true);
+              void deleteAttempt(owner, remove.id)
+                .then(refreshPractice)
+                .then(() => setRemove(null))
+                .catch(() =>
+                  setError("Could not delete this session. Try again."),
+                )
+                .finally(() => setBusy(false));
+            }}
+            style={{ marginTop: 12 }}
+          >
+            Delete from this device
           </Button>
         </Dialog>
       ) : null}

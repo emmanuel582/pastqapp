@@ -1,3 +1,4 @@
+import { withSession } from "../storage/sessionQueue";
 import * as records from "../storage/records";
 import { readAttempt } from "../storage/practice";
 import { supabase } from "./auth";
@@ -30,8 +31,13 @@ async function sync(owner: string) {
   )) {
     if ((await client.auth.getSession()).data.session?.user.id !== owner)
       return;
-    const attempt = await readAttempt(owner, row.id),
-      summary = historyRow(attempt),
+    if (await records.read(owner, "attempt-deleted", row.id)) continue;
+    const attempt = await readAttempt(owner, row.id).catch(async (error) => {
+      if (await records.read(owner, "attempt-deleted", row.id)) return null;
+      throw error;
+    });
+    if (!attempt) continue;
+    const summary = historyRow(attempt),
       input = analyticsInput(attempt);
     const { error } = await client
       .from("exam_sessions")
@@ -39,11 +45,14 @@ async function sync(owner: string) {
     if (error) throw error;
     await savePracticeResult(input);
     await records.remove(owner, "history-outbox", attempt.id);
-    await records.write(owner, "cohort-outbox", attempt.id, {
-      attempts: input.attempts.map(({ questionKey, isCorrect }) => ({
-        questionKey,
-        isCorrect,
-      })),
+    await withSession(owner, attempt.id, async () => {
+      if (await records.read(owner, "attempt-deleted", attempt.id)) return;
+      await records.write(owner, "cohort-outbox", attempt.id, {
+        attempts: input.attempts.map(({ questionKey, isCorrect }) => ({
+          questionKey,
+          isCorrect,
+        })),
+      });
     });
   }
   const headers = await records.list<{ id: string; status: string }>(
@@ -51,6 +60,7 @@ async function sync(owner: string) {
     "attempt",
   );
   for (const header of headers) {
+    if (await records.read(owner, "attempt-deleted", header.id)) continue;
     const payload = await records.read<{
       attempts: { questionKey: string; isCorrect: boolean | null }[];
       offset?: number;
@@ -70,10 +80,14 @@ async function sync(owner: string) {
           }),
           true,
         );
-        await records.write(owner, "cohort-outbox", header.id, {
-          ...payload,
-          offset: offset + 500,
+        await withSession(owner, header.id, async () => {
+          if (await records.read(owner, "attempt-deleted", header.id)) return;
+          await records.write(owner, "cohort-outbox", header.id, {
+            ...payload,
+            offset: offset + 500,
+          });
         });
+        if (await records.read(owner, "attempt-deleted", header.id)) break;
       }
       await records.remove(owner, "cohort-outbox", header.id);
     }

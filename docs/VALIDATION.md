@@ -40,3 +40,14 @@ The last registry audit reported 23 production advisories (15 high, 8 moderate);
 - Library, Discover and Preferences now have compact, distinct headers; Home keeps the original wordmark. The 390×844 fixture walkthrough checked these headers, moved forward/back across subjects, retained the selected Mathematics answer and submitted two answered/one skipped questions. The result was 33%, one correct, one incorrect, one skipped; the topic table matched those counts. No new browser console errors appeared. This local fixture check does not prove live service sync.
 - Processing stops polling while paused or awaiting input, avoids overlapping requests, restarts after explicit recovery and shows service failures without misleading photo replacement actions.
 - Final TypeScript, 40 regression tests, all 183 source-integrity checks and iOS/Android Hermes exports passed. No new runtime package was added for gestures or reminder improvements.
+
+## Offline-first follow-up — 23 October
+
+- TypeScript and 47 tests pass. Added a real SQLite journey with network access disabled, fresh module instances reading saved answer papers and separate question working, completed review preservation, owner isolation, atomic deletion rollback, stale-save rejection, backup round-trip/restoration and local day grouping.
+- Cached sign-in is loaded from existing secure auth storage without waiting for an expired-token refresh; cached catalog and private-material metadata render before network refresh. This does not authenticate offline requests to the server.
+- Working papers are saved separately from answer metadata, with bounded stroke sampling and serialized session writes. Submit flushes the current board. Completed-session working is view-only.
+- Session deletion is device-local and transactionally removes saved answers, working and outboxes; tombstones prevent synced summaries from reappearing and stale writes from recreating data. Downloaded banks and other owners are untouched.
+- Browser fixture QA confirmed daily groups, a dedicated delete confirmation, separate review/delete controls, a new question’s blank board and restoration of an earlier question’s actual drawn stroke. Native touch/airplane-mode acceptance remains a physical-device check.
+- The Android preview profile creates a standalone APK with real public API/account settings supplied by the existing EAS project’s preview environment and design fixtures disabled. Actual cloud build outcome is recorded separately after compilation.
+
+Completed-session browser QA also reopened the saved result from daily history and displayed the actual retained drawing under Saved working, with editing controls absent. A separate delete confirmation was checked without deleting prior browser QA sessions.

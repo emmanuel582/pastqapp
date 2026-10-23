@@ -48,34 +48,57 @@ export async function write(
 ) {
   await restore(owner, [{ kind, id, value }]);
 }
+export type RecordChange =
+  | { kind: string; id: string; value: unknown }
+  | { kind: string; id?: string; remove: true };
+export async function commit(
+  owner: string,
+  changes: RecordChange[],
+): Promise<void> {
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("records", "readwrite"),
+      store = tx.objectStore("records");
+    for (const row of changes) {
+      if ("remove" in row) {
+        if (row.id !== undefined) store.delete(key(owner, row.kind, row.id));
+        else {
+          const cursor = store.openCursor();
+          cursor.onsuccess = () => {
+            const current = cursor.result;
+            if (!current) return;
+            if (
+              current.value.owner === owner &&
+              current.value.kind === row.kind
+            )
+              current.delete();
+            current.continue();
+          };
+        }
+      } else
+        store.put({
+          key: key(owner, row.kind, row.id),
+          owner,
+          ...row,
+          updated: Date.now(),
+        });
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () =>
+      reject(tx.error || Error("Your changes could not be saved."));
+  });
+}
 export async function remove(
   owner: string,
   kind: string,
   id: string,
 ): Promise<void> {
-  const db = await database();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction("records", "readwrite");
-    tx.objectStore("records").delete(key(owner, kind, id));
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+  await commit(owner, [{ kind, id, remove: true }]);
 }
 export async function restore(
   owner: string,
   rows: { kind: string; id: string; value: unknown }[],
 ): Promise<void> {
-  const db = await database();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction("records", "readwrite");
-    for (const row of rows)
-      tx.objectStore("records").put({
-        key: key(owner, row.kind, row.id),
-        owner,
-        ...row,
-        updated: Date.now(),
-      });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+  await commit(owner, rows);
 }

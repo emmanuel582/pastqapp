@@ -13,12 +13,18 @@ import React, {
 import { AppState, useColorScheme, Platform } from "react-native";
 import * as Linking from "expo-linking";
 import type { Session } from "@supabase/supabase-js";
-import { supabase, manageAuthLifecycle, handleAuthUrl } from "../services/auth";
+import {
+  supabase,
+  manageAuthLifecycle,
+  handleAuthUrl,
+  readCachedStudySession,
+} from "../services/auth";
 import * as records from "../storage/records";
 import * as library from "../services/library";
 import {
   listAttempts,
   listBookmarks,
+  deletedAttemptIds,
   type AttemptHeader,
 } from "../storage/practice";
 import { syncHistory } from "../services/history";
@@ -67,6 +73,7 @@ interface State {
   signOut: () => Promise<void>;
   remoteSessions: PracticeSummary[];
   syncError: string;
+  deletedSessions: ReadonlySet<string>;
   syncNow: () => Promise<void>;
 }
 const Context = createContext<State | null>(null);
@@ -88,6 +95,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [libraryError, setLibraryError] = useState(""),
     [attempts, setAttempts] = useState<AttemptHeader[]>([]),
     [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [deletedSessions, setDeletedSessions] = useState<Set<string>>(
+    new Set(),
+  );
+  const libraryBusy = useRef(new Set<string>()),
+    syncBusy = useRef(new Set<string>());
   const [remoteSessions, setRemoteSessions] = useState<PracticeSummary[]>([]),
     [syncError, setSyncError] = useState("");
   const owner =
@@ -119,18 +131,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setReady(true);
     }
     if (supabase) {
-      void supabase.auth
-        .getSession()
-        .then(({ data }) => {
-          if (active) setSession(data.session);
+      let receivedAuthEvent = false;
+      void readCachedStudySession()
+        .then((cached) => {
+          if (active && !receivedAuthEvent && cached) setSession(cached);
         })
-        .catch(() => {
-          if (active) setSyncError("Connect to refresh your account session.");
-        })
+        .catch(() => {})
         .finally(() => {
           if (active) setReady(true);
         });
+      void supabase.auth
+        .getSession()
+        .then(({ data, error }) => {
+          if (active && !error) {
+            receivedAuthEvent = true;
+            setSession(data.session);
+          }
+        })
+        .catch(() => {});
       const { data } = supabase.auth.onAuthStateChange((_event, current) => {
+        receivedAuthEvent = true;
         if (active) setSession(current);
       });
       const link = Linking.addEventListener("url", ({ url }) => {
@@ -161,6 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rows.filter((b) => !b.ownerId || b.ownerId === owner),
     );
     setRemoteSessions([]);
+    setDeletedSessions(new Set());
     setSyncError("");
     void records
       .read<PracticeSummary[]>(owner, "remote-history", "current")
@@ -252,7 +273,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
   }, [owner]);
   const syncNow = useCallback(async () => {
-    if (owner === "guest" || owner === "design-preview") return;
+    if (
+      owner === "guest" ||
+      owner === "design-preview" ||
+      syncBusy.current.has(owner)
+    )
+      return;
+    syncBusy.current.add(owner);
     try {
       const results = await Promise.allSettled([
         syncAccount(owner),
@@ -279,16 +306,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ? e.message
             : "Saved on this device. Sync will retry when connected.",
         );
+    } finally {
+      syncBusy.current.delete(owner);
     }
   }, [owner]);
   const refreshPractice = useCallback(async () => {
     const id = owner;
-    const [history, marks] = await Promise.all([
+    const [history, marks, deleted] = await Promise.all([
       listAttempts(id),
       listBookmarks(id),
+      deletedAttemptIds(id),
     ]);
     if (ownerRef.current === id) {
-      setAttempts(history);
+      setAttempts(history.filter((row) => !deleted.has(row.id)));
+      setDeletedSessions(deleted);
       setBookmarks(marks);
     }
   }, [owner]);
@@ -299,38 +330,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLibraryStatus("ready");
       return;
     }
-    setLibraryStatus("loading");
-    setLibraryError("");
+    if (libraryBusy.current.has(owner)) return;
+    libraryBusy.current.add(owner);
+    let cached = false;
     try {
-      const [tree, rows] = await Promise.all([
+      const [tree, rows, uploads] = await Promise.all([
+        records.read<Catalog>("public", "catalog", "current"),
+        records.read<Bundle[]>("public", "materials", "current"),
+        records.list<Bundle>(owner, "remote-material"),
+      ]);
+      if (ownerRef.current !== owner) return;
+      cached = !!tree || !!rows?.length || !!uploads.length;
+      if (tree) setCatalog(tree);
+      if (rows || uploads.length) setMaterials([...(rows || []), ...uploads]);
+      setLibraryStatus(cached ? "ready" : "loading");
+      setLibraryError("");
+      const [freshTree, freshRows] = await Promise.all([
         library.catalog(),
         library.materials(),
       ]);
       if (ownerRef.current !== owner) return;
-      setCatalog(tree);
-      let remoteUploads: Bundle[] = [];
-      if (owner !== "guest" && owner !== "design-preview") {
-        remoteUploads = await library.savedUploads(owner).catch(() => []);
-      }
-      if (ownerRef.current !== owner) return;
-      setMaterials([...rows, ...remoteUploads]);
+      setCatalog(freshTree);
+      setMaterials([...freshRows, ...uploads]);
       setLibraryStatus("ready");
       await records.restore("public", [
-        { kind: "catalog", id: "current", value: tree },
-        { kind: "materials", id: "current", value: rows },
+        { kind: "catalog", id: "current", value: freshTree },
+        { kind: "materials", id: "current", value: freshRows },
       ]);
-    } catch (error) {
-      const [tree, rows] = await Promise.all([
-        records.read<Catalog>("public", "catalog", "current"),
-        records.read<Bundle[]>("public", "materials", "current"),
-      ]);
-      if (ownerRef.current !== owner) return;
-      if (tree) setCatalog(tree);
-      if (rows) setMaterials(rows);
-      setLibraryError(
-        error instanceof Error ? error.message : "Your library couldn’t load.",
-      );
-      setLibraryStatus("error");
+      if (owner !== "guest") {
+        const remoteUploads = await library
+          .savedUploads(owner)
+          .catch(() => uploads);
+        if (ownerRef.current === owner)
+          setMaterials([...freshRows, ...remoteUploads]);
+      }
+    } catch {
+      if (ownerRef.current === owner) {
+        setLibraryStatus(cached ? "ready" : "error");
+        setLibraryError(
+          cached
+            ? ""
+            : "Connect to browse new materials. Your saved papers are available offline.",
+        );
+      }
+    } finally {
+      libraryBusy.current.delete(owner);
     }
   }, [owner]);
   useEffect(() => {
@@ -419,6 +463,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       bookmarks,
       signOut,
       remoteSessions,
+      deletedSessions,
       syncError,
       syncNow,
     }),
@@ -443,6 +488,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       bookmarks,
       signOut,
       remoteSessions,
+      deletedSessions,
       syncError,
       syncNow,
     ],

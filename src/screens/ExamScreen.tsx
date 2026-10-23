@@ -143,11 +143,13 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         ),
       );
   }
+  const workingFlush = useRef<(() => Promise<void>) | null>(null);
   async function submit() {
     if (submitLock.current || !latest.current || review) return;
     submitLock.current = true;
     setBusy(true);
     try {
+      await workingFlush.current?.();
       const done = completeAttempt(latest.current);
       await saveAttempt(done);
       const evidence = done.questions.map((q, i) => ({
@@ -904,7 +906,11 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
       </View>
       {board ? (
         <DrawingBoard
-          question={String(attempt.current)}
+          key={attempt.id + ":" + attempt.current}
+          attemptId={attempt.id}
+          questionIndex={attempt.current}
+          readOnly={review || attempt.status === "completed"}
+          flushRef={workingFlush}
           onClose={() => setBoard(false)}
         />
       ) : null}

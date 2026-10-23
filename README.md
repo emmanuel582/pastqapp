@@ -57,6 +57,16 @@ Study reminders use native iOS/Android notifications, selected weekdays, quiet h
 
 The live personal-material upload was accepted but processing paused because the VPS provider returned OpenRouter 401 (User not found). Correct the provider credential on the server, resume the saved processing job, and rerun the check before accepting live extraction. Service failures now show a saved-material recovery message rather than asking for a replacement photo.
 
+## Offline study
+
+After the initial sign-in and downloading your materials, saved-question search, CBT, answer selection, solving tools, results, topic tables, history and saved reasoning use device storage. Previously signed-in learners can open cached study data while their network session refreshes in the background. New downloads, joining live sessions, account changes and AI extraction require a connection.
+
+Each question has its own working paper. Strokes save on the device after gestures and when backgrounding or closing the board; submitting waits for the current working to save. A new question starts blank, returning restores its paper, and completed-answer review shows the original working without changing it. Backups include these papers.
+
+Past sessions are grouped by local calendar day for evening review. Deleting a session removes its local answers, paper, working and pending result uploads together, while keeping downloaded material. A small local deletion marker keeps a synced account summary from reappearing on this device. Account summaries on other devices remain unchanged. An explicit backup import can restore a deleted session.
+
+The standalone preview APK contains the JavaScript and artwork, so it does not need Expo Go or a laptop development server. First sign-in/download still needs internet; extracting new question photos/PDFs uses the VPS.
+
 ## Native builds
 
 EAS development, preview APK and production profiles are in eas.json. expo-dev-client is included for development builds. Run eas build --profile preview --platform android or eas build --profile development --platform ios after providing the required signing credentials. This app is linked to emmanuelwritecode/focalpoint (project ID 2a3c3ccd-bfc5-48af-9615-f33b8de210f6); the display name remains PastQ. iOS compilation requires EAS or macOS/Xcode. No build has been signed, submitted, or published.

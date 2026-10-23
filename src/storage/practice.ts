@@ -1,3 +1,5 @@
+import { withSession, waitForSession } from "./sessionQueue";
+import { workingKind } from "./working";
 import { resolveQuestion } from "./bank";
 import * as records from "./records";
 import { attemptSummary, bookmarkIdentity } from "../domain/attempt";
@@ -6,58 +8,51 @@ export type AttemptHeader = Omit<Attempt, "questions" | "assets"> & {
   questionCount: number;
   summary: ReturnType<typeof attemptSummary>;
 };
-const queues = new Map<string, Promise<void>>();
 export function saveAttempt(attempt: Attempt, newPaper = false) {
-  const key = attempt.owner + ":" + attempt.id;
-  const next = (queues.get(key) || Promise.resolve())
-    .catch(() => {})
-    .then(async () => {
-      let { questions, assets, ...metadata } = attempt;
-      if (newPaper) {
-        const selectedAssets: NonNullable<Attempt["assets"]> = {};
-        const hydrated: Question[] = [];
-        for (const source of questions) {
-          const value = await resolveQuestion(attempt.owner, source);
-          const { nativeRef: _nativeRef, ...question } = value.question;
-          hydrated.push(question as Question);
-          Object.assign(selectedAssets, value.assets);
-          const refs = JSON.stringify(question).match(/[a-f0-9]{64}/g) || [];
-          for (const id of refs)
-            if (assets?.[id]) selectedAssets[id] = assets[id];
-        }
-        questions = hydrated;
-        assets = selectedAssets;
+  return withSession(attempt.owner, attempt.id, async () => {
+    if (await records.read(attempt.owner, "attempt-deleted", attempt.id))
+      throw Error("This session was deleted.");
+    let { questions, assets, ...metadata } = attempt;
+    if (newPaper) {
+      const selectedAssets: NonNullable<Attempt["assets"]> = {};
+      const hydrated: Question[] = [];
+      for (const source of questions) {
+        const value = await resolveQuestion(attempt.owner, source);
+        const { nativeRef: _nativeRef, ...question } = value.question;
+        hydrated.push(question as Question);
+        Object.assign(selectedAssets, value.assets);
+        const refs = JSON.stringify(question).match(/[a-f0-9]{64}/g) || [];
+        for (const id of refs)
+          if (assets?.[id]) selectedAssets[id] = assets[id];
       }
-      const header = {
-        ...metadata,
-        questionCount: questions.length,
-        summary: attemptSummary(attempt),
-      };
-      const rows: { kind: string; id: string; value: unknown }[] = [
-        { kind: "attempt", id: attempt.id, value: header },
-      ];
-      if (newPaper)
-        rows.push({
-          kind: "attempt-paper",
-          id: attempt.id,
-          value: { questions, assets },
-        });
-      if (attempt.status === "completed")
-        rows.push({ kind: "history-outbox", id: attempt.id, value: header });
-      await records.restore(attempt.owner, rows);
-    });
-  queues.set(key, next);
-  void next
-    .finally(() => {
-      if (queues.get(key) === next) queues.delete(key);
-    })
-    .catch(() => {});
-  return next;
+      questions = hydrated;
+      assets = selectedAssets;
+    }
+    const header = {
+      ...metadata,
+      questionCount: questions.length,
+      summary: attemptSummary(attempt),
+    };
+    const rows: { kind: string; id: string; value: unknown }[] = [
+      { kind: "attempt", id: attempt.id, value: header },
+    ];
+    if (newPaper)
+      rows.push({
+        kind: "attempt-paper",
+        id: attempt.id,
+        value: { questions, assets },
+      });
+    if (attempt.status === "completed")
+      rows.push({ kind: "history-outbox", id: attempt.id, value: header });
+    await records.restore(attempt.owner, rows);
+  });
 }
 export const listAttempts = (owner: string) =>
   records.list<AttemptHeader>(owner, "attempt");
 export async function readAttempt(owner: string, id: string): Promise<Attempt> {
-  await queues.get(owner + ":" + id);
+  await waitForSession(owner, id);
+  if (await records.read(owner, "attempt-deleted", id))
+    throw Error("This session was deleted.");
   const header = await records.read<AttemptHeader>(owner, "attempt", id);
   const paper = await records.read<Pick<Attempt, "questions" | "assets">>(
     owner,
@@ -67,12 +62,30 @@ export async function readAttempt(owner: string, id: string): Promise<Attempt> {
   if (!header || !paper) throw new Error("This saved exam could not open.");
   return { ...header, ...paper };
 }
-export async function discardAttempt(owner: string, id: string) {
-  const attempt = await records.read<AttemptHeader>(owner, "attempt", id);
-  if (attempt?.status !== "active")
-    throw new Error("Only unfinished exams can be discarded.");
-  await records.remove(owner, "attempt", id);
-  await records.remove(owner, "attempt-paper", id);
+export const deletedAttemptIds = async (owner: string) =>
+  new Set(
+    (await records.list<{ id: string }>(owner, "attempt-deleted")).map(
+      (row) => row.id,
+    ),
+  );
+export function deleteAttempt(owner: string, id: string, allowActive = false) {
+  return withSession(owner, id, async () => {
+    const attempt = await records.read<AttemptHeader>(owner, "attempt", id);
+    if (allowActive && attempt?.status !== "active")
+      throw Error("Only unfinished exams can be discarded.");
+    if (attempt?.status === "active" && !allowActive)
+      throw Error("Finish or discard this exam first.");
+    await records.commit(owner, [
+      { kind: "attempt-deleted", id, value: { id, deletedAt: Date.now() } },
+      ...["attempt", "attempt-paper", "history-outbox", "cohort-outbox"].map(
+        (kind) => ({ kind, id, remove: true as const }),
+      ),
+      { kind: workingKind(id), remove: true },
+    ]);
+  });
+}
+export function discardAttempt(owner: string, id: string) {
+  return deleteAttempt(owner, id, true);
 }
 export const listBookmarks = (owner: string) =>
   records.list<Bookmark>(owner, "bookmark");
