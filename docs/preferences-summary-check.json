@@ -1,0 +1,22 @@
+{
+  "checkedOn": "2026-10-24",
+  "typecheck": "passed",
+  "mobileTests": 89,
+  "summary": "Compact completed-session count, real seven-day activity bars and a single tap to detailed topic progress",
+  "data": "Existing owner-scoped local and cached remote history; deduplicated IDs; deleted/unfinished sessions excluded",
+  "emptyState": "Zero sessions and seven zero values; no invented activity",
+  "calendar": "Local calendar-day grouping, including midnight boundaries",
+  "themesChecked": [
+    "dark",
+    "light"
+  ],
+  "phoneWidthsChecked": [
+    320,
+    390
+  ],
+  "browserData": "Synthetic sample history, isolated from real accounts",
+  "navigation": "Tapping the whole summary card opens Progress with subject/topic filters and topic-only practice",
+  "dependenciesAdded": 0,
+  "nativeBuildSubmitted": false,
+  "buildHold": "Continuing the owner-requested hold"
+}

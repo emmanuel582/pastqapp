@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import ChartNoAxesCombined from "lucide-react-native/icons/chart-no-axes-combined";
+import SessionActivityCard from "../components/SessionActivityCard";
 import AccountOptions from "../components/AccountOptions";
 import History from "lucide-react-native/icons/rotate-ccw-clock";
 import Bookmark from "lucide-react-native/icons/bookmark";
@@ -127,13 +127,7 @@ export default function PreferencesScreen({
           maxWidth: 744,
         }}
       >
-        <Row
-          title="Your progress"
-          detail="Find topics to practise and see how you improve"
-          icon={<ChartNoAxesCombined size={22} color={palette.accent} />}
-          onPress={() => navigation.navigate("Progress")}
-          style={{ minHeight: 88 }}
-        />
+        <SessionActivityCard onPress={() => navigation.navigate("Progress")} />
         <View style={{ marginTop: 18 }}>
           {settings.map(({ title, detail, Icon, screen }, index) => (
             <View key={title} style={{ marginTop: index === 2 ? 24 : 0 }}>

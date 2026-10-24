@@ -85,3 +85,11 @@ Implement compact exam controls, one bottom question counter and no flags/progre
 - [x] Verify TypeScript, 85 regression tests, browser subject/time filters, chart taps, topic-only practice and 320/390-pixel layouts.
 - [ ] Wait for the owner’s additional update before any Android/iOS build.
 - [ ] After that build, verify first-use prompts, screen-lock/background transfer, interrupted resume and OS termination behaviour on real phones.
+
+## Compact Preferences summary — 24 October
+
+- [x] Keep full subject/topic analytics on their dedicated Progress page.
+- [x] Add one compact Preferences card with total completed sessions and seven real daily activity counts.
+- [x] Match the existing warm dark/light palette, fonts, borders and navigation icons.
+- [x] Verify the card opens Progress, empty activity has no invented bars, and 320/390px phone layouts fit.
+- [x] TypeScript and all 89 mobile tests pass; native builds remain on hold.
