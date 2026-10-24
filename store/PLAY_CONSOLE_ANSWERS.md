@@ -1,6 +1,6 @@
 # focalPoint — Play Console submission pack
 
-Prepared 24 October 2026 from the actual mobile source and current Google Play documentation. This is a field-by-field draft, not a declaration that release gates have passed. Do not submit statements marked HOLD until they are true.
+Updated 25 October 2026 from the actual mobile source and current Google Play documentation. This is a field-by-field draft, not a declaration that release gates have passed. Do not submit statements marked HOLD until they are true.
 
 ## App creation and listing
 
@@ -44,7 +44,7 @@ LEARN FROM YOUR RESULTS
 • Explore your topic results and choose what to practise next.
 
 BRING YOUR OWN MATERIALS
-Upload question photos, PDFs or text, review the prepared questions, and save them for practice. Uploading and question extraction require an internet connection.
+Upload question photos, PDFs, Word or PowerPoint documents, or text; review the prepared questions once and save them for practice. Uploading and question extraction require an internet connection.
 
 DOWNLOADED PAPERS WORK OFFLINE
 New downloads, sign-in, uploads and account synchronisation require internet access. Previously saved papers and working can be used offline. Some features depend on available source content; written answers are not automatically marked.
@@ -218,6 +218,7 @@ Keep the download free if the plan is free installation with premium study featu
 - Extraction provider data practices: https://openrouter.ai/privacy
 
 ## Latest verified implementation
+
 - Public privacy URL: https://76.13.110.6.nip.io/legal/privacy (HTTP 200, no sign-in).
 - Public deletion-request URL: https://76.13.110.6.nip.io/legal/delete-account (HTTP 200, no sign-in).
 - Support URL: https://76.13.110.6.nip.io/legal/support (HTTP 200). Support email remains wealthconsort@gmail.com.
@@ -225,3 +226,7 @@ Keep the download free if the plan is free installation with premium study featu
 - Real PNG, PDF and DOCX extraction and private confirmation passed on the VPS. Native background/resume adapters have tests; actual phone suspension/relaunch checks on 1.0.8 remain pending.
 - New-account summary cloud sync passed with the existing schema. Detailed topic graphs are computed from local attempts; full topic cloud synchronization is queued until the detailed tables exist. Do not advertise complete cross-device working/analytics sync yet.
 - Included original graphic: store/feature-graphic-1024x500.png. Icon: store/icon-512.png. Capture final store screenshots from a real installed build; a browser preview alone is insufficient device evidence.
+
+## Verified release bundle
+
+focalPoint 1.0.8, Android version code 12: [signed production AAB](https://expo.dev/accounts/emmanuelwritecode/projects/focalpoint/builds/55a7e185-7663-4b7d-8f3b-e48e2a265800). EAS status FINISHED and artifact HEAD 200 verified on 25 October 2026. Use internal testing first. Successful compilation does not clear the HOLD items or grant production access.

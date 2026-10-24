@@ -19,13 +19,12 @@ Before a scale claim: establish expected active/concurrent users and request mix
 
 ## Release gates still to prove
 
-- Public policy and account deletion resources and an operational deletion process.
+- Public policy and deletion-request pages are live (HTTP 200); ownership verification and actual deletion fulfilment still need operational validation.
 - Children/mixed-audience data and provider compliance; current app has not been audited as child-directed.
 - Supabase migration acceptance and browser/mobile history write/read parity.
-- OAuth callback allowlist and Android Play signing client registration where applicable.
+- Mobile callback allowlist is verified. Complete a Google sign-in return-to-app check on the latest signed device builds. Native Google Sign-In registrations remain deferred; the current flow uses system-browser OAuth.
 - New personal Google Play account: 12 opted-in testers continuously for 14 days, then production-access review.
 - Licensed question content, complete rating questionnaire (including biology/anatomy content) and real review credentials.
-- Production EAS environment is populated with validated public API/auth configuration. No preview/demo switch is used.
 
 ## Evidence
 
@@ -57,12 +56,22 @@ Production deployment image: focalpoint-api:uploads-20261024. Backup: /opt/pastq
 
 The review screen shows the question and highlighted answer options. Redundant Correct/Wrong status headings, visible Your answer captions and the entire All/Correct/Wrong/Unanswered/Saved filter strip were removed at the owner's request. Screen-reader answer semantics remain. The actual QA session reopened from history and the new layout was visually verified.
 
-Final source commit: bb6154e. Preview Android version code 11; iPhone build number 10. The production AAB increments Android to 12. Earlier code-9/code-10 builds predate these last review changes and should not be distributed as the final update.
+Final source commit: bb6154e. Preview Android version code 11; iPhone build number 10. The production AAB increments Android to 12. Earlier Android codes 9/10 and iPhone build 9 predate these last review changes and should not be distributed as the final update.
 
-Final build candidates (status must be checked before installation):
+Final signed builds (all FINISHED; artifact header checks returned 200):
 
-- Android APK: d300ae7f-0371-4865-96a3-f5fb787a7e73
-- Registered iPhone: 6076abbf-3c15-4142-a161-5fe15c7697ad
-- Play internal-testing AAB: 55a7e185-7663-4b7d-8f3b-e48e2a265800
+- [Android APK](https://expo.dev/accounts/emmanuelwritecode/projects/focalpoint/builds/d300ae7f-0371-4865-96a3-f5fb787a7e73)
+- [Registered iPhone](https://expo.dev/accounts/emmanuelwritecode/projects/focalpoint/builds/6076abbf-3c15-4142-a161-5fe15c7697ad)
+- [Play internal-testing AAB](https://expo.dev/accounts/emmanuelwritecode/projects/focalpoint/builds/55a7e185-7663-4b7d-8f3b-e48e2a265800)
 
 Security tooling audit on 25 October: npm audit --omit=dev reports five high-severity package findings arising from two advisories, node-forge <=1.4.0 (GHSA-86w9-cpqp-85rv) and Zod <4.6.6 (GHSA-mrhx-c7xc-m3w5). npm explain places these under Expo CLI/code-signing tooling. The current registry node-forge latest is 1.4.0; forcing Zod 4 into a tool expecting Zod 3 or downgrading Expo to 44 is not a validated fix. These findings remain tracked; a clean dependency security audit is not claimed.
+
+## Signed device build results, 25 October
+
+- Final Android APK d300ae7f-0371-4865-96a3-f5fb787a7e73 (version code 11): FINISHED.
+- Final iPhone 6076abbf-3c15-4142-a161-5fe15c7697ad (build 10): FINISHED; signed IPA HTTP HEAD 200, 15,003,402 bytes.
+- Play AAB 55a7e185-7663-4b7d-8f3b-e48e2a265800 (code 12): FINISHED; artifact HTTP HEAD 200, 77,600,377 bytes.
+
+No APK/IPA was downloaded to the laptop. These results establish successful native builds, not physical-device background behavior, complete cross-device analytics, all-age compliance or large-scale capacity. The gates above still apply before public publication.
+
+Final live smoke checks: health, privacy, terms, support and deletion-request resources returned 200. Private vision-session and transfer endpoints returned 401 without authentication. Android APK header check returned 200 with 60,923,884 bytes.
