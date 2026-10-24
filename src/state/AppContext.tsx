@@ -1,3 +1,4 @@
+import { abortTransfer } from "../domain/cancellation";
 import {
   registerTransferRecovery,
   resumePendingTransfers,
@@ -261,7 +262,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         void resumePendingTransfers(controller.signal).catch(() => {});
     });
     return () => {
-      controller.abort("account-changed");
+      abortTransfer(controller, "account-changed");
       sub.remove();
     };
   }, [owner]);

@@ -113,3 +113,35 @@ export async function restore(
 ) {
   await commit(owner, rows);
 }
+
+/** Atomically acknowledge one version without overwriting a newer draft. */
+export async function compareAndSwap(
+  owner: string,
+  kind: string,
+  id: string,
+  expected: unknown,
+  next: unknown | null,
+): Promise<boolean> {
+  return mutate(async () => {
+    const db = await database();
+    const result =
+      next === null
+        ? await db.runAsync(
+            "DELETE FROM records WHERE owner=? AND kind=? AND id=? AND value=?",
+            owner,
+            kind,
+            id,
+            JSON.stringify(expected),
+          )
+        : await db.runAsync(
+            "UPDATE records SET value=?, updated=? WHERE owner=? AND kind=? AND id=? AND value=?",
+            JSON.stringify(next),
+            Date.now(),
+            owner,
+            kind,
+            id,
+            JSON.stringify(expected),
+          );
+    return result.changes === 1;
+  });
+}

@@ -102,3 +102,32 @@ export async function restore(
 ): Promise<void> {
   await commit(owner, rows);
 }
+
+export async function compareAndSwap(
+  owner: string,
+  kind: string,
+  id: string,
+  expected: unknown,
+  next: unknown | null,
+): Promise<boolean> {
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("records", "readwrite"),
+      store = tx.objectStore("records"),
+      request = store.get(key(owner, kind, id));
+    let changed = false;
+    request.onsuccess = () => {
+      if (
+        !request.result ||
+        JSON.stringify(request.result.value) !== JSON.stringify(expected)
+      )
+        return;
+      changed = true;
+      if (next === null) store.delete(key(owner, kind, id));
+      else store.put({ ...request.result, value: next, updated: Date.now() });
+    };
+    tx.oncomplete = () => resolve(changed);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || Error("Could not save this change."));
+  });
+}

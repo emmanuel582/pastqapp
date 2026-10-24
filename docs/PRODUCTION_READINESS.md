@@ -1,6 +1,6 @@
 # focalPoint production readiness
 
-Updated 24 October 2026. Scope: separate mobile app and its VPS overlay. Original web source is not edited.
+Updated 25 October 2026. Scope: separate mobile app and its VPS overlay. Original web source is not edited.
 
 ## Delivery order
 
@@ -10,7 +10,7 @@ Updated 24 October 2026. Scope: separate mobile app and its VPS overlay. Origina
 4. Add accessible privacy, support, terms and account-deletion-request paths. Publish accurate policy resources; verify real support handling and deletion workflow before declaring compliance.
 5. Audit client request races, account isolation, retry/cancellation, upload/download persistence and backend authentication, queues, resource limits and data ownership. Fix demonstrated defects with targeted tests.
 6. Verify shared Supabase schema, real signup/login, upload/review, offline practice, results/history and device notification delivery. No synthetic data or test broadcast to real students.
-7. Complete Play Console answer pack, original brand assets and release checks. Produce a production AAB only after release gates pass. Never claim successful builds prove production compliance.
+7. Complete Play Console answer pack, original brand assets and release checks. Produce a signed production-configuration AAB for internal testing; publish only after release gates pass. Never claim successful builds prove production compliance.
 
 ## Capacity gate
 
@@ -25,13 +25,14 @@ Before a scale claim: establish expected active/concurrent users and request mix
 - OAuth callback allowlist and Android Play signing client registration where applicable.
 - New personal Google Play account: 12 opted-in testers continuously for 14 days, then production-access review.
 - Licensed question content, complete rating questionnaire (including biology/anatomy content) and real review credentials.
-- Production EAS environment populated with validated public API/auth configuration; no preview/demo switch used.
+- Production EAS environment is populated with validated public API/auth configuration. No preview/demo switch is used.
 
 ## Evidence
 
-Latest shipping baseline: 1.0.7, commit 78b53f6; Android and iPhone device builds succeeded. 102 tests passed before this production audit. New changes require fresh verification.
+Latest installed-device baseline: 1.0.7, commit 78b53f6. Release candidate 1.0.8 includes rebranding, clean screens and durable transfers. Current checks: TypeScript passes; 121 mobile tests and 11 backend tests pass; SDK dependency compatibility passes. Signed 1.0.8 builds are recorded below once verified.
 
 ## 24 October upload and offline verification
+
 - Rebranded display name, wordmark, launcher assets, native permission text, legal/support pages and store artwork to focalPoint. Bundle IDs, existing signing and pastq callbacks remain compatible. No production screen imports test questions or a synthetic catalog.
 - Supabase callback verification accepts both mobile callback schemes. A recreated temporary QA account signs in. The existing database has legacy exam summaries, without the detailed analytics tables; the app now writes its actual legacy columns and verifies duplicate retries. Two authenticated clients read back the new summary. Detailed topic outcomes remain on-device and queued; cross-device topic analytics is still a schema gate.
 - Live PNG, PDF and DOCX uploads each produced two questions through the real extraction provider. The VPS started each job from receipt of the final part, without an app-side start request. Confirmed private material and approvedAt persisted; reopening loads a normal practice paper. Only the authorized QA account was used.
@@ -42,3 +43,12 @@ Latest shipping baseline: 1.0.7, commit 78b53f6; Android and iPhone device build
 - Public HTTPS health, privacy, deletion-request and support pages return 200. The deletion resource starts an ownership-verified email request; operation and fulfilment remain an owner responsibility.
 
 Production deployment image: focalpoint-api:uploads-20261024. Backup: /opt/pastq/backups/focalpoint-uploads-20261024/student-data.tar. Previous image retained as pastq-api:rollback-uploads-20261024.
+
+## 25 October final recovery and UI audit
+
+- Camera button is centered within the navigation frame rather than the browser/window width. Verified in the actual signed-in QA preview: camera center and app center both 159.5 px at a 319 px app width; tapping opens Upload material.
+- An actual QA DOCX upload reopened directly into practice setup, completed with one correct and one wrong answer, opened Review answers at Question 1 and showed Correct/Wrong outcomes in the navigator. No test fixtures are imported by the shipped application.
+- SQLite and IndexedDB draft acknowledgements compare the stored version atomically; an older transfer cannot remove a newer upload. Owner changes do not persist a prior account's draft into the new account.
+- Foreground and recovery share upload session creation. Failed uploads do not block download recovery; separate accounts have independent recovery runs.
+- React Native's installed AbortController drops abort reasons. Recovery now retains its reason separately and propagates it to the download controller, keeping background expiry/account changes eligible for retry while preserving manual pauses. Regression tests use the installed native-compatible abort-controller and real SQLite.
+- Production EAS variables now point to the live HTTPS VPS and the correct Supabase project using only the public client key. This is build preparation, not Play publication approval.

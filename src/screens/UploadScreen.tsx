@@ -47,7 +47,7 @@ import type { Props } from "../navigation/types";
 export default function UploadScreen({ navigation }: Props<"Upload">) {
   const { owner, palette } = useApp();
   const [draft, setDraft] = useState<UploadDraft>({ files: [], name: "" }),
-    [loaded, setLoaded] = useState(false),
+    [loadedOwner, setLoadedOwner] = useState<string | null>(null),
     [camera, setCamera] = useState(false),
     [busy, setBusy] = useState(false),
     [progress, setProgress] = useState({ done: 0, total: 0, label: "" }),
@@ -72,19 +72,19 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
     void records
       .read<UploadDraft>(owner, "upload", "draft")
       .then((value) => {
-        if (active && value) setDraft(value);
+        if (active) setDraft(value || { files: [], name: "" });
       })
       .finally(() => {
-        if (active) setLoaded(true);
+        if (active) setLoadedOwner(owner);
       });
     return () => {
       active = false;
     };
   }, [owner]);
   useEffect(() => {
-    if (loaded)
+    if (loadedOwner === owner && !busy)
       void records.write(owner, "upload", "draft", draft).catch(() => {});
-  }, [draft, loaded, owner]);
+  }, [draft, loadedOwner, owner, busy]);
   async function choose() {
     if (busy) return;
     try {
@@ -125,7 +125,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
         other = index + direction;
       if (other < 0 || other >= files.length) return d;
       [files[index], files[other]] = [files[other], files[index]];
-      return { ...d, files, sessionId: undefined };
+      return { ...d, files, sessionId: undefined, started: false };
     });
   }
   async function submit() {
@@ -140,9 +140,11 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
       if (draft.files.some((f) => !supportedMaterial(f.name)))
         throw Error("Choose a supported photo or document.");
       const files = await stageUploadFiles(owner, draft.files);
+      checkCancelled(abort.signal);
       const staged = { ...draft, files, started: true };
       await records.write(owner, "upload", "draft", staged);
       if (mounted.current) setDraft(staged);
+      let persisted = staged;
       const id = await uploadMaterial(
         files,
         draft.name,
@@ -152,15 +154,28 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
         draft.sessionId,
         async (sessionId) => {
           const next = { ...staged, sessionId };
-          if (mounted.current) setDraft(next);
-          await records.write(owner, "upload", "draft", next);
+          const updated = await records.compareAndSwap(
+            owner,
+            "upload",
+            "draft",
+            persisted,
+            next,
+          );
+          persisted = next;
+          if (updated && mounted.current) setDraft(next);
         },
         abort.signal,
       );
       checkCancelled(abort.signal);
-      await records.write(owner, "processing", "current", id);
-      await records.remove(owner, "upload", "draft");
-      if (mounted.current) {
+      const cleared = await records.compareAndSwap(
+        owner,
+        "upload",
+        "draft",
+        persisted,
+        null,
+      );
+      if (cleared) await records.write(owner, "processing", "current", id);
+      if (cleared && mounted.current) {
         setDraft({ files: [], name: "" });
         navigation.replace("Processing", { sessionId: id });
       }
@@ -232,7 +247,12 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
                 placeholder="e.g. Chemistry revision"
                 value={draft.name}
                 onChangeText={(name) =>
-                  setDraft((d) => ({ ...d, name, sessionId: undefined }))
+                  setDraft((d) => ({
+                    ...d,
+                    name,
+                    sessionId: undefined,
+                    started: false,
+                  }))
                 }
                 editable={!busy}
               />
@@ -330,6 +350,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
                           setDraft((d) => ({
                             ...d,
                             sessionId: undefined,
+                            started: false,
                             files: d.files.filter((_, i) => i !== index),
                           }))
                         }
@@ -431,6 +452,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
               ...d,
               files: [...d.files, file],
               sessionId: undefined,
+              started: false,
             }));
           }}
         />

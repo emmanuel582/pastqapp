@@ -1,4 +1,8 @@
-import { checkCancelled } from "../domain/cancellation";
+import {
+  checkCancelled,
+  abortTransfer,
+  cancellationReason,
+} from "../domain/cancellation";
 import { supabase } from "./auth";
 import {
   supportsIndex,
@@ -184,7 +188,8 @@ export async function download(
   const current = run;
   current.listeners.add(onProgress);
   onProgress(...current.progress);
-  const abort = () => current.controller.abort();
+  const abort = () =>
+    abortTransfer(current.controller, cancellationReason(signal));
   signal.addEventListener("abort", abort, { once: true });
   if (signal.aborted) abort();
   try {
@@ -321,8 +326,8 @@ async function performDownload(
         manifest: value,
         selected,
         paused:
-          signal.reason !== "background-expired" &&
-          signal.reason !== "account-changed",
+          cancellationReason(signal) !== "background-expired" &&
+          cancellationReason(signal) !== "account-changed",
       });
     }
     release();

@@ -6,7 +6,11 @@ import ts from "typescript";
 import { createHash } from "node:crypto";
 import { AbortController as NativeAbortController } from "abort-controller";
 import { nativeBankFixture } from "./helpers/nativeBank";
-import { checkCancelled } from "../src/domain/cancellation";
+import {
+  checkCancelled,
+  abortTransfer,
+  cancellationReason,
+} from "../src/domain/cancellation";
 import { normalizeBundle } from "../src/domain/contracts";
 function fixture(id: string) {
   const native = nativeBankFixture(),
@@ -60,7 +64,8 @@ function fixture(id: string) {
       Error,
       AbortController: NativeAbortController,
       require: (p: string) => {
-        if (p === "../domain/cancellation") return { checkCancelled };
+        if (p === "../domain/cancellation")
+          return { checkCancelled, abortTransfer, cancellationReason };
         if (p === "./auth") return { supabase: null };
         if (p === "../storage/bank") return native.bank;
         if (p === "../storage/records") return native.records;
@@ -182,3 +187,32 @@ test("cancellation accepts React Native signals and aborts before any network or
     f.sqlite.close();
   }
 });
+
+for (const reason of ["background-expired", "account-changed", undefined])
+  test(`native cancellation keeps recovery intent: ${reason || "manual pause"}`, async () => {
+    const f = fixture("recovery-reason"),
+      c = new NativeAbortController();
+    try {
+      await assert.rejects(
+        f.api.download(
+          "alice",
+          f.manifest,
+          f.manifest.parts.map((p) => p.hash),
+          c.signal,
+          (done: number) => {
+            if (done > 0)
+              abortTransfer(c as unknown as AbortController, reason);
+          },
+        ),
+        { name: "AbortError" },
+      );
+      const plan: any = await f.records.read(
+        "alice",
+        "download-plan",
+        f.manifest.bundle.id,
+      );
+      assert.equal(plan.paused, reason === undefined);
+    } finally {
+      f.sqlite.close();
+    }
+  });

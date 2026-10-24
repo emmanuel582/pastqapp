@@ -1,3 +1,4 @@
+import { supabase } from "./auth";
 import { appendUploadFile as appendFile } from "./multipartFile";
 export { appendUploadFile as appendFile } from "./multipartFile";
 import { checkCancelled } from "../domain/cancellation";
@@ -33,7 +34,70 @@ export async function extractText(
     throw new Error("Your upload could not be opened. Please try again.");
   return id;
 }
+type UploadProgress = (done: number, total: number, label: string) => void;
+type UploadRun = {
+  promise: Promise<string>;
+  sessionId?: string;
+  progress?: [number, number, string];
+  listeners: Set<UploadProgress>;
+  sessions: Set<(id: string) => Promise<void>>;
+};
+const uploadRuns = new Map<string, UploadRun>();
+/** Foreground and recovery share session creation as well as the native transfer. */
 export async function uploadMaterial(
+  files: UploadFile[],
+  name: string,
+  onProgress: UploadProgress,
+  resumeId?: string,
+  onSession?: (id: string) => Promise<void>,
+  signal?: AbortSignal,
+): Promise<string> {
+  checkCancelled(signal);
+  const owner = (await supabase?.auth.getSession())?.data.session?.user.id;
+  if (!owner) throw Error("Sign in to continue.");
+  const key = JSON.stringify([
+    owner,
+    name,
+    files.map((f) => [f.uri, f.name, f.size]),
+  ]);
+  let run = uploadRuns.get(key);
+  if (!run) {
+    run = {
+      promise: Promise.resolve(""),
+      listeners: new Set([onProgress]),
+      sessions: new Set(onSession ? [onSession] : []),
+    };
+    const current = run;
+    uploadRuns.set(key, current);
+    current.promise = performUpload(
+      files,
+      name,
+      (...progress) => {
+        current.progress = progress;
+        for (const fn of current.listeners) fn(...progress);
+      },
+      resumeId,
+      async (id) => {
+        current.sessionId = id;
+        await Promise.all([...current.sessions].map((fn) => fn(id)));
+      },
+      signal,
+    ).finally(() => uploadRuns.delete(key));
+  } else {
+    run.listeners.add(onProgress);
+    if (onSession) run.sessions.add(onSession);
+  }
+  const current = run;
+  try {
+    if (current.progress) onProgress(...current.progress);
+    if (current.sessionId) await onSession?.(current.sessionId);
+    return await current.promise;
+  } finally {
+    current.listeners.delete(onProgress);
+    if (onSession) current.sessions.delete(onSession);
+  }
+}
+async function performUpload(
   files: UploadFile[],
   name: string,
   onProgress: (done: number, total: number, label: string) => void,

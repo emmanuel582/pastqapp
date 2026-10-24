@@ -8,3 +8,17 @@ export function checkCancelled(
     throw error;
   }
 }
+
+// React Native's AbortController does not retain abort(reason).
+const reasons = new WeakMap<object, unknown>();
+export function cancellationReason(signal: AbortSignal): unknown {
+  return reasons.get(signal) ?? signal.reason;
+}
+export function abortTransfer(
+  controller: AbortController,
+  reason?: unknown,
+): void {
+  if (controller.signal.aborted) return;
+  reasons.set(controller.signal, reason);
+  controller.abort(reason);
+}
