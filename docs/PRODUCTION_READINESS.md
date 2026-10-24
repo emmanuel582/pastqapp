@@ -52,3 +52,17 @@ Production deployment image: focalpoint-api:uploads-20261024. Backup: /opt/pastq
 - Foreground and recovery share upload session creation. Failed uploads do not block download recovery; separate accounts have independent recovery runs.
 - React Native's installed AbortController drops abort reasons. Recovery now retains its reason separately and propagates it to the download controller, keeping background expiry/account changes eligible for retry while preserving manual pauses. Regression tests use the installed native-compatible abort-controller and real SQLite.
 - Production EAS variables now point to the live HTTPS VPS and the correct Supabase project using only the public client key. This is build preparation, not Play publication approval.
+
+## Final review simplification and build candidates
+
+The review screen shows the question and highlighted answer options. Redundant Correct/Wrong status headings, visible Your answer captions and the entire All/Correct/Wrong/Unanswered/Saved filter strip were removed at the owner's request. Screen-reader answer semantics remain. The actual QA session reopened from history and the new layout was visually verified.
+
+Final source commit: bb6154e. Preview Android version code 11; iPhone build number 10. The production AAB increments Android to 12. Earlier code-9/code-10 builds predate these last review changes and should not be distributed as the final update.
+
+Final build candidates (status must be checked before installation):
+
+- Android APK: d300ae7f-0371-4865-96a3-f5fb787a7e73
+- Registered iPhone: 6076abbf-3c15-4142-a161-5fe15c7697ad
+- Play internal-testing AAB: 55a7e185-7663-4b7d-8f3b-e48e2a265800
+
+Security tooling audit on 25 October: npm audit --omit=dev reports five high-severity package findings arising from two advisories, node-forge <=1.4.0 (GHSA-86w9-cpqp-85rv) and Zod <4.6.6 (GHSA-mrhx-c7xc-m3w5). npm explain places these under Expo CLI/code-signing tooling. The current registry node-forge latest is 1.4.0; forcing Zod 4 into a tool expecting Zod 3 or downgrading Expo to 44 is not a validated fix. These findings remain tracked; a clean dependency security audit is not claimed.
