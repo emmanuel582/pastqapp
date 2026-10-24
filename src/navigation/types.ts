@@ -9,7 +9,11 @@ export type Routes = {
   Onboarding: undefined;
   Main: { tab?: MainTab } | undefined;
   Setup: { bundleId: string };
-  Download: { ids: string[]; title: string; mode?: "all" | "select" };
+  Download: {
+    ids: string[];
+    title: string;
+    mode?: "all" | "select" | "resume";
+  };
   Exam: {
     attemptId: string;
     review?: boolean;
@@ -25,6 +29,7 @@ export type Routes = {
   Reminders: undefined;
   Notifications: undefined;
   History: undefined;
+  Progress: undefined;
   Saved: undefined;
   Storage: undefined;
   Reports: undefined;

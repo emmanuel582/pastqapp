@@ -30,3 +30,4 @@ coverage/
 *service-account*.json
 *adminsdk*.json
 fcm-*.json
+/qa-progress.entry.ts

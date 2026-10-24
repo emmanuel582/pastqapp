@@ -12,7 +12,7 @@
   "artifactHeadStatus": 200,
   "downloadedToLaptop": false,
   "installation": "Install link shared privately in the task; omitted from public repository.",
-  "physicalDeviceAcceptance": "pending",
+  "physicalDeviceAcceptance": "Owner confirmed the iPhone 1.0.6 test alert arrived after enabling notifications in iOS Settings; artwork and closed-app upload delivery remain pending",
   "nativeCompilationStarted": true,
   "bundleIdentifier": "com.pastq.study",
   "extensionBundleIdentifier": "com.pastq.study.notifications",

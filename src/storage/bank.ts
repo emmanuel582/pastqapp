@@ -47,3 +47,13 @@ export async function searchIndex(
 }
 
 export async function removeIndex(_owner: string, _bundleId: string) {}
+
+export async function hasIndexPart(
+  _owner: string,
+  _bundle: string,
+  _version: string,
+  _hash: string,
+  _count: number,
+) {
+  return false;
+}

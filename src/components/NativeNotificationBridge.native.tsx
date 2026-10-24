@@ -1,4 +1,8 @@
-import { refreshPush, observePushToken } from "../services/remotePush";
+import {
+  refreshPush,
+  observePushToken,
+  offerInitialPush,
+} from "../services/remotePush";
 import React, { useEffect, useMemo, useState } from "react";
 import { AppState } from "react-native";
 import type { NavigationContainerRefWithCurrent } from "@react-navigation/native";
@@ -23,7 +27,7 @@ export default function NativeNotificationBridge({
   navigationRef: NavigationContainerRefWithCurrent<Routes>;
   activeRoute: string | undefined;
 }) {
-  const { owner, attempts } = useApp();
+  const { owner, attempts, profile } = useApp();
   const [pending, setPending] = useState<NotificationOpen | null>(null);
   const days = useMemo(
     () =>
@@ -41,6 +45,14 @@ export default function NativeNotificationBridge({
     configureNotificationContext(owner, activeRoute === "Exam");
   }, [owner, activeRoute]);
   useEffect(() => observeNotificationResponses(setPending), []);
+  useEffect(() => {
+    if (
+      activeRoute === "Main" &&
+      profile?.onboarding_complete &&
+      AppState.currentState === "active"
+    )
+      void offerInitialPush(owner).catch(() => {});
+  }, [owner, profile?.onboarding_complete, activeRoute]);
   useEffect(
     () =>
       observePushToken((token) => {

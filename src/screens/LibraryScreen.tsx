@@ -39,6 +39,7 @@ import { resolveQuestion } from "../storage/bank";
 import { createAttempt } from "../domain/attempt";
 import { saveAttempt } from "../storage/practice";
 import Skeleton from "../components/Skeleton";
+import PendingDownloads from "../components/PendingDownloads";
 type Category = "institution" | "exam_board" | "professional_body" | "all";
 type Entry =
   | { kind: "category"; id: string; title: string; category: Category }
@@ -336,6 +337,7 @@ export default function LibraryScreen({
               <View>
                 {
                   <>
+                    <PendingDownloads navigation={navigation} />
                     <SearchField
                       value={query}
                       onChangeText={setQuery}

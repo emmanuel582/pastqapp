@@ -73,3 +73,15 @@ Implement compact exam controls, one bottom question counter and no flags/progre
 - [x] Finish the new iOS image extension signing profile and compile the iPhone 1.0.6 release.
 - [x] Confirm a real Android 1.0.6 test alert arrives (owner-reported physical check).
 - [ ] Verify admin artwork push, iPhone delivery and app-closed upload completion on installed Android/iPhone devices.
+
+## Topic guidance and resilient downloads — 24 October (build on hold)
+
+- [x] Record the owner-confirmed iPhone 1.0.6 test alert; permission had been enabled manually in Settings.
+- [x] Request normal phone notification permission once on first study-room entry after onboarding, respecting denial and opt-out.
+- [x] Remove the answer-number colour legend.
+- [x] Replace the Preferences score chart with a dedicated topic progress page: subject/time filters, correct/wrong/skipped counts, ungraded separation, weak-topic guidance, real per-topic trends and topic-only offline practice.
+- [x] Save compact topic totals with completed sessions and avoid refreshing the page for active-answer changes.
+- [x] Preserve interrupted download selections and verified chunks; persist native pause state; enqueue native background transfers before waiting; retain transfer work when leaving the screen and coalesce duplicate transfer/pause requests.
+- [x] Verify TypeScript, 85 regression tests, browser subject/time filters, chart taps, topic-only practice and 320/390-pixel layouts.
+- [ ] Wait for the owner’s additional update before any Android/iOS build.
+- [ ] After that build, verify first-use prompts, screen-lock/background transfer, interrupted resume and OS termination behaviour on real phones.

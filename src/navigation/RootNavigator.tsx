@@ -63,6 +63,7 @@ export default function RootNavigator() {
     upload: { name: "Upload" },
     saved: { name: "Saved" },
     history: { name: "History" },
+    progress: { name: "Progress" },
     storage: { name: "Storage" },
     reports: { name: "Reports" },
     reminders: { name: "Reminders" },
@@ -180,6 +181,10 @@ export default function RootNavigator() {
             getComponent={() =>
               require("../screens/NotificationsScreen").default
             }
+          />
+          <Stack.Screen
+            name="Progress"
+            getComponent={() => require("../screens/ProgressScreen").default}
           />
           <Stack.Screen
             name="History"

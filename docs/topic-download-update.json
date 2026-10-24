@@ -1,0 +1,22 @@
+{
+  "checkedOn": "2026-10-24",
+  "nativeBuildSubmitted": false,
+  "buildHold": "Owner requested more changes before the next build",
+  "typecheck": "passed",
+  "mobileTests": 85,
+  "originalWebFilesUnchanged": 183,
+  "progress": "Offline per-topic correct/wrong/skipped/ungraded counts, subject/time filtering, evidence-based weak-topic ordering and real topic trends",
+  "targetedPractice": "Browser walkthrough confirmed a new session containing only the selected topic, using deduplicated saved full questions and artwork",
+  "layoutsChecked": [
+    320,
+    390
+  ],
+  "browserUsesSyntheticData": true,
+  "horizontalOverflowAt320": false,
+  "downloads": "Native background sessions pre-queue selected files; verified indexed chunks and paused native state are reused; saved selections and interrupted plans are recoverable; duplicate transfer/pause requests are coalesced",
+  "downloadAcceptance": "Controlled adapter and SQLite tests passed; real screen-lock/background and process-termination behaviour require the next installed build",
+  "partialByteResume": "Uses OS-provided pause state where available. If the OS or server cannot resume a partial chunk, only that chunk is retried; verified chunks remain reusable",
+  "notifications": "Normal OS permission requested once on first study-room entry after onboarding, with opt-out respected; no automatic quiet-only request for new accounts",
+  "answerLegend": "Removed; answer colours and accessibility labels retained",
+  "sharedSync": "Existing Supabase answered_count migration remains outstanding"
+}

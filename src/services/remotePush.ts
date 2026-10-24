@@ -23,3 +23,5 @@ export function observePushToken(
 export async function quietPush(): Promise<boolean> {
   return false;
 }
+
+export async function offerInitialPush(_owner: string): Promise<void> {}

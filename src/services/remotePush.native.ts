@@ -126,7 +126,10 @@ export function connectPush(owner: string): Promise<void> {
         );
     }
     await register(owner, true);
-    await records.write(owner, "remote-push", "current", { enabled: true });
+    await records.write(owner, "remote-push", "current", {
+      enabled: true,
+      alertPrompted: true,
+    });
   });
 }
 export function disablePush(owner: string): Promise<void> {
@@ -150,44 +153,64 @@ export function refreshPush(
     const d = await device();
     if (d.owner && d.owner !== owner) await revoke(d);
     if (owner === "guest") return;
-    let value = await records.read<{ enabled: boolean }>(
+    const value = await records.read<{ enabled: boolean }>(
       owner,
       "remote-push",
       "current",
     );
-    if (
-      !value &&
-      Platform.OS === "ios" &&
-      Constants.executionEnvironment !== "storeClient"
-    ) {
-      await ensureOwner(owner);
-      let result = await Notifications.getPermissionsAsync();
-      if (
-        result.ios?.status ===
-        Notifications.IosAuthorizationStatus.NOT_DETERMINED
-      )
-        result = await Notifications.requestPermissionsAsync({
-          ios: {
-            allowProvisional: true,
-            allowAlert: true,
-            allowSound: true,
-            allowBadge: false,
-          },
-        });
-      if (
-        result.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
-      ) {
-        await ensureOwner(owner);
-        value = { enabled: true };
-        await records.write(owner, "remote-push", "current", value);
-      }
-    }
     if (value?.enabled) {
       if (await permission(false)) await register(owner, false, deviceToken);
       else if (d.owner === owner) await revoke(d);
     } else if (d.owner === owner) await revoke(d);
   });
 }
+/** Ask once, after the student has entered their study room. Never override opt-out. */
+export function offerInitialPush(owner: string): Promise<void> {
+  return serial(async () => {
+    if (owner === "guest" || Constants.executionEnvironment === "storeClient")
+      return;
+    await ensureOwner(owner);
+    const old = await records.read<{
+      enabled: boolean;
+      alertPrompted?: boolean;
+    }>(owner, "remote-push", "current");
+    if (old?.enabled === false || old?.alertPrompted) return;
+    // Persist before the OS dialog: app resume/token events cannot prompt a second time.
+    await records.write(owner, "remote-push", "current", {
+      ...old,
+      enabled: true,
+      alertPrompted: true,
+    });
+    try {
+      if (await quietPush()) {
+        const result = await Notifications.requestPermissionsAsync({
+          ios: {
+            allowAlert: true,
+            allowSound: true,
+            allowBadge: false,
+            allowProvisional: false,
+          },
+        });
+        if (
+          !result.granted ||
+          result.ios?.status ===
+            Notifications.IosAuthorizationStatus.PROVISIONAL
+        )
+          return;
+      } else if (!(await permission(true))) return;
+    } catch {
+      await ensureOwner(owner);
+      await records.write(owner, "remote-push", "current", {
+        enabled: false,
+        alertPrompted: true,
+      });
+      return;
+    }
+    await ensureOwner(owner);
+    await register(owner, false);
+  });
+}
+
 export async function testPush(): Promise<void> {
   await request("/api/reminders/native-test", json("POST", {}), true);
 }

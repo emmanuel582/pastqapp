@@ -222,3 +222,22 @@ export async function removeIndex(owner: string, bundleId: string) {
     }),
   );
 }
+
+/** Only complete, previously verified immutable parts are reusable. */
+export async function hasIndexPart(
+  owner: string,
+  bundle: string,
+  version: string,
+  hash: string,
+  count: number,
+) {
+  const database = await db();
+  const row = await database.getFirstAsync<{ count: number }>(
+    "SELECT COUNT(*) as count FROM bank_questions WHERE owner=? AND bundle=? AND version=? AND part=?",
+    owner,
+    bundle,
+    version,
+    hash,
+  );
+  return row?.count === count;
+}

@@ -25,10 +25,12 @@ import {
 import Scholar from "../components/Scholar";
 import {
   manifest,
+  prepareDownload,
   download,
   formatBytes,
   type Manifest,
 } from "../services/library";
+import * as records from "../storage/records";
 import type { Props } from "../navigation/types";
 import { fonts } from "../theme/tokens";
 type Entry = { manifest: Manifest; selected: string[] };
@@ -40,7 +42,7 @@ export default function DownloadScreen({
     { ids, title, mode = "select" } = route.params;
   const [entries, setEntries] = useState<Record<string, Entry>>({}),
     [stage, setStage] = useState<"selection" | "transfer" | "complete">(
-      mode === "all" ? "transfer" : "selection",
+      mode !== "select" ? "transfer" : "selection",
     ),
     [detail, setDetail] = useState<{ id: string; subject: string } | null>(
       null,
@@ -64,9 +66,19 @@ export default function DownloadScreen({
     setError("");
     async function load() {
       while (next < ids.length && !abort.signal.aborted) {
-        const id = ids[next++],
-          value = await manifest(id, abort.signal),
-          old = saved.find((b) => b.id === id);
+        const id = ids[next++];
+        const plan = await records.read<{
+          manifest: Manifest;
+          selected: string[];
+        }>(owner, "download-plan", id);
+        let value: Manifest;
+        try {
+          value = await manifest(id, abort.signal);
+        } catch (e) {
+          if (!plan) throw e;
+          value = plan.manifest;
+        }
+        const old = saved.find((b) => b.id === id);
         if (!abort.signal.aborted)
           setEntries((previous) => ({
             ...previous,
@@ -75,7 +87,16 @@ export default function DownloadScreen({
               selected:
                 mode === "all"
                   ? value.parts.map((p) => p.hash)
-                  : savedDownloadSelection(value, old),
+                  : plan
+                    ? savedDownloadSelection(value, {
+                        ...plan.manifest.bundle,
+                        partialDownload: true,
+                        downloadedParts: plan.selected,
+                        downloadedSelection: plan.manifest.parts.filter((p) =>
+                          plan.selected.includes(p.hash),
+                        ),
+                      })
+                    : savedDownloadSelection(value, old),
             },
           }));
       }
@@ -88,7 +109,7 @@ export default function DownloadScreen({
     return () => {
       mounted.current = false;
       abort.abort();
-      controller.current?.abort();
+      // Leaving this screen keeps native transfers running. Pause is explicit.
     };
   }, [ids, mode, reload]);
   const ready = ids.every((id) => entries[id]),
@@ -111,12 +132,24 @@ export default function DownloadScreen({
     controller.current = abort;
     let done = 0;
     setProgress([0, bytes]);
+    const releases: (() => void)[] = [];
     try {
+      // Hand every selected material to the native queue before awaiting any one material.
+      for (const job of jobs)
+        releases.push(
+          await prepareDownload(
+            owner,
+            job.manifest,
+            job.selected,
+            abort.signal,
+          ),
+        );
       for (const job of jobs) {
         const size = job.manifest.parts
           .filter((p) => job.selected.includes(p.hash))
           .reduce((n, p) => n + p.bytes, 0);
-        setCurrentTitle(job.manifest.bundle.title || title);
+        if (mounted.current)
+          setCurrentTitle(job.manifest.bundle.title || title);
         if (!completed.current.has(job.id)) {
           await download(
             owner,
@@ -145,14 +178,19 @@ export default function DownloadScreen({
           );
       }
     } finally {
+      for (const release of releases) release();
       lock.current = false;
       if (mounted.current) setBusy(false);
     }
   }
   useEffect(() => {
-    if (mode === "all" && ready && !auto.current) {
+    if (mode !== "select" && ready && !auto.current) {
       auto.current = true;
-      void start();
+      if (jobs.length) void start();
+      else {
+        setStage("selection");
+        setError("Choose a subject to continue this download.");
+      }
     }
   }, [ready, mode]);
   function toggle(id: string, hashes: string[], checked: boolean) {

@@ -24,33 +24,6 @@ export default function QuestionNumbers({
   const { palette } = useApp();
   return (
     <View>
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: 14,
-          marginVertical: 12,
-        }}
-      >
-        {review ? (
-          <>
-            <Text style={{ fontSize: 12, color: palette.correct }}>
-              ✓ Correct
-            </Text>
-            <Text style={{ fontSize: 12, color: palette.incorrect }}>
-              × Wrong
-            </Text>
-            <Muted>— Unanswered</Muted>
-            {attempt.questions.some(
-              (_, i) => questionOutcome(attempt, i) === "reviewed",
-            ) ? (
-              <Muted>Not auto-marked: review the answer</Muted>
-            ) : null}
-          </>
-        ) : (
-          <Muted>Filled: answered · Empty: unanswered</Muted>
-        )}
-      </View>
       <FlatList
         data={indexes}
         numColumns={5}

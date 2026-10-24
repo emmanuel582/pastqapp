@@ -22,6 +22,7 @@ import {
 import { useApp } from "../state/AppContext";
 import * as records from "../storage/records";
 import { formatBytes } from "../services/library";
+import { clearTransferCache } from "../services/downloadTransport";
 import { exportBackup, importBackup } from "../services/backup";
 import { shareJson, chooseJson } from "../services/files";
 import type { Bundle } from "../domain/types";
@@ -126,6 +127,7 @@ export default function StorageScreen({ navigation }: Props<"Storage">) {
                         "download-part",
                         b.id + ":" + hash,
                       );
+                  await clearTransferCache(owner);
                   setStatus("Temporary download parts cleared.");
                 })
               }

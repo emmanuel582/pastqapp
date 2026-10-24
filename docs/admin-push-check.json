@@ -31,5 +31,11 @@
     "checkedOn": "2026-10-24",
     "source": "Owner reported the Send a test notification alert arrived after installing and enabling phone notifications",
     "scope": "Single-device test alert; admin artwork broadcast, closed-app upload completion and iOS delivery remain pending"
+  },
+  "iosPhysicalPhonePushEvidence": {
+    "version": "1.0.6",
+    "checkedOn": "2026-10-24",
+    "source": "Owner confirmed the test arrived after enabling notifications in iOS Settings",
+    "scope": "Test alert only; artwork and upload completion acceptance remain pending"
   }
 }

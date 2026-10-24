@@ -2,10 +2,12 @@ import { withSession, waitForSession } from "./sessionQueue";
 import { workingKind } from "./working";
 import { resolveQuestion } from "./bank";
 import * as records from "./records";
+import { progressSession, type ProgressSession } from "../domain/topicProgress";
 import { attemptSummary, bookmarkIdentity } from "../domain/attempt";
 import type { Attempt, Bookmark, Question, Bundle } from "../domain/types";
 export type AttemptHeader = Omit<Attempt, "questions" | "assets"> & {
   questionCount: number;
+  topicProgress?: ProgressSession;
   summary: ReturnType<typeof attemptSummary>;
 };
 export function saveAttempt(attempt: Attempt, newPaper = false) {
@@ -32,6 +34,9 @@ export function saveAttempt(attempt: Attempt, newPaper = false) {
       ...metadata,
       questionCount: questions.length,
       summary: attemptSummary(attempt),
+      ...(attempt.status === "completed"
+        ? { topicProgress: progressSession(attempt) ?? undefined }
+        : {}),
     };
     const rows: { kind: string; id: string; value: unknown }[] = [
       { kind: "attempt", id: attempt.id, value: header },

@@ -149,6 +149,13 @@ test("offline SQLite journey retains answers and question working after restart 
     0,
   );
   await reopened.practice.saveAttempt(attempts.completeAttempt(saved));
+  const header = await reopened.records.read("alice", "attempt", attempt.id);
+  assert.equal(header.topicProgress.topics.length, 3);
+  assert.equal(
+    header.topicProgress.topics.find((t: any) => t.topic === "Vocabulary")
+      .wrong,
+    1,
+  );
   await assert.rejects(
     reopened.papers.saveWorkingPaper("alice", attempt.id, 0, ink(300)),
     /unfinished/,

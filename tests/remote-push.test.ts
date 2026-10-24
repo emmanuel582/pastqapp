@@ -57,7 +57,7 @@ function fixture() {
               ios: { status: quietAvailable ? 0 : 2 },
             }),
             requestPermissionsAsync: async (options: any) => {
-              assert.equal(options.ios.allowProvisional, true);
+              assert.equal(options.ios.allowProvisional, false);
               return { granted: true, ios: { status: 3 } };
             },
             getExpoPushTokenAsync: async (options: any) => {
@@ -213,18 +213,39 @@ test("iOS registration events reuse the supplied native token without an endless
   stop();
 });
 
-test("new iPhone installs can register quiet provisional updates without a full permission prompt, and respect opt-out", async () => {
+test("first study-room arrival requests normal notification access once, registers, and respects opt-out", async () => {
   const f = fixture();
-  f.setQuietAvailable(true);
   await f.api.refreshPush("alice");
-  assert.equal(f.prefs.get("alice").enabled, true);
-  assert.ok(
-    f.calls.some((v: any) => v.path === "/api/reminders/native-device"),
-  );
   assert.equal(f.prompts.filter(Boolean).length, 0);
+  await f.api.offerInitialPush("alice");
+  assert.equal(f.prompts.filter(Boolean).length, 1);
+  assert.equal(f.prefs.get("alice").alertPrompted, true);
+  assert.equal(await f.api.pushStatus("alice"), true);
+  await f.api.offerInitialPush("alice");
+  assert.equal(f.prompts.filter(Boolean).length, 1);
   await f.api.disablePush("alice");
   const count = f.calls.length;
+  await f.api.offerInitialPush("alice");
   await f.api.refreshPush("alice");
   assert.equal(f.calls.length, count);
   assert.equal(f.prefs.get("alice").enabled, false);
+});
+test("declining the first-use prompt is remembered and never prompts again on resume", async () => {
+  const f = fixture();
+  f.setAllowed(false);
+  await f.api.offerInitialPush("alice");
+  assert.equal(f.prefs.get("alice").enabled, false);
+  await f.api.offerInitialPush("alice");
+  assert.equal(f.prompts.filter(Boolean).length, 1);
+  assert.equal(f.calls.length, 0);
+});
+test("offline registration keeps opt-in so the next refresh retries without prompting", async () => {
+  const f = fixture();
+  f.setOnline(false);
+  await assert.rejects(f.api.offerInitialPush("alice"), /offline/);
+  assert.equal(f.prefs.get("alice").enabled, true);
+  f.setOnline(true);
+  await f.api.refreshPush("alice");
+  assert.equal(await f.api.pushStatus("alice"), true);
+  assert.equal(f.prompts.filter(Boolean).length, 1);
 });

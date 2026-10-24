@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { View, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import ProgressChart from "../components/ProgressChart";
+import ChartNoAxesCombined from "lucide-react-native/icons/chart-no-axes-combined";
 import AccountOptions from "../components/AccountOptions";
 import History from "lucide-react-native/icons/rotate-ccw-clock";
 import Bookmark from "lucide-react-native/icons/bookmark";
@@ -13,56 +13,26 @@ import Sun from "lucide-react-native/icons/sun";
 import Monitor from "lucide-react-native/icons/monitor";
 import BookOpen from "lucide-react-native/icons/book-open";
 import { useApp } from "../state/AppContext";
-import {
-  Header,
-  Content,
-  Text,
-  Title,
-  Muted,
-  Button,
-  Row,
-} from "../components/ui";
+import { Header, Content, Text, Button, Row } from "../components/ui";
 import StudySwitch from "../components/StudySwitch";
-import Scholar from "../components/Scholar";
 import type { Navigation } from "../navigation/types";
-import { mergeHistory } from "../domain/history";
 import { fonts } from "../theme/tokens";
 export default function PreferencesScreen({
   navigation,
-  onStudy,
 }: {
   navigation: Navigation;
   onStudy: () => void;
 }) {
-  const {
-    palette,
-    profile,
-    attempts,
-    preferences,
-    setPreferences,
-    remoteSessions,
-    deletedSessions,
-  } = useApp();
+  const { palette, profile, preferences, setPreferences } = useApp();
   const [showEmail, setShowEmail] = useState(false),
     [accountMenu, setAccountMenu] = useState(false);
-  const window = useWindowDimensions();
-  const completed = mergeHistory(attempts, remoteSessions, deletedSessions),
-    scores = completed
-      .map((a) => a.percent)
-      .filter(
-        (v): v is number =>
-          v !== null && Number.isFinite(v) && v >= 0 && v <= 100,
-      ),
-    recent = completed
-      .filter((a) => a.percent !== null)
-      .slice(0, 5)
-      .reverse(),
-    initials = (profile?.full_name || "Student")
-      .split(/\s+/)
-      .map((w) => w[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
+
+  const initials = (profile?.full_name || "Student")
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
   const settings = [
     { title: "Past sessions", Icon: History, screen: "History" as const },
     { title: "Saved questions", Icon: Bookmark, screen: "Saved" as const },
@@ -157,73 +127,13 @@ export default function PreferencesScreen({
           maxWidth: 744,
         }}
       >
-        {completed.length ? (
-          <View
-            style={{
-              padding: 18,
-              borderWidth: 1,
-              borderColor: palette.line,
-              borderRadius: 16,
-              backgroundColor: palette.panel,
-            }}
-          >
-            <Text style={{ fontSize: 17, fontFamily: fonts.semibold }}>
-              Your study progress
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                gap: 10,
-                marginTop: 18,
-                marginBottom: 20,
-              }}
-            >
-              {[
-                { title: "Tests done", value: completed.length },
-                {
-                  title: "Average score",
-                  value: scores.length
-                    ? Math.round(
-                        scores.reduce((a, b) => a + b, 0) / scores.length,
-                      ) + "%"
-                    : "—",
-                },
-                {
-                  title: "Best score",
-                  value: scores.length ? Math.max(...scores) + "%" : "—",
-                },
-              ].map((stat, i) => (
-                <View key={stat.title} style={{ flex: 1, gap: 4 }}>
-                  <Muted style={{ minHeight: window.width < 360 ? 36 : 18 }}>
-                    {stat.title}
-                  </Muted>
-                  <Title
-                    size={26}
-                    style={{ color: i === 2 ? palette.accent : palette.ink }}
-                  >
-                    {stat.value}
-                  </Title>
-                </View>
-              ))}
-            </View>
-            <ProgressChart items={recent} />
-          </View>
-        ) : (
-          <View style={{ alignItems: "center", paddingBottom: 20 }}>
-            <Scholar
-              state="study"
-              width={168}
-              sceneWidth={180}
-              sceneHeight={190}
-            />
-            <Title size={28} style={{ textAlign: "center", marginTop: 12 }}>
-              Start with one paper.
-            </Title>
-            <Button arrow onPress={onStudy} style={{ marginTop: 24 }}>
-              Find a paper
-            </Button>
-          </View>
-        )}
+        <Row
+          title="Your progress"
+          detail="Find topics to practise and see how you improve"
+          icon={<ChartNoAxesCombined size={22} color={palette.accent} />}
+          onPress={() => navigation.navigate("Progress")}
+          style={{ minHeight: 88 }}
+        />
         <View style={{ marginTop: 18 }}>
           {settings.map(({ title, detail, Icon, screen }, index) => (
             <View key={title} style={{ marginTop: index === 2 ? 24 : 0 }}>

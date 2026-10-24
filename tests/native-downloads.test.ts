@@ -58,6 +58,7 @@ function fixture(id: string) {
     {
       exports: api,
       Error,
+      AbortController: NativeAbortController,
       require: (p: string) => {
         if (p === "../domain/cancellation") return { checkCancelled };
         if (p === "./auth") return { supabase: null };
@@ -71,6 +72,17 @@ function fixture(id: string) {
             CryptoDigestAlgorithm: { SHA256: "sha256" },
             digestStringAsync: async (_a: string, text: string) =>
               createHash("sha256").update(text).digest("hex"),
+          };
+        if (p === "./downloadTransport")
+          return {
+            prepareParts: async () => () => {},
+            pauseParts: async () => {},
+            forgetParts: async () => {},
+            readPart: async (_o: any, value: any, part: any) => {
+              if (!online) throw Error("Offline");
+              requested.push(part.hash);
+              return textByHash.get(part.hash);
+            },
           };
         if (p === "./api")
           return {
@@ -113,7 +125,9 @@ for (const id of ["waec-2027", "utme-testdriller-2027", "personal-paper"])
             f.manifest,
             f.manifest.parts.map((p) => p.hash),
             first.signal,
-            () => first.abort(),
+            (done: number) => {
+              if (done > 0) first.abort();
+            },
           ),
           { name: "AbortError" },
         );
