@@ -8,7 +8,7 @@ export async function shareJson(name: string, text: string) {
     throw new Error("Sharing is unavailable on this device.");
   await Sharing.shareAsync(file.uri, {
     mimeType: "application/json",
-    dialogTitle: "Save your PastQ study backup",
+    dialogTitle: "Save your focalPoint study backup",
   });
 }
 export async function chooseJson() {

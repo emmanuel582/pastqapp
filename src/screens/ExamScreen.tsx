@@ -415,7 +415,9 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     following = subjects[subjects.indexOf(q.subject) + 1],
     summary = totals!,
     marked = bookmarkIds.has(bookmarkIdentity(attempt.bundleId, q)),
-    navigatorIndexes = orderedIndexes.filter(
+    navigatorIndexes = (
+      review ? attempt.questions.map((_, i) => i) : orderedIndexes
+    ).filter(
       (i) =>
         review ||
         navigatorFilter === "all" ||
@@ -1271,6 +1273,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             review={review}
             current={attempt.current}
             onSelect={(i) => {
+              if (review && !reviewIndexSet.has(i)) setReviewFilter("all");
               void go(i).then((ok) => {
                 if (ok) setNavigator(false);
               });

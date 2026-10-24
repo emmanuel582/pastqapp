@@ -49,7 +49,7 @@ export default function SessionActivityCard({
         }}
       >
         <Text style={{ fontFamily: fonts.semibold, fontSize: 15 }}>
-          Your progress
+          Sessions
         </Text>
         <ArrowUpRight size={18} color={palette.accent} />
       </View>
@@ -74,9 +74,6 @@ export default function SessionActivityCard({
         >
           {activity.total.toLocaleString()}
         </Text>
-        <Muted>
-          {activity.total === 1 ? "session completed" : "sessions completed"}
-        </Muted>
       </View>
       <View
         style={{ flexDirection: "row", gap: 8, height: 85 }}
@@ -138,27 +135,6 @@ export default function SessionActivityCard({
             </Text>
           </View>
         ))}
-      </View>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          gap: 10,
-          marginTop: 14,
-          flexWrap: "wrap",
-        }}
-      >
-        <Muted>{activity.recent} in the last 7 days</Muted>
-        <Text
-          style={{
-            fontSize: 12,
-            lineHeight: 18,
-            color: palette.accent,
-            fontFamily: fonts.semibold,
-          }}
-        >
-          View topics →
-        </Text>
       </View>
     </Pressable>
   );

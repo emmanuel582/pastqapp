@@ -1,4 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import RichText from "../components/RichText";
+import { isWrittenQuestion, theoryLabel } from "../domain/theory";
+import { confirmedMaterial } from "../services/confirmedMaterial";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, FlatList, ScrollView, Pressable } from "react-native";
 import Edit2 from "lucide-react-native/icons/pen";
 import Plus from "lucide-react-native/icons/plus";
@@ -31,15 +34,17 @@ export default function ReviewMaterialScreen({
   route,
   navigation,
 }: Props<"ReviewMaterial">) {
-  const { owner, palette, refreshSaved } = useApp(),
+  const { owner, palette, refreshSaved, refreshLibrary } = useApp(),
     insets = useSafeAreaInsets();
   const [session, setSession] = useState<VisionSession | null>(null),
     [questions, setQuestions] = useState<Question[]>([]),
     [selected, setSelected] = useState("all"),
+    [expanded, setExpanded] = useState<number | null>(null),
     [editing, setEditing] = useState<number | null>(null),
     [draft, setDraft] = useState<Question | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const saveLock = useRef(false);
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -60,6 +65,12 @@ export default function ReviewMaterialScreen({
             throw error;
           });
         if (active) {
+          const confirmed = await confirmedMaterial(owner, value);
+          if (!active) return;
+          if (confirmed) {
+            navigation.replace("Setup", { bundleId: confirmed });
+            return;
+          }
           if (!value.questions?.length) {
             navigation.replace("Processing", {
               sessionId: route.params.sessionId,
@@ -116,20 +127,34 @@ export default function ReviewMaterialScreen({
     ),
     flagged = questions.filter((q) => q.needsReview);
   async function save() {
-    if (busy || blocking.length || !questions.length) return;
+    if (saveLock.current || blocking.length || !questions.length) return;
+    saveLock.current = true;
     setBusy(true);
     setError("");
     try {
       const bundle = await confirmMaterial(route.params.sessionId, questions);
       await saveBundle(owner, { ...bundle, ownerId: owner });
+      await records.write(
+        owner,
+        "confirmed-material",
+        route.params.sessionId,
+        bundle.id,
+      );
+      await records.write(owner, "remote-material", bundle.id, {
+        ...bundle,
+        ownerId: owner,
+        questions: [],
+      });
       await records.remove(owner, "processing", "current");
       await refreshSaved();
+      void refreshLibrary();
       navigation.replace("Setup", { bundleId: bundle.id });
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Could not save. Please try again.",
       );
     } finally {
+      saveLock.current = false;
       setBusy(false);
     }
   }
@@ -181,11 +206,8 @@ export default function ReviewMaterialScreen({
         }}
       >
         <Text style={{ fontFamily: fonts.serifMedium, fontSize: 16 }}>
-          Check your questions
+          Review questions
         </Text>
-        <Muted style={{ fontFamily: fonts.outfit }}>
-          {questions.length} extracted · viewing {visible.length}
-        </Muted>
       </View>
       {groups.length > 1 ? (
         <View
@@ -247,30 +269,29 @@ export default function ReviewMaterialScreen({
                   padding: 12,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: "#FCD34D",
-                  backgroundColor: "#FFFBEB",
+                  borderColor: palette.line,
+                  backgroundColor: palette.accentWash,
                   marginBottom: 12,
                 }}
               >
                 <Text
                   style={{
-                    color: "#92400E",
+                    color: palette.accent,
                     fontFamily: fonts.serifMedium,
                     fontSize: 12,
                   }}
                 >
-                  Quality review required
+                  Check marked questions
                 </Text>
                 <Text
                   style={{
-                    color: "#92400E",
+                    color: palette.accent,
                     fontFamily: fonts.outfit,
                     fontSize: 11,
                     marginTop: 4,
                   }}
                 >
-                  {blocking.length} blocking · {flagged.length} flagged. Open
-                  each marked question and compare it with the source page.
+                  {blocking.length} incomplete · {flagged.length} to check
                 </Text>
               </View>
             ) : null}
@@ -307,11 +328,13 @@ export default function ReviewMaterialScreen({
                     borderRadius: 8,
                   }}
                 >
-                  {q.questionNumber ?? index + 1}
+                  {isWrittenQuestion(q)
+                    ? theoryLabel(q, i)
+                    : (q.questionNumber ?? i + 1)}
                 </Text>
                 <Muted style={{ fontSize: 10 }}>{q.subject}</Muted>
                 {q.year ? (
-                  <Muted style={{ fontSize: 10, color: "#7A6CB2" }}>
+                  <Muted style={{ fontSize: 10, color: palette.muted }}>
                     {q.year}
                     {q.paper && q.paper !== "Default" ? " · " + q.paper : ""}
                   </Muted>
@@ -320,8 +343,8 @@ export default function ReviewMaterialScreen({
                   <Text
                     style={{
                       fontSize: 10,
-                      color: "#92400E",
-                      backgroundColor: "#FEF3C7",
+                      color: palette.accent,
+                      backgroundColor: palette.accentWash,
                       borderRadius: 12,
                       paddingHorizontal: 8,
                     }}
@@ -329,51 +352,66 @@ export default function ReviewMaterialScreen({
                     Review
                   </Text>
                 ) : null}
-                {q.correct == null ? (
+                {q.correct == null && !isWrittenQuestion(q) ? (
                   <Muted style={{ fontSize: 10 }}>No key</Muted>
                 ) : null}
-                {typeof q.confidence === "number" ? (
-                  <Muted style={{ fontSize: 10 }}>
-                    {Math.round(q.confidence * 100)}% confidence
-                  </Muted>
-                ) : null}
                 {q.topic ? (
-                  <Muted style={{ fontSize: 10, color: "#2563EB" }}>
+                  <Muted style={{ fontSize: 10, color: palette.muted }}>
                     {String(q.topic)}
                   </Muted>
                 ) : null}
               </View>
               <QuestionMedia figures={q.figures} assets={session.assets} />
-              <Text
-                numberOfLines={2}
-                style={{
-                  fontFamily: fonts.outfit,
-                  fontSize: 13,
-                  lineHeight: 18,
-                }}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  expanded === i ? "Collapse question" : "Read full question"
+                }
+                onPress={() => setExpanded(expanded === i ? null : i)}
               >
-                {q.question}
-              </Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  marginTop: 6,
-                }}
-              >
-                {q.options.slice(0, 2).map((o, j) => (
-                  <Muted key={j} style={{ fontSize: 10 }}>
-                    {String.fromCharCode(65 + j)}. {o.slice(0, 28)}
-                    {o.length > 28 ? "…" : ""}
-                  </Muted>
-                ))}
-              </View>
-              {Array.isArray(q.reviewReasons) && q.reviewReasons.length ? (
-                <Text style={{ marginTop: 8, fontSize: 10, color: "#B45309" }}>
-                  {q.reviewReasons.join(" · ").replaceAll("_", " ")}
-                </Text>
-              ) : null}
+                {expanded === i ? (
+                  <RichText
+                    text={q.question}
+                    html={q.questionHtml}
+                    assets={session.assets}
+                    size={14}
+                  />
+                ) : (
+                  <Text
+                    numberOfLines={2}
+                    style={{
+                      fontFamily: fonts.outfit,
+                      fontSize: 13,
+                      lineHeight: 18,
+                    }}
+                  >
+                    {q.question}
+                  </Text>
+                )}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    marginTop: 6,
+                  }}
+                >
+                  {(expanded === i ? q.options : q.options.slice(0, 2)).map(
+                    (o, j) => (
+                      <Muted key={j} style={{ fontSize: 10 }}>
+                        {String.fromCharCode(65 + j)}.{" "}
+                        {expanded === i ? o : o.slice(0, 28)}
+                        {expanded !== i && o.length > 28 ? "…" : ""}
+                      </Muted>
+                    ),
+                  )}
+                </View>
+                <Muted
+                  style={{ fontSize: 10, marginTop: 8, color: palette.accent }}
+                >
+                  {expanded === i ? "Show less" : "Read question"}
+                </Muted>
+              </Pressable>
             </View>
             <IconButton
               label="Edit question"
@@ -404,25 +442,6 @@ export default function ReviewMaterialScreen({
           borderTopColor: palette.line,
         }}
       >
-        <View
-          style={{
-            height: 66,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 12,
-          }}
-        >
-          <Scholar
-            state={busy ? "study" : "idle"}
-            width={52}
-            sceneWidth={62}
-            sceneHeight={62}
-          />
-          <Muted>
-            {busy ? "Saving your material…" : "Ready when you are."}
-          </Muted>
-        </View>
         {error ? <ErrorText>{error}</ErrorText> : null}
         <Button
           disabled={busy || blocking.length > 0 || !questions.length}
@@ -436,7 +455,7 @@ export default function ReviewMaterialScreen({
               (blocking.length === 1 ? "" : "s")
             : busy
               ? "Saving…"
-              : "Looks good — save"}
+              : "Complete"}
         </Button>
       </View>
       {draft && editing !== null ? (

@@ -11,7 +11,7 @@ import X from "lucide-react-native/icons/x";
 import Pencil from "lucide-react-native/icons/pencil";
 import * as Crypto from "expo-crypto";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useApp, designPreview } from "../state/AppContext";
+import { useApp } from "../state/AppContext";
 import {
   Screen,
   Header,
@@ -56,7 +56,6 @@ import {
   sessionDurationSeconds,
 } from "../domain/sessionDuration";
 import { questionUnits } from "../domain/theory";
-import { previewBundle } from "../data/preview";
 import { fonts } from "../theme/tokens";
 import type { Bundle, Question } from "../domain/types";
 import type { Props } from "../navigation/types";
@@ -91,10 +90,7 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
     let active = true;
     void (async () => {
       try {
-        const b =
-          designPreview && key === previewBundle.id
-            ? previewBundle
-            : await getBundle(owner, key);
+        const b = await getBundle(owner, key);
         const subjects = getAvailableSubjects(b),
           saved = await records.read<Draft>(owner, "setup", key),
           settings: Record<string, SubjectSettings> = Object.create(null);
@@ -321,9 +317,6 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
       <Header
         onBack={back}
         title={bundle.examType || bundle.title}
-        right={
-          <Text style={{ fontSize: 11, color: palette.muted }}>pastq</Text>
-        }
         style={{ minHeight: 68, paddingHorizontal: 20, paddingVertical: 12 }}
       />
       <View
@@ -360,15 +353,6 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
             >
               {name}
             </Text>
-            <Muted style={{ fontSize: 10, marginTop: 4 }}>
-              {index === 0
-                ? draft.selected.length + " selected"
-                : index === 1
-                  ? (draft.mode === "full" ? "Exam" : "Practice") +
-                    " · " +
-                    durationLabel(seconds)
-                  : count + " questions"}
-            </Muted>
           </Pressable>
         ))}
       </View>

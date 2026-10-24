@@ -17,7 +17,7 @@ export function figureSource(url: string, assets?: Record<string, Asset>) {
   }
   if (
     /^data:image\/(png|jpeg|webp|gif);base64,/.test(url) ||
-    /^https?:\/\//.test(url)
+    /^https:\/\//.test(url)
   )
     return url;
   if (url.startsWith("/") && !url.startsWith("//")) return API_BASE + url;

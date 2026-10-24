@@ -26,6 +26,9 @@ function fixture(shared?: any) {
         .map((p) => (typeof p === "string" ? p : p.uri))
         .join("/");
     }
+    get parentDirectory() {
+      return new Directory(this.uri.slice(0, this.uri.lastIndexOf("/")));
+    }
     get exists() {
       return files.has(this.uri);
     }

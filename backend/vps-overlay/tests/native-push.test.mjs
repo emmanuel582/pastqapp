@@ -156,3 +156,23 @@ test("completion reconciliation deduplicates repeated saves, ignores in-flight a
     f.close();
   }
 });
+
+test("a failed upload can notify again when retry succeeds without replaying the failure", () => {
+  const f = fixture();
+  try {
+    push.registerDevice("a", "alice", f.device);
+    const s = {
+      id: "recovered",
+      ownerKey: "a",
+      status: "failed",
+      updatedAt: f.now,
+    };
+    assert.equal(push.materialCompleted(s, f.now).queued, 1);
+    assert.equal(push.materialCompleted(s, f.now).queued, 0);
+    s.status = "completed";
+    assert.equal(push.materialCompleted(s, f.now).queued, 1);
+    assert.equal(push.materialCompleted(s, f.now).queued, 0);
+  } finally {
+    f.close();
+  }
+});

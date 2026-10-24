@@ -183,9 +183,17 @@ export function materialCompleted(session, now = Date.now()) {
   // Reconciliation never sends an old backlog after deployment or enabling push.
   if (!session.updatedAt || session.updatedAt < now - 86400000) return;
   const ready = session.status === "completed";
+  // Preserve legacy event IDs, avoiding a replay of previously delivered failures on deployment.
+  if (
+    !ready &&
+    db()
+      .prepare("SELECT 1 FROM events WHERE id = ?")
+      .get("material:" + session.id)
+  )
+    return { queued: 0 };
   return enqueueNative(
     session.ownerKey,
-    "material:" + session.id,
+    ready ? "material:" + session.id : "material-attention:" + session.id,
     {
       title: ready ? "Your questions are ready" : "Your upload needs a look",
       body: ready

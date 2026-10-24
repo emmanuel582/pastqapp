@@ -73,7 +73,7 @@ export default function StorageScreen({ navigation }: Props<"Storage">) {
               }
               icon={<Database size={22} color={palette.accent} />}
             />
-            <Muted style={{ marginTop: 14 }}>App ready to open offline.</Muted>
+            <></>
             {saved.map((bundle) => (
               <Row
                 key={bundle.id}
@@ -138,17 +138,13 @@ export default function StorageScreen({ navigation }: Props<"Storage">) {
           </>
         ) : (
           <>
-            <Muted style={{ marginTop: 14 }}>
-              Keep a private copy of your sessions, diagrams, saved questions
-              and notes. Restore it while signed into the same account. Keep
-              this file somewhere safe.
-            </Muted>
+            <></>
             <Button
               disabled={busy}
               onPress={() =>
                 void run(async () => {
                   await shareJson(
-                    "PastQ-study-" +
+                    "focalPoint-study-" +
                       new Date().toISOString().slice(0, 10) +
                       ".json",
                     await exportBackup(owner),

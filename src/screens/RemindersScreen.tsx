@@ -14,7 +14,7 @@ import {
   Row,
 } from "../components/ui";
 import StudySwitch from "../components/StudySwitch";
-import { useApp, designPreview } from "../state/AppContext";
+import { useApp } from "../state/AppContext";
 import {
   getReminders,
   saveReminders,
@@ -44,13 +44,12 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
       .then((saved) => {
         if (saved && !abort.signal.aborted) setDraft(saved);
       });
-    if (!designPreview)
-      void getReminders(abort.signal)
-        .then((value) => {
-          setSnapshot(value);
-          setDraft(value.settings);
-        })
-        .catch(() => {});
+    void getReminders(abort.signal)
+      .then((value) => {
+        setSnapshot(value);
+        setDraft(value.settings);
+      })
+      .catch(() => {});
     return () => abort.abort();
   }, [owner]);
   function patch(value: Partial<ReminderSettings>) {
@@ -94,7 +93,7 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
       });
       setDraft(value);
       try {
-        if (!designPreview) setSnapshot(await saveReminders(value));
+        setSnapshot(await saveReminders(value));
         setStatus("Reminder settings saved.");
       } catch {
         await records.write(owner, "reminder-outbox", "current", value);
@@ -118,7 +117,7 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
               ? "Reminders paused"
               : "Study reminders"
           }
-          detail="Skips days you’ve practised."
+
           right={
             <StudySwitch
               label="Study reminders"
@@ -145,7 +144,7 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
             style={{ width: 76, height: 76, borderRadius: 14 }}
           />
           <View style={{ flex: 1, gap: 5 }}>
-            <Muted style={{ fontSize: 11 }}>PastQ · Scholar</Muted>
+            <></>
             <Text style={{ fontFamily: fonts.semibold }}>
               {draft.personalized
                 ? snapshot?.preview.title || "A study moment with Scholar"

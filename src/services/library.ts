@@ -315,7 +315,16 @@ async function performDownload(
     await records.remove(owner, "download-plan", value.bundle.id);
     return result;
   } finally {
-    if (signal.aborted) await pauseParts(owner, value);
+    if (signal.aborted) {
+      await pauseParts(owner, value);
+      await records.write(owner, "download-plan", value.bundle.id, {
+        manifest: value,
+        selected,
+        paused:
+          signal.reason !== "background-expired" &&
+          signal.reason !== "account-changed",
+      });
+    }
     release();
   }
 }

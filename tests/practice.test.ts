@@ -18,7 +18,7 @@ import {
   buildSubjectSession,
 } from "../src/domain/subjectSession";
 import { validateBackup } from "../src/domain/backup";
-import { previewBundle } from "../src/data/preview";
+import { previewBundle } from "./fixtures/questions";
 test("deadline survives background time and a serialized restart", () => {
   const a = createAttempt(
     previewBundle,

@@ -1,3 +1,8 @@
+import {
+  MOBILE_AUTH_CALLBACK,
+  isAuthCallback,
+  validateOAuthStart,
+} from "../domain/authRedirect";
 import { cachedStudySession } from "../domain/offline";
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
@@ -29,26 +34,20 @@ export const supabase =
 export function requireAuth() {
   if (!supabase)
     throw new Error(
-      "Connect this app to your PastQ account service. See the project .env.example.",
+      "Connect this app to your focalPoint account service. See the project .env.example.",
     );
   return supabase;
 }
 export function authCallbackUrl() {
   return Platform.OS === "web"
     ? Linking.createURL("auth/callback")
-    : Linking.createURL("auth/callback", { scheme: "pastq" });
+    : MOBILE_AUTH_CALLBACK;
 }
 if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 const exchanges = new Map<string, Promise<void>>();
 export async function handleAuthUrl(url: string): Promise<void> {
-  const parsed = new URL(url),
-    expected = new URL(authCallbackUrl());
-  if (
-    parsed.protocol !== expected.protocol ||
-    parsed.host !== expected.host ||
-    parsed.pathname !== expected.pathname
-  )
-    return;
+  if (!isAuthCallback(url, authCallbackUrl())) return;
+  const parsed = new URL(url);
   const hash = new URLSearchParams(parsed.hash.slice(1));
   if (parsed.searchParams.get("error") || hash.get("error"))
     throw Error("Sign-in did not finish. Please try again.");
@@ -92,6 +91,7 @@ export async function signInGoogle() {
   });
   if (error) throw error;
   if (!data.url) throw new Error("Google sign in could not start.");
+  validateOAuthStart(data.url, url!, redirectTo);
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
   if (result.type === "success") await handleAuthUrl(result.url);
 }

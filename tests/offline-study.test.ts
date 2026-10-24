@@ -11,7 +11,7 @@ import * as working from "../src/domain/working";
 import * as backupDomain from "../src/domain/backup";
 import { cachedStudySession } from "../src/domain/offline";
 import { historyDays, mergeHistory } from "../src/domain/history";
-import { previewBundle } from "../src/data/preview";
+import { previewBundle } from "./fixtures/questions";
 function storageHarness(sqlite = new DatabaseSync(":memory:")) {
   const adapter: any = {
     execAsync: async (sql: string) => sqlite.exec(sql),

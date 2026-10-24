@@ -157,15 +157,59 @@ test("completion reconciliation deduplicates repeated saves, ignores in-flight a
   }
 });
 
-test('campaign artwork survives the durable native queue and provider handoff', async () => {
- const f=fixture();try {
- push.registerDevice('owner-a','alice',f.device,f.now);
- const image='https://pastq.example/api/reminders/images/9f85e11d-a3d3-4a92-9698-a752e564fd55';
- push.enqueueNative('owner-a','campaign:art:owner-a',{title:'News',body:'A new paper',image,data:{kind:'inbox',campaignId:'art'}},f.now);
- push.closeNativeStore();
- await push.dispatchNative({now:f.now+1,request:async(endpoint,payload)=>{
- assert.equal(endpoint,'send');assert.deepEqual(payload[0].richContent,{image});assert.equal(payload[0].mutableContent,true);assert.equal(payload[0].data.owner,'alice');return [{status:'ok',id:'art-ticket'}];
- }});
- assert.deepEqual(push.nativeCampaignRecipients('art').map(row=>({...row})),[{user_id:'alice',status:'receipt',count:1}]);
- }finally{f.close();}
+test("campaign artwork survives the durable native queue and provider handoff", async () => {
+  const f = fixture();
+  try {
+    push.registerDevice("owner-a", "alice", f.device, f.now);
+    const image =
+      "https://pastq.example/api/reminders/images/9f85e11d-a3d3-4a92-9698-a752e564fd55";
+    push.enqueueNative(
+      "owner-a",
+      "campaign:art:owner-a",
+      {
+        title: "News",
+        body: "A new paper",
+        image,
+        data: { kind: "inbox", campaignId: "art" },
+      },
+      f.now,
+    );
+    push.closeNativeStore();
+    await push.dispatchNative({
+      now: f.now + 1,
+      request: async (endpoint, payload) => {
+        assert.equal(endpoint, "send");
+        assert.deepEqual(payload[0].richContent, { image });
+        assert.equal(payload[0].mutableContent, true);
+        assert.equal(payload[0].data.owner, "alice");
+        return [{ status: "ok", id: "art-ticket" }];
+      },
+    });
+    assert.deepEqual(
+      push.nativeCampaignRecipients("art").map((row) => ({ ...row })),
+      [{ user_id: "alice", status: "receipt", count: 1 }],
+    );
+  } finally {
+    f.close();
+  }
+});
+
+test("a failed upload can notify again when retry succeeds without replaying the failure", () => {
+  const f = fixture();
+  try {
+    push.registerDevice("a", "alice", f.device);
+    const s = {
+      id: "recovered",
+      ownerKey: "a",
+      status: "failed",
+      updatedAt: f.now,
+    };
+    assert.equal(push.materialCompleted(s, f.now).queued, 1);
+    assert.equal(push.materialCompleted(s, f.now).queued, 0);
+    s.status = "completed";
+    assert.equal(push.materialCompleted(s, f.now).queued, 1);
+    assert.equal(push.materialCompleted(s, f.now).queued, 0);
+  } finally {
+    f.close();
+  }
 });

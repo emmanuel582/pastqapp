@@ -42,7 +42,7 @@ async function prepare() {
         });
       if (Platform.OS === "android")
         await Notifications.setNotificationChannelAsync("updates", {
-          name: "Uploads and PastQ messages",
+          name: "Uploads and focalPoint messages",
           importance: Notifications.AndroidImportance.DEFAULT,
           sound: "default",
         });
@@ -246,7 +246,7 @@ export async function testNotification(owner: string): Promise<void> {
   ensureOwner(owner);
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "PastQ · Scholar",
+      title: "focalPoint · Scholar",
       body: "Your study reminder is ready. Tap to open your library.",
       sound: "default",
       categoryIdentifier: "study-reminder",

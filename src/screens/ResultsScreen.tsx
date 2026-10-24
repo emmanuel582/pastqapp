@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { View, Pressable } from "react-native";
-import Svg, { Path, Circle } from "react-native-svg";
 import BookOpen from "lucide-react-native/icons/book-open";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
 import RotateCcw from "lucide-react-native/icons/rotate-ccw";
@@ -32,6 +31,25 @@ import type { Attempt } from "../domain/types";
 import type { Props } from "../navigation/types";
 export default function ResultsScreen({ route, navigation }: Props<"Results">) {
   const { owner, palette, refreshPractice } = useApp();
+  const actionLock = useRef(false);
+  useEffect(
+    () =>
+      navigation.addListener("focus", () => {
+        actionLock.current = false;
+      }),
+    [navigation],
+  );
+  function openReview(questionIndex = 0, reviewFilter: AnswerFilter = "all") {
+    if (!attempt || actionLock.current) return;
+    actionLock.current = true;
+    setReviewGroup(null);
+    navigation.navigate("Exam", {
+      attemptId: attempt.id,
+      review: true,
+      questionIndex,
+      reviewFilter,
+    });
+  }
   const [attempt, setAttempt] = useState<Attempt | null>(null),
     [reviewGroup, setReviewGroup] = useState<AnswerFilter | null>(null),
     [error, setError] = useState(""),
@@ -42,13 +60,16 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
       .then((a) => {
         if (active) setAttempt(a);
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        if (active) setError(e.message);
+      });
     return () => {
       active = false;
     };
   }, [owner, route.params.attemptId]);
   async function retry(missed = false) {
-    if (!attempt || busy) return;
+    if (!attempt || busy || actionLock.current) return;
+    actionLock.current = true;
     setBusy(true);
     try {
       const questions = missed
@@ -78,13 +99,14 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
         e instanceof Error ? e.message : "Could not start another session.",
       );
     } finally {
+      actionLock.current = false;
       setBusy(false);
     }
   }
   if (!attempt)
     return (
       <Screen>
-        <Header title="Results" />
+        <Header title="Session complete" />
         {error ? <ErrorText>{error}</ErrorText> : <Loading />}
       </Screen>
     );
@@ -106,7 +128,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
     );
   return (
     <Screen>
-      <Header title="Results" />
+      <Header title="Session complete" />
       <Content
         style={{
           paddingTop: 28,
@@ -125,9 +147,6 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
             sceneHeight={104}
           />
         </View>
-        <Title size={34} style={{ marginTop: 12, marginBottom: 12 }}>
-          Session complete
-        </Title>
         <View
           style={{
             marginTop: 25,
@@ -160,7 +179,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
               </Text>
               <Muted style={{ fontSize: 9, marginTop: 9 }}>
                 {writtenOnly
-                  ? "Parts answered · not auto-marked"
+                  ? "Not auto-marked"
                   : summary.graded
                     ? summary.correct +
                       " of " +
@@ -169,31 +188,6 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
                     : summary.answered + " questions practised · ungraded"}
               </Muted>
             </View>
-            <Svg width={90} height={63} viewBox="0 0 260 180" fill="none">
-              <Path d="M20 156H244" stroke={palette.artInk} opacity={0.25} />
-              <Path
-                d="M30 155V132H77V105H124V78H171V51H218V25"
-                stroke={palette.artInk}
-                strokeWidth={2}
-              />
-              <Path
-                d="M32 131H76V154H32zM79 105H123V154H79zM126 78H170V154H126zM173 51H217V154H173z"
-                fill={palette.artInk}
-                opacity={0.06}
-              />
-              <Path
-                d="m204 23 15 2-1 15"
-                stroke={palette.accent}
-                strokeWidth={2}
-              />
-              <Circle cx={124} cy={78} r={5} fill={palette.accent} />
-              <Path
-                d="M30 126C83 111 117 90 150 66S195 35 218 25"
-                stroke={palette.accent}
-                strokeWidth={2}
-                strokeDasharray="3 5"
-              />
-            </Svg>
           </View>
           <View
             style={{
@@ -224,15 +218,15 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
                         value: summary.correct,
                         label: "Correct",
                         filter: "correct",
-                        color: palette.correct,
-                        wash: palette.correctWash,
+                        color: palette.ink,
+                        wash: palette.wash,
                       },
                       {
                         value: summary.incorrect,
                         label: "Wrong",
                         filter: "incorrect",
-                        color: palette.incorrect,
-                        wash: palette.incorrectWash,
+                        color: palette.ink,
+                        wash: palette.wash,
                       },
                     ]),
                 {
@@ -283,24 +277,26 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
                 }
                 onPress={() => setReviewGroup(item.filter)}
                 style={({ pressed }) => ({
-                  minWidth: "44%",
+                  flexBasis: "47%",
+                  minWidth: 0,
                   flexGrow: 1,
                   gap: 4,
                   padding: 12,
                   borderRadius: 8,
                   borderWidth: 1,
-                  borderColor:
-                    item.filter === "correct" || item.filter === "incorrect"
-                      ? item.color
-                      : palette.line,
+                  borderColor: palette.line,
                   backgroundColor: item.wash,
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
                 <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
                   style={{
                     fontFamily: fonts.mono,
                     fontSize: 22,
+                    lineHeight: 29,
                     color: item.color,
                   }}
                 >
@@ -320,7 +316,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
 
           <Button
             kind="secondary"
-            onPress={() => setReviewGroup("all")}
+            onPress={() => openReview()}
             style={{ marginTop: 22 }}
           >
             <BookOpen size={18} color={palette.ink} />
@@ -338,7 +334,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
             borderBottomColor: palette.line,
           }}
         >
-          {missed ? "Practice these questions" : "Practice again"}
+          {missed ? "Practise missed questions" : "Practice again"}
         </Button>
         <View style={{ paddingVertical: 24 }}>
           <Text
@@ -437,14 +433,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
             indexes={reviewQuestions(attempt, reviewGroup)}
             review
             onSelect={(questionIndex) => {
-              const filter = reviewGroup;
-              setReviewGroup(null);
-              navigation.navigate("Exam", {
-                attemptId: attempt.id,
-                review: true,
-                questionIndex,
-                reviewFilter: filter,
-              });
+              openReview(questionIndex, reviewGroup);
             }}
           />
         </Dialog>

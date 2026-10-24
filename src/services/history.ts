@@ -1,3 +1,4 @@
+import { saveHistorySummary, missingAnalyticsSchema } from "./historySummary";
 import { withSession } from "../storage/sessionQueue";
 import * as records from "../storage/records";
 import { readAttempt } from "../storage/practice";
@@ -37,13 +38,28 @@ async function sync(owner: string) {
       throw error;
     });
     if (!attempt) continue;
-    const summary = historyRow(attempt),
-      input = analyticsInput(attempt);
-    const { error } = await client
-      .from("exam_sessions")
-      .upsert(summary, { onConflict: "id" });
-    if (error) throw error;
-    await savePracticeResult(input);
+    const input = analyticsInput(attempt);
+    if (!(await records.read(owner, "history-summary-synced", attempt.id))) {
+      await saveHistorySummary(client, attempt);
+      await records.write(owner, "history-summary-synced", attempt.id, true);
+    }
+    const capability = await records.read<{ retryAfter: number }>(
+      owner,
+      "analytics-schema",
+      "current",
+    );
+    if (capability && capability.retryAfter > Date.now()) continue;
+    try {
+      await savePracticeResult(input);
+      await records.remove(owner, "analytics-schema", "current");
+    } catch (error) {
+      if (!missingAnalyticsSchema(error)) throw error;
+      // Keep the detailed outcomes in the durable outbox until cloud tables are installed.
+      await records.write(owner, "analytics-schema", "current", {
+        retryAfter: Date.now() + 3600000,
+      });
+      continue;
+    }
     await records.remove(owner, "history-outbox", attempt.id);
     await withSession(owner, attempt.id, async () => {
       if (await records.read(owner, "attempt-deleted", attempt.id)) return;
@@ -102,5 +118,9 @@ export async function remoteHistory(owner: string): Promise<PracticeSummary[]> {
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw error;
-  return (data || []).map((row) => ({ ...row, completed_at: row.created_at }));
+  return (data || []).map((row) => ({
+    ...row,
+    title: row.title || row.material_name || "Practice",
+    completed_at: row.created_at,
+  }));
 }

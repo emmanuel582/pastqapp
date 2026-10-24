@@ -273,7 +273,7 @@ export default function LibraryScreen({
       </View>
       <Row
         title="All subjects"
-        detail="Save everything in this collection."
+
         icon={<Download size={22} color={palette.accent} />}
         onPress={() => {
           navigation.navigate("Download", { ...scope, mode: "all" });
@@ -282,7 +282,7 @@ export default function LibraryScreen({
       />
       <Row
         title="Choose subjects"
-        detail="Pick only the subjects and papers you need."
+
         icon={<BookOpen size={22} color={palette.accent} />}
         onPress={() => {
           navigation.navigate("Download", { ...scope, mode: "select" });

@@ -296,7 +296,7 @@ export default function ProfileScreen({ navigation }: Props<"Profile">) {
               action: () => navigation.navigate("Auth", { mode: "recovery" }),
             },
             {
-              title: "About PastQ",
+              title: "About focalPoint",
               action: () => navigation.navigate("About"),
             },
             {

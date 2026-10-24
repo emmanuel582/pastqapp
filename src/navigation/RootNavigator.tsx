@@ -8,7 +8,7 @@ import {
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
-import { useApp, designPreview } from "../state/AppContext";
+import { useApp } from "../state/AppContext";
 import { supabase } from "../services/auth";
 import { Screen, Loading } from "../components/ui";
 import { useReducedMotion } from "../hooks/useReducedMotion";
@@ -41,38 +41,6 @@ export default function RootNavigator() {
       ? "Main"
       : "Onboarding"
     : "Welcome";
-  let params: Routes[keyof Routes] | undefined;
-  const preview =
-    designPreview && Platform.OS === "web"
-      ? new URL(globalThis.location.href).searchParams.get("screen")
-      : null;
-  const mapped: Record<
-    string,
-    { name: keyof Routes; params?: Routes[keyof Routes] }
-  > = {
-    welcome: { name: "Welcome" },
-    login: { name: "Auth", params: { mode: "login" } },
-    signup: { name: "Auth", params: { mode: "signup" } },
-    onboarding: { name: "Onboarding" },
-    home: { name: "Main", params: { tab: "home" } },
-    library: { name: "Main", params: { tab: "library" } },
-    discover: { name: "Main", params: { tab: "discover" } },
-    preferences: { name: "Main", params: { tab: "preferences" } },
-    theme: { name: "Theme" },
-    setup: { name: "Setup", params: { bundleId: "design-preview" } },
-    upload: { name: "Upload" },
-    saved: { name: "Saved" },
-    history: { name: "History" },
-    progress: { name: "Progress" },
-    storage: { name: "Storage" },
-    reports: { name: "Reports" },
-    reminders: { name: "Reminders" },
-    notifications: { name: "Notifications" },
-  };
-  if (preview && mapped[preview]) {
-    initial = mapped[preview].name;
-    params = mapped[preview].params;
-  }
   const theme = {
     ...(palette.scheme === "dark" ? DarkTheme : DefaultTheme),
     colors: {
@@ -114,9 +82,6 @@ export default function RootNavigator() {
           />
           <Stack.Screen
             name="Auth"
-            initialParams={
-              initial === "Auth" ? (params as Routes["Auth"]) : undefined
-            }
             getComponent={() => require("../screens/AuthScreen").default}
           />
           <Stack.Screen
@@ -125,16 +90,10 @@ export default function RootNavigator() {
           />
           <Stack.Screen
             name="Main"
-            initialParams={
-              initial === "Main" ? (params as Routes["Main"]) : undefined
-            }
             getComponent={() => require("../screens/MainScreen").default}
           />
           <Stack.Screen
             name="Setup"
-            initialParams={
-              initial === "Setup" ? (params as Routes["Setup"]) : undefined
-            }
             getComponent={() => require("../screens/SetupScreen").default}
           />
           <Stack.Screen
@@ -208,6 +167,18 @@ export default function RootNavigator() {
           />
           <Stack.Screen
             name="About"
+            getComponent={() => require("../screens/InfoScreen").default}
+          />
+          <Stack.Screen
+            name="Privacy"
+            getComponent={() => require("../screens/InfoScreen").default}
+          />
+          <Stack.Screen
+            name="Terms"
+            getComponent={() => require("../screens/InfoScreen").default}
+          />
+          <Stack.Screen
+            name="DeleteAccount"
             getComponent={() => require("../screens/InfoScreen").default}
           />
           <Stack.Screen

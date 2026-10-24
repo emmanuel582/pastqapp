@@ -377,26 +377,18 @@ export default function ProgressScreen({ navigation }: Props<"Progress">) {
           ListEmptyComponent={
             detail ? null : (
               <View style={{ gap: 16 }}>
-                <Muted>
-                  {all.length
-                    ? "No finished practice matches these filters."
-                    : "Finish a practice to see your topics."}
-                </Muted>
+                <Muted>{all.length ? "No results" : "No sessions yet"}</Muted>
                 <Button
                   onPress={() =>
                     navigation.navigate("Main", { tab: "library" })
                   }
                 >
-                  Find questions to practise
+                  Practise
                 </Button>
               </View>
             )
           }
-          ListFooterComponent={
-            <Muted style={{ marginTop: 22 }}>
-              Based on finished practices saved on this phone.
-            </Muted>
-          }
+          ListFooterComponent={<></>}
         />
       )}
     </Screen>

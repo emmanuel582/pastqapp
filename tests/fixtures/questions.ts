@@ -1,5 +1,5 @@
-import type { Bundle, Catalog } from "../domain/types";
-// The three source App.tsx DEMO_QUESTIONS, available only in explicit development preview.
+import type { Bundle, Catalog } from "../../src/domain/types";
+// Isolated test questions. Never imported by the application.
 export const previewBundle: Bundle = {
   id: "design-preview",
   title: "UTME practice",

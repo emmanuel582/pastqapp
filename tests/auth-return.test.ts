@@ -1,3 +1,4 @@
+import * as authRedirect from "../src/domain/authRedirect";
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -18,7 +19,11 @@ function fixture() {
     signInWithOAuth: async (input: any) => {
       oauth = input;
       return {
-        data: { url: "https://accounts.google.com/oauth" },
+        data: {
+          url:
+            "https://example.supabase.co/auth/v1/authorize?provider=google&redirect_to=" +
+            encodeURIComponent(input.options.redirectTo),
+        },
         error: null,
       };
     },
@@ -44,6 +49,7 @@ function fixture() {
         },
       },
       require: (p: string) => {
+        if (p === "../domain/authRedirect") return authRedirect;
         if (p === "../domain/offline")
           return { cachedStudySession: () => null };
         if (p === "react-native-url-polyfill/auto") return {};
@@ -57,8 +63,9 @@ function fixture() {
         if (p === "expo-linking")
           return {
             createURL: (path: string, options: any) => {
-              assert.equal(options.scheme, "pastq");
-              return "pastq://" + path;
+              throw Error(
+                "Native OAuth must not derive a callback from the development host",
+              );
             },
           };
         if (p === "expo-web-browser")

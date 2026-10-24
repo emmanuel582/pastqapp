@@ -70,9 +70,7 @@ export default function HomeScreen({
   const first = profile?.full_name.trim().split(/\s+/)[0] || "there";
   return (
     <View style={{ flex: 1 }}>
-      <Header
-        right={<Muted>{profile?.study_focus?.name || "Your study room"}</Muted>}
-      />
+      <Header brand />
       <Content style={{ paddingTop: 28 }}>
         <Title size={31} style={{ marginBottom: 25 }}>
           Hi, {first}.
@@ -116,8 +114,8 @@ export default function HomeScreen({
           : null}
         {pendingUpload ? (
           <Row
-            title="Your questions are being prepared"
-            detail="Continue reviewing your uploaded material."
+            title="Uploads"
+
             onPress={() =>
               navigation.navigate("Processing", { sessionId: pendingUpload })
             }
@@ -142,7 +140,6 @@ export default function HomeScreen({
               }}
             >
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Muted>{plan.reason}</Muted>
                 <Title size={25} style={{ marginTop: 12, marginBottom: 16 }}>
                   {plan.material.title}
                 </Title>

@@ -13,7 +13,7 @@ import Bell from "lucide-react-native/icons/bell";
 import Check from "lucide-react-native/icons/check";
 import RefreshCw from "lucide-react-native/icons/refresh-cw";
 import { Image } from "expo-image";
-import { useApp, designPreview } from "../state/AppContext";
+import { useApp } from "../state/AppContext";
 import {
   Screen,
   Header,
@@ -57,13 +57,11 @@ export default function NotificationsScreen({
     let timer: ReturnType<typeof setInterval> | undefined;
     async function load() {
       try {
-        const value = designPreview
-          ? { items: [], total: 0, unread: 0 }
-          : await request<Inbox>(
-              "/api/reminders/inbox?offset=" + offset,
-              { signal: abort.signal },
-              true,
-            );
+        const value = await request<Inbox>(
+          "/api/reminders/inbox?offset=" + offset,
+          { signal: abort.signal },
+          true,
+        );
         if (!abort.signal.aborted) {
           void records
             .write(owner, "inbox-cache", String(offset), value)
@@ -207,10 +205,7 @@ export default function NotificationsScreen({
               <Text style={{ fontFamily: fonts.semibold }}>
                 Phone notifications
               </Text>
-              <Muted>
-                Get upload completion alerts and messages from PastQ, even when
-                the app is closed.
-              </Muted>
+              <></>
               <Button
                 kind="secondary"
                 disabled={pushBusy || owner === "guest"}
@@ -219,15 +214,12 @@ export default function NotificationsScreen({
                 {pushBusy
                   ? "Updating…"
                   : pushEnabled
-                    ? "Turn off phone notifications"
-                    : "Enable phone notifications"}
+                    ? "Disable notifications"
+                    : "Enable notifications"}
               </Button>
               {pushEnabled && pushQuiet ? (
                 <View style={{ gap: 10 }}>
-                  <Muted>
-                    iPhone updates arrive quietly in Notification Centre. Turn
-                    on alerts for banners and sound.
-                  </Muted>
+                  <></>
                   <Button
                     kind="text"
                     disabled={pushBusy}
@@ -256,7 +248,7 @@ export default function NotificationsScreen({
                   disabled={pushBusy}
                   onPress={() => void sendPushTest()}
                 >
-                  Send a test notification
+                  Test notification
                 </Button>
               ) : null}
               {pushMessage ? <Muted>{pushMessage}</Muted> : null}
@@ -293,7 +285,7 @@ export default function NotificationsScreen({
               }}
             >
               <Bell size={16} color={palette.muted} />
-              <Muted style={{ fontSize: 10 }}>PastQ</Muted>
+              <></>
               <Muted style={{ marginLeft: "auto", fontSize: 9 }}>
                 {new Date(item.sent_at).toLocaleString()}
               </Muted>
@@ -344,7 +336,7 @@ export default function NotificationsScreen({
                     else navigation.navigate(target.screen);
                   }}
                 >
-                  Open in PastQ
+                  Open
                 </Button>
               ) : null}
               {!item.read_at ? (
@@ -371,7 +363,7 @@ export default function NotificationsScreen({
                 title="You’re all caught up."
                 icon={<Bell size={30} color={palette.accent} />}
               >
-                <Muted>Messages from PastQ will appear here.</Muted>
+                <></>
               </Empty>
             ) : null}
           </View>

@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "PastQ",
+    "name": "focalPoint",
     "slug": "focalpoint",
-    "scheme": "pastq",
-    "version": "1.0.7",
+    "scheme": ["focalpoint", "pastq"],
+    "version": "1.0.8",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -11,11 +11,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.pastq.study",
       "infoPlist": {
-        "NSCameraUsageDescription": "Photograph your question papers to study them in PastQ.",
+        "NSCameraUsageDescription": "Photograph your question papers to study them in focalPoint.",
         "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "8",
+      "buildNumber": "9",
       "appleTeamId": "4F385JKS7J"
     },
     "android": {
@@ -28,7 +28,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
       },
-      "versionCode": 8,
+      "versionCode": 9,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -60,7 +60,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Photograph your question papers to study them in PastQ.",
+          "cameraPermission": "Photograph your question papers to study them in focalPoint.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -83,7 +83,8 @@
           }
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "expo-background-task"
     ],
     "experiments": {
       "reactCompiler": true

@@ -6,7 +6,7 @@ import ArrowRight from "lucide-react-native/icons/arrow-right";
 import Check from "lucide-react-native/icons/check";
 import ChevronRight from "lucide-react-native/icons/chevron-right";
 import { Image } from "expo-image";
-import { useApp, designPreview } from "../state/AppContext";
+import { useApp } from "../state/AppContext";
 import {
   Header,
   Text,
@@ -47,10 +47,6 @@ export default function DiscoverScreen({
     [joinError, setJoinError] = useState(""),
     [busy, setBusy] = useState(false);
   async function load(signal?: AbortSignal) {
-    if (designPreview) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError("");
     try {

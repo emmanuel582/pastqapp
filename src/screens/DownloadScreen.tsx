@@ -1,3 +1,4 @@
+import { registerTransferRecovery } from "../services/backgroundTransfers";
 import {
   savedDownloadSelection,
   groupDownloadPapers,
@@ -123,6 +124,7 @@ export default function DownloadScreen({
     count = parts.reduce((n, p) => n + p.count, 0);
   async function start() {
     if (!ready || !jobs.length || lock.current) return;
+    void registerTransferRecovery().catch(() => {});
     lock.current = true;
     setBusy(true);
     setError("");
@@ -213,7 +215,7 @@ export default function DownloadScreen({
   return (
     <Screen>
       <Header
-        title={detail ? detail.subject : "Download subjects"}
+        title={detail ? detail.subject : title || "Download"}
         onBack={() => (detail ? setDetail(null) : navigation.goBack())}
       />
       {!ready ? (
@@ -231,9 +233,6 @@ export default function DownloadScreen({
         </Content>
       ) : stage === "selection" ? (
         <Content style={{ paddingTop: 18 }}>
-          <Title size={27} style={{ marginBottom: 24 }}>
-            {title}
-          </Title>
           {detail
             ? groupDownloadPapers(rows).map((part) => (
                 <Row

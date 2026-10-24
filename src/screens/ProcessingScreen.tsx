@@ -1,3 +1,4 @@
+import { confirmedMaterial } from "../services/confirmedMaterial";
 import { missingPageInsertion, processingFollowUp } from "../domain/processing";
 import React, { useEffect, useRef, useState } from "react";
 import { View, AppState } from "react-native";
@@ -5,7 +6,6 @@ import * as DocumentPicker from "expo-document-picker";
 import { useApp } from "../state/AppContext";
 import {
   Screen,
-  Wordmark,
   Content,
   Title,
   Text,
@@ -47,6 +47,13 @@ export default function ProcessingScreen({
       try {
         const value = await visionSession(route.params.sessionId, abort.signal);
         if (!mounted) return;
+        const confirmed = await confirmedMaterial(owner, value);
+        if (!mounted) return;
+        if (confirmed) {
+          finish.current = true;
+          navigation.replace("Setup", { bundleId: confirmed });
+          return;
+        }
         setSession(value);
         setInterrupted(false);
         await records.write(owner, "vision-session", value.id, value);
@@ -160,7 +167,7 @@ export default function ProcessingScreen({
         const form = new FormData();
         form.append("followUpId", item.id);
         form.append("action", "replace_page");
-        appendFile(form, "image", file);
+        await appendFile(form, "image", file);
         setSession(await replyVision(session.id, form));
       }
       setPollRevision((value) => value + 1);
@@ -177,9 +184,6 @@ export default function ProcessingScreen({
 
   return (
     <Screen>
-      <View style={{ paddingVertical: 25, paddingHorizontal: 26 }}>
-        <Wordmark />
-      </View>
       <Content
         style={{
           paddingHorizontal: 30,
@@ -213,7 +217,6 @@ export default function ProcessingScreen({
           >
             {title}
           </Title>
-          {session?.name ? <Muted>{session.name}</Muted> : null}
           {!waiting && !failed && !interrupted ? (
             <View style={{ width: "100%", marginTop: 30 }}>
               {progress !== null ? (
@@ -238,23 +241,14 @@ export default function ProcessingScreen({
               </View>
             </View>
           ) : null}
-          {!failed && !waiting ? (
-            <Muted style={{ textAlign: "center" }}>
-              Your uploaded files are on the server. You can close PastQ while
-              processing continues.
-            </Muted>
-          ) : null}
+          {!failed && !waiting ? <></> : null}
           <Button
             kind="text"
             onPress={() => navigation.navigate("Notifications")}
           >
-            Upload completion alerts
+            Notifications
           </Button>
-          {interrupted ? (
-            <Muted>Reconnecting. Your preparation will continue.</Muted>
-          ) : failed ? (
-            <Muted>Your material is saved. Try preparing it again.</Muted>
-          ) : null}
+          {interrupted ? <></> : failed ? <></> : null}
           {session?.followUps
             ?.filter((f) => f.status === "open")
             .map((item) => (

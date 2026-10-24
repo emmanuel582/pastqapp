@@ -89,7 +89,7 @@ export function Wordmark({ size = 23 }: { size?: number }) {
   const { palette } = useApp();
   return (
     <Text
-      accessibilityLabel="PastQ"
+      accessibilityLabel="focalPoint"
       style={{
         fontFamily: fonts.bold,
         fontSize: size,
@@ -97,7 +97,7 @@ export function Wordmark({ size = 23 }: { size?: number }) {
         letterSpacing: -size * 0.056,
       }}
     >
-      past
+      focal
       <Text
         style={{
           fontFamily: fonts.bold,
@@ -107,7 +107,7 @@ export function Wordmark({ size = 23 }: { size?: number }) {
           letterSpacing: -size * 0.056,
         }}
       >
-        q
+        Point
       </Text>
     </Text>
   );
@@ -246,7 +246,7 @@ export function Header({
   title,
   onBack,
   right,
-  brand = true,
+  brand = false,
   style,
 }: {
   title?: string;

@@ -12,7 +12,7 @@ import {
   patchAnswer,
   questionIdentity,
 } from "../src/domain/attempt";
-import { previewBundle } from "../src/data/preview";
+import { previewBundle } from "./fixtures/questions";
 test("history matches the browser contract without obsolete completed/graded column names", () => {
   const a = completeAttempt(
       createAttempt(

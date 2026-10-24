@@ -1,5 +1,11 @@
+import { registerTransferRecovery } from "../services/backgroundTransfers";
+import { stageUploadFiles } from "../services/uploadTransport";
 import { checkCancelled } from "../domain/cancellation";
-import { materialMimeType } from "../domain/files";
+import {
+  materialPickerTypes,
+  materialMimeType,
+  supportedMaterial,
+} from "../domain/files";
 import React, { useEffect, useRef, useState } from "react";
 import { View, ScrollView } from "react-native";
 import { Image } from "expo-image";
@@ -18,7 +24,6 @@ import {
   Screen,
   Header,
   Content,
-  Title,
   Text,
   Muted,
   Button,
@@ -49,7 +54,19 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
     [error, setError] = useState(""),
     lock = useRef(false);
   const transfer = useRef<AbortController | null>(null);
-  useEffect(() => () => transfer.current?.abort(), []);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  // Screen navigation does not cancel a native transfer. Account changes do.
+  const transferOwner = useRef(owner);
+  useEffect(() => {
+    if (transferOwner.current !== owner) transfer.current?.abort();
+    transferOwner.current = owner;
+  }, [owner]);
   useEffect(() => {
     let active = true;
     void records
@@ -72,7 +89,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
     if (busy) return;
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "application/pdf", "text/plain", "application/json"],
+        type: materialPickerTypes,
         multiple: true,
         copyToCacheDirectory: true,
       });
@@ -80,6 +97,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
         setDraft((d) => ({
           ...d,
           sessionId: undefined,
+          started: false,
           files: [
             ...d.files,
             ...result.assets
@@ -112,28 +130,40 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
   }
   async function submit() {
     if (lock.current || !draft.files.length) return;
+    void registerTransferRecovery().catch(() => {});
     lock.current = true;
     setBusy(true);
     setError("");
     try {
       const abort = new AbortController();
       transfer.current = abort;
+      if (draft.files.some((f) => !supportedMaterial(f.name)))
+        throw Error("Choose a supported photo or document.");
+      const files = await stageUploadFiles(owner, draft.files);
+      const staged = { ...draft, files, started: true };
+      await records.write(owner, "upload", "draft", staged);
+      if (mounted.current) setDraft(staged);
       const id = await uploadMaterial(
-        draft.files,
+        files,
         draft.name,
-        (done, total, label) => setProgress({ done, total, label }),
+        (done, total, label) => {
+          if (mounted.current) setProgress({ done, total, label });
+        },
         draft.sessionId,
         async (sessionId) => {
-          const next = { ...draft, sessionId };
-          setDraft(next);
+          const next = { ...staged, sessionId };
+          if (mounted.current) setDraft(next);
           await records.write(owner, "upload", "draft", next);
         },
         abort.signal,
       );
       checkCancelled(abort.signal);
       await records.write(owner, "processing", "current", id);
-      setDraft({ files: [], name: "" });
-      navigation.replace("Processing", { sessionId: id });
+      await records.remove(owner, "upload", "draft");
+      if (mounted.current) {
+        setDraft({ files: [], name: "" });
+        navigation.replace("Processing", { sessionId: id });
+      }
     } catch (e) {
       setError(
         e instanceof Error
@@ -147,7 +177,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
   }
   return (
     <Screen>
-      <Header onBack={() => navigation.goBack()} />
+      <Header title="Upload material" onBack={() => navigation.goBack()} />
       <Content
         style={{
           paddingTop: 30,
@@ -156,16 +186,6 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
           maxWidth: 600,
         }}
       >
-        <Title
-          size={36}
-          style={{
-            fontFamily: fonts.serifMedium,
-            letterSpacing: -1.62,
-            marginBottom: 26,
-          }}
-        >
-          Upload material
-        </Title>
         <View
           style={{
             padding: 24,
@@ -189,9 +209,6 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
             <View style={{ alignItems: "center", gap: 12 }}>
               <PaperArt />
               <View style={{ width: "100%" }}>
-                <Muted style={{ textAlign: "center", marginTop: 8 }}>
-                  Photos, PDF or text
-                </Muted>
                 <Button onPress={() => void choose()} style={{ marginTop: 20 }}>
                   <Upload size={18} color={palette.onButton} />
                   <Text

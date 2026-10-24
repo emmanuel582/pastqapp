@@ -36,6 +36,9 @@ export type Routes = {
   Profile: undefined;
   About: undefined;
   Support: undefined;
+  Privacy: undefined;
+  Terms: undefined;
+  DeleteAccount: undefined;
 };
 export type Props<T extends keyof Routes> = NativeStackScreenProps<Routes, T>;
 export type Navigation = NativeStackNavigationProp<Routes>;

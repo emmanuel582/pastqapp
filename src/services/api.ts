@@ -7,7 +7,7 @@ export type ApiOptions = RequestInit & { timeoutMs?: number };
 export function apiUrl(path: string) {
   if (!API_BASE)
     throw new Error(
-      "Connect to your PastQ API to continue. Set EXPO_PUBLIC_API_URL in the mobile project.",
+      "Connect to your focalPoint API to continue. Set EXPO_PUBLIC_API_URL in the mobile project.",
     );
   const base =
     __DEV__ && Platform.OS === "web"
@@ -70,7 +70,14 @@ async function consume<T>(
               "Could not finish (" + res.status + "). Try again.",
       );
     }
-    return await read(res);
+    const value = await read(res);
+    if (
+      authenticated &&
+      (await supabase?.auth.getSession())?.data.session?.user.id !==
+        original!.user.id
+    )
+      throw new Error("Your account changed. Sign in again.");
+    return value;
   } catch (error) {
     if (controller.signal.aborted && !external?.aborted)
       throw new Error(

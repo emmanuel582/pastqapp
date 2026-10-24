@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createAttempt } from "../src/domain/attempt";
-import { previewBundle } from "../src/data/preview";
+import { previewBundle } from "./fixtures/questions";
 import { reviewQuestions, questionNumberLabel } from "../src/domain/review";
 import { examCountdown, formatTime } from "../src/domain/examClock";
 test("result boxes jump to correct, wrong, unanswered and ungraded original question numbers", () => {

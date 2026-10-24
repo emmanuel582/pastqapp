@@ -169,9 +169,7 @@ export default function ThemeScreen({ navigation }: Props<"Theme">) {
             );
           })}
         </View>
-        {preferences.theme === "system" ? (
-          <Muted style={{ marginTop: 14 }}>Follows your device.</Muted>
-        ) : null}
+        {preferences.theme === "system" ? <></> : null}
         {error ? <ErrorText>{error}</ErrorText> : null}
       </Content>
     </Screen>

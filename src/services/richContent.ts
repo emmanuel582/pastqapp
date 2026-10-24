@@ -63,8 +63,8 @@ export function contentHtml(
         "text-decoration": [/^(underline|line-through)$/],
       },
     },
-    allowedSchemes: ["data", "https", "http"],
-    allowedSchemesByTag: { img: ["data", "https", "http"] },
+    allowedSchemes: ["data", "https"],
+    allowedSchemesByTag: { img: ["data", "https"] },
     transformTags: {
       span: (_tag, attribs) => {
         const style = attribs.style || "";
@@ -113,7 +113,7 @@ export function richDocument(
   serif: boolean,
 ) {
   return (
-    '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\';img-src data: https: http:;font-src data:;style-src \'unsafe-inline\';script-src \'nonce-pastq-measure\'"><style>' +
+    '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\';img-src data: https:;font-src data:;style-src \'unsafe-inline\';script-src \'nonce-pastq-measure\'"><style>' +
     mathCss +
     "html,body{margin:0;padding:0;background:transparent;color:" +
     palette.ink +

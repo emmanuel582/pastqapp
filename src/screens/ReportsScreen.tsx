@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, FlatList } from "react-native";
 import { Screen, Header, Text, Muted, Button, Empty } from "../components/ui";
-import { useApp, designPreview } from "../state/AppContext";
+import { useApp } from "../state/AppContext";
 import { syncReports } from "../services/reports";
 import * as records from "../storage/records";
 import Skeleton from "../components/Skeleton";
@@ -16,15 +16,14 @@ export default function ReportsScreen({ navigation }: Props<"Reports">) {
     void records.list<QuestionReport>(owner, "report").then((value) => {
       if (active) setRows(value);
     });
-    if (!designPreview)
-      void syncReports(owner)
-        .then(() => records.list<QuestionReport>(owner, "report"))
-        .then((value) => {
-          if (active) setRows(value);
-        })
-        .catch(() => {
-          if (active) setError("Showing reports saved on this device.");
-        });
+    void syncReports(owner)
+      .then(() => records.list<QuestionReport>(owner, "report"))
+      .then((value) => {
+        if (active) setRows(value);
+      })
+      .catch(() => {
+        if (active) setError("Showing reports saved on this device.");
+      });
     return () => {
       active = false;
     };

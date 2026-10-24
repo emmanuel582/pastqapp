@@ -138,6 +138,7 @@ export interface StudySession {
   joined: boolean;
 }
 export interface VisionSession {
+  approvedAt?: string | null;
   ingest?: unknown;
   id: string;
   name: string;

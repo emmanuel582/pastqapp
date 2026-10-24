@@ -20,7 +20,7 @@ class ErrorBoundary extends React.Component<
       return (
         <View style={styles.loading}>
           <Text style={{ color: "#eee9e1", fontSize: 20 }}>
-            PastQ could not open this screen.
+            focalPoint could not open this screen.
           </Text>
           <Text style={{ color: "#aaa49b", padding: 24 }}>
             {__DEV__
@@ -55,7 +55,7 @@ export default function App() {
       <View style={styles.loading}>
         {error ? (
           <Text style={{ color: "#eee9e1" }}>
-            The bundled fonts could not load. Reopen PastQ to retry.
+            The bundled fonts could not load. Reopen focalPoint to retry.
           </Text>
         ) : (
           <ActivityIndicator color="#c7927d" />

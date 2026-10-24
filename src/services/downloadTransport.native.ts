@@ -1,5 +1,6 @@
 import {
   File,
+  FileMode,
   Directory,
   Paths,
   DownloadTask,
@@ -81,33 +82,75 @@ async function createTransfer(
     "download-resume",
     part.hash,
   );
+  const range = await records.read<{ offset: number }>(
+    owner,
+    "download-range",
+    part.hash,
+  );
+  const tail = new File(folder, part.hash + ".tail");
+  const pausedValid =
+    !!state?.resumeData &&
+    state.url === url &&
+    (state.fileUri === file.uri ||
+      (state.fileUri === tail.uri &&
+        range?.offset === (file.exists ? file.size : 0))) &&
+    (Platform.OS === "ios" || new File(state.fileUri).exists);
+  // An interrupted Android stream leaves real bytes on disk. Fold them into the verified prefix.
+  if (!pausedValid && tail.exists) {
+    if (tail.size === part.bytes) {
+      if (file.exists) file.delete();
+      await tail.move(file);
+    } else if (
+      range &&
+      range.offset === (file.exists ? file.size : 0) &&
+      tail.size <= part.bytes - range.offset
+    ) {
+      appendBytes(file, tail);
+      tail.delete();
+    } else tail.delete();
+  }
+  if (file.exists && file.size > part.bytes) file.delete();
+  const offset = file.exists ? file.size : 0;
+  if (offset === part.bytes) {
+    const done = {
+      file,
+      bytes: part.bytes,
+      promise: Promise.resolve(file),
+      failed: false,
+    };
+    transfers.set(id, done);
+    return done;
+  }
   const options = {
     sessionType: "background" as const,
+    headers: pausedValid
+      ? state!.headers || { "Accept-Encoding": "identity" }
+      : {
+          "Accept-Encoding": "identity",
+          ...(offset ? { Range: "bytes=" + offset + "-" } : {}),
+        },
     onProgress: (p: { bytesWritten: number }) => {
       const current = transfers.get(id);
       if (current) {
-        current.bytes = Math.max(0, Math.min(part.bytes, p.bytesWritten));
+        current.bytes = Math.max(
+          0,
+          Math.min(part.bytes, offset + p.bytesWritten),
+        );
         notify();
       }
     },
   };
   let task: DownloadTask;
-  if (
-    state?.resumeData &&
-    state.url === url &&
-    state.fileUri === file.uri &&
-    (Platform.OS === "ios" || file.exists)
-  )
-    task = DownloadTask.fromSavable(state, options);
+  if (pausedValid) task = DownloadTask.fromSavable(state!, options);
   else {
-    if (file.exists) file.delete();
-    task = File.createDownloadTask(url, file, options);
+    if (offset)
+      await records.write(owner, "download-range", part.hash, { offset });
+    task = File.createDownloadTask(url, offset ? tail : file, options);
   }
   const t: Transfer = {
     file,
     task,
-    bytes:
-      state?.resumeData && file.exists ? Math.min(file.size, part.bytes) : 0,
+    bytes: offset,
     failed: false,
     promise: Promise.resolve(file),
   };
@@ -115,16 +158,32 @@ async function createTransfer(
   t.promise = (
     task.state === "paused" ? task.resumeAsync() : task.downloadAsync()
   )
-    .then((result) => {
+    .then(async (result) => {
       if (!result) throw Error("Download paused.");
+      if (result.uri !== file.uri) {
+        // Some proxies ignore Range and return the complete resource; accept it only as a full file.
+        if (result.size === part.bytes) {
+          if (file.exists) file.delete();
+          await result.move(file);
+        } else if (offset + result.size === part.bytes) {
+          appendBytes(file, result);
+          result.delete();
+        } else throw Error("Download interrupted. Resume to continue.");
+      }
+      await records.remove(owner, "download-resume", part.hash);
+      await records.remove(owner, "download-range", part.hash);
       t.bytes = part.bytes;
       notify();
-      return result;
+      return file;
     })
     .catch(async (error) => {
       t.failed = true;
-      if (task.state !== "paused")
-        await records.remove(owner, "download-resume", part.hash);
+      // Keep disk prefixes and pause data. A retry never discards other completed parts.
+      if (task.state === "paused") {
+        const saved = task.savable();
+        if (saved.resumeData)
+          await records.write(owner, "download-resume", part.hash, saved);
+      } else await records.remove(owner, "download-resume", part.hash);
       throw error;
     });
   // Files are consumed one at a time. Later native transfers can finish while JS is suspended.
@@ -249,6 +308,22 @@ export async function pauseParts(owner: string, value: Manifest) {
     }),
   );
 }
+function appendBytes(destination: File, source: File) {
+  if (!destination.exists) destination.create();
+  const input = source.open(FileMode.ReadOnly),
+    output = destination.open(FileMode.Append);
+  try {
+    for (let left = source.size; left > 0;) {
+      const bytes = input.readBytes(Math.min(65536, left));
+      if (!bytes.length) throw Error("Incomplete download file.");
+      output.writeBytes(bytes);
+      left -= bytes.length;
+    }
+  } finally {
+    input.close();
+    output.close();
+  }
+}
 export async function forgetParts(
   owner: string,
   value: Manifest,
@@ -259,9 +334,14 @@ export async function forgetParts(
       t = transfers.get(id);
     if (t?.task?.state === "active") continue;
     if (t?.file.exists) t.file.delete();
+    if (t?.file) {
+      const tail = new File(t.file.parentDirectory, p.hash + ".tail");
+      if (tail.exists) tail.delete();
+    }
     t?.task?.release();
     transfers.delete(id);
     await records.remove(owner, "download-resume", p.hash);
+    await records.remove(owner, "download-range", p.hash);
   }
 }
 
@@ -282,6 +362,7 @@ export async function clearTransferCache(owner: string) {
   if (folder.exists) folder.delete();
   await records.commit(owner, [
     { kind: "download-resume", remove: true },
+    { kind: "download-range", remove: true },
     { kind: "download-part", remove: true },
   ]);
 }

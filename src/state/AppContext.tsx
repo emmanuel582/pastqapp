@@ -1,3 +1,7 @@
+import {
+  registerTransferRecovery,
+  resumePendingTransfers,
+} from "../services/backgroundTransfers";
 import { disconnectPush } from "../services/remotePush";
 import { syncAccount } from "../services/sync";
 import { remoteHistory, type PracticeSummary } from "../services/history";
@@ -38,9 +42,6 @@ import type {
   Bookmark,
 } from "../domain/types";
 import { dark, light, type Palette } from "../theme/tokens";
-import { previewBundle, previewCatalog } from "../data/preview";
-export const designPreview =
-  __DEV__ && process.env.EXPO_PUBLIC_DESIGN_PREVIEW === "true";
 const defaults: Preferences = {
   theme: "dark",
   preparation: false,
@@ -103,8 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     syncBusy = useRef(new Set<string>());
   const [remoteSessions, setRemoteSessions] = useState<PracticeSummary[]>([]),
     [syncError, setSyncError] = useState("");
-  const owner =
-      session?.user.id || (designPreview ? "design-preview" : "guest"),
+  const owner = session?.user.id || "guest",
     ownerRef = useRef(owner);
   ownerRef.current = owner;
   const scheme = useColorScheme();
@@ -122,15 +122,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (active && value) setPrefs({ ...defaults, ...value });
       })
       .catch(() => {});
-    if (designPreview) {
-      setProfile({
-        id: "design-preview",
-        email: "student@example.com",
-        full_name: "Student",
-        onboarding_complete: true,
-      });
-      setReady(true);
-    }
     if (supabase) {
       let receivedAuthEvent = false;
       void readCachedStudySession()
@@ -191,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {});
     if (!session) {
-      if (!designPreview) setProfile(null);
+      setProfile(null);
       return;
     }
     const user = session.user;
@@ -259,27 +250,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       active = false;
     };
   }, [session?.user.id, owner]);
+  useEffect(() => {
+    if (owner === "guest") return;
+    const controller = new AbortController();
+    void registerTransferRecovery().catch(() => {});
+    void resumePendingTransfers(controller.signal).catch(() => {});
+    // Retry saved jobs on return to the app; an explicit download pause is preserved.
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active")
+        void resumePendingTransfers(controller.signal).catch(() => {});
+    });
+    return () => {
+      controller.abort("account-changed");
+      sub.remove();
+    };
+  }, [owner]);
   const refreshSaved = useCallback(async () => {
     const id = owner;
-    let rows = await library.savedBundles(id);
-    if (designPreview && !rows.length) {
-      await library.saveBundle(id, previewBundle);
-      rows = await library.savedBundles(id);
-    }
-    if (ownerRef.current === id)
-      setSaved(
-        designPreview && !rows.length
-          ? [{ ...previewBundle, question_count: 3 }]
-          : rows,
-      );
+    const rows = await library.savedBundles(id);
+    if (ownerRef.current === id) setSaved(rows);
   }, [owner]);
   const syncNow = useCallback(async () => {
-    if (
-      owner === "guest" ||
-      owner === "design-preview" ||
-      syncBusy.current.has(owner)
-    )
-      return;
+    if (owner === "guest" || syncBusy.current.has(owner)) return;
     syncBusy.current.add(owner);
     try {
       const results = await Promise.allSettled([
@@ -325,12 +317,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [owner]);
   const refreshLibrary = useCallback(async () => {
-    if (designPreview) {
-      setCatalog(previewCatalog);
-      setMaterials([previewBundle]);
-      setLibraryStatus("ready");
-      return;
-    }
     if (libraryBusy.current.has(owner)) return;
     libraryBusy.current.add(owner);
     let cached = false;
@@ -427,7 +413,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       const next = { ...profile, ...value };
       await records.write(owner, "profile", "current", next);
-      setProfile(next);
+      if (ownerRef.current === owner) setProfile(next);
     },
     [profile, owner, session],
   );

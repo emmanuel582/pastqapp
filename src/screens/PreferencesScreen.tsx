@@ -1,3 +1,4 @@
+import CircleHelp from "lucide-react-native/icons/circle-question-mark";
 import React, { useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
@@ -34,6 +35,7 @@ export default function PreferencesScreen({
     .join("")
     .toUpperCase();
   const settings = [
+    { title: "Help & privacy", Icon: CircleHelp, screen: "Support" as const },
     { title: "Past sessions", Icon: History, screen: "History" as const },
     { title: "Saved questions", Icon: Bookmark, screen: "Saved" as const },
     { title: "Storage & backup", Icon: Database, screen: "Storage" as const },
@@ -128,11 +130,13 @@ export default function PreferencesScreen({
       >
         <SessionActivityCard onPress={() => navigation.navigate("Progress")} />
         <View style={{ marginTop: 18 }}>
-          {settings.map(({ title, detail, Icon, screen }, index) => (
-            <View key={title} style={{ marginTop: index === 2 ? 24 : 0 }}>
+          {settings.map(({ title, Icon, screen }, index) => (
+            <View
+              key={title}
+              style={{ marginTop: title === "Storage & backup" ? 24 : 0 }}
+            >
               <Row
                 title={title}
-                detail={detail}
                 icon={<Icon size={20} color={palette.accent} />}
                 onPress={() => navigation.navigate(screen)}
                 style={{ minHeight: index < 2 ? 64 : 72 }}

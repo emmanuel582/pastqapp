@@ -64,14 +64,14 @@ async function register(
 ) {
   if (Constants.executionEnvironment === "storeClient")
     throw Error(
-      "Open the installed PastQ app to enable phone notifications. Expo Go supports local study reminders only.",
+      "Open the installed focalPoint app to enable phone notifications. Expo Go supports local study reminders only.",
     );
   if (
     Platform.OS === "android" &&
     !("googleServicesFile" in appConfig.expo.android)
   )
     throw Error(
-      "Phone notifications are not available in this Android build yet. Messages from PastQ still appear in your inbox.",
+      "Phone notifications are not available in this Android build yet. Messages from focalPoint still appear in your inbox.",
     );
   await ensureOwner(owner);
   if (!(await permission(prompt))) return;
@@ -87,7 +87,7 @@ async function register(
     ).data;
   } catch {
     throw Error(
-      "This build could not connect to phone notifications. Check your internet connection and use the latest installed PastQ app.",
+      "This build could not connect to phone notifications. Check your internet connection and use the latest installed focalPoint app.",
     );
   }
   await ensureOwner(owner);

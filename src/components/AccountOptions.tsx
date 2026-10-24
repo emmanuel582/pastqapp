@@ -32,14 +32,14 @@ export default function AccountOptions({
             }}
           />
           <Row
-            title="About PastQ"
+            title="About focalPoint"
             onPress={() => {
               onClose();
               navigation.navigate("About");
             }}
           />
           <Row
-            title="Help & support"
+            title="Help & privacy"
             onPress={() => {
               onClose();
               navigation.navigate("Support");

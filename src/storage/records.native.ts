@@ -8,12 +8,17 @@ export function mutate<T>(work: () => Promise<T>): Promise<T> {
   return next;
 }
 export function database() {
-  return (pending ??= openDatabaseAsync("pastq-native.db").then(async (db) => {
-    await db.execAsync(
-      "PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS records (owner TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, value TEXT NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY(owner,kind,id)); CREATE INDEX IF NOT EXISTS records_lookup ON records(owner,kind,updated DESC);",
-    );
-    return db;
-  }));
+  return (pending ??= openDatabaseAsync("pastq-native.db")
+    .then(async (db) => {
+      await db.execAsync(
+        "PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS records (owner TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, value TEXT NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY(owner,kind,id)); CREATE INDEX IF NOT EXISTS records_lookup ON records(owner,kind,updated DESC);",
+      );
+      return db;
+    })
+    .catch((error) => {
+      pending = undefined;
+      throw error;
+    }));
 }
 export async function read<T>(
   owner: string,
