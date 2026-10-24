@@ -578,68 +578,6 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             </Pressable>
           ))}
         </ScrollView>
-        {review ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{
-              flexGrow: 0,
-              borderBottomWidth: 1,
-              borderColor: palette.line,
-            }}
-            contentContainerStyle={{
-              flexDirection: "row",
-              paddingHorizontal: 12,
-              gap: 4,
-              paddingVertical: 6,
-            }}
-          >
-            {(
-              [
-                "all",
-                ...(writtenPaper
-                  ? []
-                  : ["correct" as const, "incorrect" as const]),
-                "skipped",
-                ...(summary.ungraded ? ["reviewed" as const] : []),
-                "saved",
-              ] as const
-            ).map((filter) => (
-              <Pressable
-                key={filter}
-                accessibilityRole="button"
-                accessibilityState={{ selected: filter === reviewFilter }}
-                onPress={() => setReviewFilter(filter)}
-                style={{
-                  paddingHorizontal: 10,
-                  paddingVertical: 8,
-                  minHeight: 40,
-                  borderRadius: 8,
-                  backgroundColor:
-                    filter === reviewFilter ? palette.control : "transparent",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color:
-                      filter === reviewFilter ? palette.ink : palette.muted,
-                  }}
-                >
-                  {filter === "incorrect"
-                    ? "Wrong"
-                    : filter === "skipped"
-                      ? "Unanswered"
-                      : filter === "reviewed"
-                        ? writtenPaper
-                          ? "Answered"
-                          : "Not marked"
-                        : filter[0].toUpperCase() + filter.slice(1)}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        ) : null}
         <View
           style={{
             flexDirection: "row",
