@@ -7,7 +7,7 @@ export function formatRemainingTime(seconds: number, spoken = false) {
     rest = minutes % 60;
   return spoken
     ? `${hours} ${hours === 1 ? "hour" : "hours"} ${rest} ${rest === 1 ? "minute" : "minutes"}`
-    : `${String(hours).padStart(2, "0")}h ${String(rest).padStart(2, "0")}m`;
+    : `${String(hours).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
 }
 
 export function formatTime(seconds: number) {

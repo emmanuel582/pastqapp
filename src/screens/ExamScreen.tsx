@@ -13,6 +13,7 @@ import {
   TextInput,
   BackHandler,
   useWindowDimensions,
+  Keyboard,
 } from "react-native";
 import { usePreventRemove, useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -60,6 +61,7 @@ import QuestionMedia from "../components/QuestionMedia";
 import QuestionReport from "../components/QuestionReport";
 import { DrawingBoard } from "../components/StudyTools";
 import FloatingCalculator from "../components/FloatingCalculator";
+import type { WorkingBoardSize } from "../domain/workingBoard";
 import type { ToolFrame } from "../domain/floatingTool";
 import { readAttempt, saveAttempt, toggleBookmark } from "../storage/practice";
 import {
@@ -84,7 +86,10 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   const { owner, palette, bookmarks, refreshPractice, syncNow } = useApp(),
     insets = useSafeAreaInsets(),
     window = useWindowDimensions(),
-    sideTools = window.width > window.height && window.height < 600;
+    sideTools =
+      window.width > window.height &&
+      window.height < 600 &&
+      window.width >= 560;
   const [attempt, setAttempt] = useState<Attempt | null>(null),
     [error, setError] = useState(""),
     [navigator, setNavigator] = useState(false),
@@ -94,6 +99,11 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     [finish, setFinish] = useState(false),
     [calculator, setCalculator] = useState(false),
     [board, setBoard] = useState(false),
+    [boardExpanded, setBoardExpanded] = useState(false),
+    [boardWidth, setBoardWidth] = useState(320),
+    [chromeHeight, setChromeHeight] = useState(180),
+    [clockHeight, setClockHeight] = useState(68),
+    [navigationHeight, setNavigationHeight] = useState(64),
     [scale, setScale] = useState(1),
     [reviewFilter, setReviewFilter] = useState<ReviewFilter>(
       route.params.reviewFilter || "all",
@@ -102,6 +112,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     [busy, setBusy] = useState(false),
     [bookmarkBusy, setBookmarkBusy] = useState(false),
     [writingFocused, setWritingFocused] = useState(false);
+  const boardSize = useRef<WorkingBoardSize>({ width: 320, height: 260 });
   const calculatorFrame = useRef<ToolFrame | null>(null);
   const latest = useRef<Attempt | null>(null),
     submitLock = useRef(false),
@@ -189,6 +200,10 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           setCalculator(false);
           return true;
         }
+        if (board && boardExpanded) {
+          setBoardExpanded(false);
+          return true;
+        }
         if (board) {
           void workingFlush
             .current?.()
@@ -215,6 +230,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
       navigator,
       calculator,
       board,
+      boardExpanded,
       review,
       navigation,
     ]),
@@ -447,6 +463,10 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     else if (review) navigation.goBack();
     else setFinish(true);
   }
+  const visibleBoardWidth = Math.min(
+    boardWidth,
+    Math.max(1, window.width - insets.left - insets.right - 320),
+  );
   const writtenPaper = attempt.questions.every(isWrittenQuestion);
   const theory = isWrittenQuestion(q),
     reveal =
@@ -459,263 +479,275 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
   return (
     <Screen
       style={
-        sideTools && board
-          ? { paddingRight: 320 + insets.right, paddingLeft: insets.left }
+        sideTools && board && !boardExpanded
+          ? {
+              paddingRight: visibleBoardWidth + insets.right,
+              paddingLeft: insets.left,
+            }
           : undefined
       }
     >
       <View
-        style={{
-          minHeight: 68,
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 12,
-          backgroundColor: palette.examHeader,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.line,
-        }}
+        onLayout={(event) => setChromeHeight(event.nativeEvent.layout.height)}
       >
-        <Text style={{ fontFamily: fonts.semibold, fontSize: 18 }}>
-          {review
-            ? "Review"
-            : theory
-              ? "Theory"
-              : attempt.mode === "full"
-                ? "Exam"
-                : "Practice"}
-        </Text>
-        <View style={{ flex: 1 }} />
-        {review ? (
-          <Button kind="secondary" onPress={() => navigation.goBack()}>
-            <Check size={17} color={palette.ink} />
-            <Text style={{ fontFamily: fonts.mono }}>Complete</Text>
-          </Button>
-        ) : (
-          <>
-            <ExamClock
-              deadline={attempt.deadline}
-              duration={attempt.duration}
-              onExpire={() => void submit()}
-            />
-            <Button kind="secondary" onPress={() => setFinish(true)}>
-              <Text style={{ fontSize: 10 }}>Finish</Text>
-              <ArrowRight size={14} color={palette.ink} />
+        <View
+          onLayout={(event) => setClockHeight(event.nativeEvent.layout.height)}
+          style={{
+            minHeight: 68,
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            backgroundColor: palette.examHeader,
+            borderBottomWidth: 1,
+            borderBottomColor: palette.line,
+          }}
+        >
+          <Text style={{ fontFamily: fonts.semibold, fontSize: 18 }}>
+            {review
+              ? "Review"
+              : theory
+                ? "Theory"
+                : attempt.mode === "full"
+                  ? "Exam"
+                  : "Practice"}
+          </Text>
+          <View style={{ flex: 1 }} />
+          {review ? (
+            <Button kind="secondary" onPress={() => navigation.goBack()}>
+              <Check size={17} color={palette.ink} />
+              <Text style={{ fontFamily: fonts.mono }}>Complete</Text>
             </Button>
-          </>
-        )}
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0, backgroundColor: palette.examHeader }}
-        contentContainerStyle={{
-          flexDirection: "row",
-          minWidth: "100%",
-          paddingVertical: 4,
-          paddingHorizontal: 12,
-          gap: 6,
-          backgroundColor: palette.examHeader,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.line,
-        }}
-      >
-        {subjects.map((subject) => (
-          <Pressable
-            key={subject}
-            onPress={() => switchSubject(subject)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: q.subject === subject }}
-            style={{
-              flexGrow: 1,
-              minWidth: 112,
-              minHeight: 44,
-              padding: 8,
-              borderBottomWidth: 2,
-              borderBottomColor:
-                q.subject === subject ? palette.accent : "transparent",
-              backgroundColor:
-                q.subject === subject ? palette.wash : "transparent",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                textAlign: "center",
-                fontFamily: fonts.semibold,
-                color: q.subject === subject ? palette.accent : palette.muted,
-              }}
-            >
-              {subject}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-      {review ? (
+          ) : (
+            <>
+              <ExamClock
+                deadline={attempt.deadline}
+                duration={attempt.duration}
+                onExpire={() => void submit()}
+              />
+              <Button kind="secondary" onPress={() => setFinish(true)}>
+                <Text style={{ fontSize: 10 }}>Finish</Text>
+                <ArrowRight size={14} color={palette.ink} />
+              </Button>
+            </>
+          )}
+        </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{
-            flexGrow: 0,
-            borderBottomWidth: 1,
-            borderColor: palette.line,
-          }}
+          style={{ flexGrow: 0, backgroundColor: palette.examHeader }}
           contentContainerStyle={{
             flexDirection: "row",
+            minWidth: "100%",
+            paddingVertical: 4,
             paddingHorizontal: 12,
-            gap: 4,
-            paddingVertical: 6,
+            gap: 6,
+            backgroundColor: palette.examHeader,
+            borderBottomWidth: 1,
+            borderBottomColor: palette.line,
           }}
         >
-          {(
-            [
-              "all",
-              ...(writtenPaper
-                ? []
-                : ["correct" as const, "incorrect" as const]),
-              "skipped",
-              ...(summary.ungraded ? ["reviewed" as const] : []),
-              "saved",
-            ] as const
-          ).map((filter) => (
+          {subjects.map((subject) => (
             <Pressable
-              key={filter}
-              accessibilityRole="button"
-              accessibilityState={{ selected: filter === reviewFilter }}
-              onPress={() => setReviewFilter(filter)}
+              key={subject}
+              onPress={() => switchSubject(subject)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: q.subject === subject }}
               style={{
-                paddingHorizontal: 10,
-                paddingVertical: 8,
-                minHeight: 40,
-                borderRadius: 8,
+                flexGrow: 1,
+                minWidth: 112,
+                minHeight: 44,
+                padding: 8,
+                borderBottomWidth: 2,
+                borderBottomColor:
+                  q.subject === subject ? palette.accent : "transparent",
                 backgroundColor:
-                  filter === reviewFilter ? palette.control : "transparent",
+                  q.subject === subject ? palette.wash : "transparent",
+                justifyContent: "center",
               }}
             >
               <Text
                 style={{
                   fontSize: 12,
-                  color: filter === reviewFilter ? palette.ink : palette.muted,
+                  textAlign: "center",
+                  fontFamily: fonts.semibold,
+                  color: q.subject === subject ? palette.accent : palette.muted,
                 }}
               >
-                {filter === "incorrect"
-                  ? "Wrong"
-                  : filter === "skipped"
-                    ? "Unanswered"
-                    : filter === "reviewed"
-                      ? writtenPaper
-                        ? "Answered"
-                        : "Not marked"
-                      : filter[0].toUpperCase() + filter.slice(1)}
+                {subject}
               </Text>
             </Pressable>
           ))}
         </ScrollView>
-      ) : null}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          paddingHorizontal: 8,
-          paddingVertical: 2,
-          minHeight: 48,
-          borderBottomWidth: 1,
-          borderColor: palette.line,
-          backgroundColor: palette.examRail,
-        }}
-      >
-        <IconButton
-          label="Decrease question text"
-          disabled={scale <= 0.9}
-          onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
-          style={{ width: 44, height: 44 }}
-        >
-          <Minus size={15} color={palette.muted} />
-        </IconButton>
-        <IconButton
-          label="Increase question text"
-          disabled={scale >= 1.4}
-          onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
-          style={{ width: 44, height: 44 }}
-        >
-          <Plus size={15} color={palette.muted} />
-        </IconButton>
-        <IconButton
-          label={marked ? "Remove saved question" : "Save question"}
-          active={marked}
-          disabled={bookmarkBusy || hydrating}
-          onPress={() => {
-            setBookmarkBusy(true);
-            void toggleBookmark(
-              owner,
-              {
-                id: attempt.bundleId,
-                title: attempt.title,
-                assets: questionAssets,
-              },
-              q,
-            )
-              .then(refreshPractice)
-              .catch((e) => setError(e.message))
-              .finally(() => setBookmarkBusy(false));
+        {review ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{
+              flexGrow: 0,
+              borderBottomWidth: 1,
+              borderColor: palette.line,
+            }}
+            contentContainerStyle={{
+              flexDirection: "row",
+              paddingHorizontal: 12,
+              gap: 4,
+              paddingVertical: 6,
+            }}
+          >
+            {(
+              [
+                "all",
+                ...(writtenPaper
+                  ? []
+                  : ["correct" as const, "incorrect" as const]),
+                "skipped",
+                ...(summary.ungraded ? ["reviewed" as const] : []),
+                "saved",
+              ] as const
+            ).map((filter) => (
+              <Pressable
+                key={filter}
+                accessibilityRole="button"
+                accessibilityState={{ selected: filter === reviewFilter }}
+                onPress={() => setReviewFilter(filter)}
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 8,
+                  minHeight: 40,
+                  borderRadius: 8,
+                  backgroundColor:
+                    filter === reviewFilter ? palette.control : "transparent",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color:
+                      filter === reviewFilter ? palette.ink : palette.muted,
+                  }}
+                >
+                  {filter === "incorrect"
+                    ? "Wrong"
+                    : filter === "skipped"
+                      ? "Unanswered"
+                      : filter === "reviewed"
+                        ? writtenPaper
+                          ? "Answered"
+                          : "Not marked"
+                        : filter[0].toUpperCase() + filter.slice(1)}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : null}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            minHeight: 48,
+            borderBottomWidth: 1,
+            borderColor: palette.line,
+            backgroundColor: palette.examRail,
           }}
-          style={{ width: 44, height: 44 }}
         >
-          <Bookmark
-            size={17}
-            color={marked ? palette.accent : palette.muted}
-            fill={marked ? palette.accent : "none"}
+          <IconButton
+            label="Decrease question text"
+            disabled={scale <= 0.9}
+            onPress={() => setScale((v) => Math.max(0.9, v - 0.1))}
+            style={{ width: 44, height: 44 }}
+          >
+            <Minus size={15} color={palette.muted} />
+          </IconButton>
+          <IconButton
+            label="Increase question text"
+            disabled={scale >= 1.4}
+            onPress={() => setScale((v) => Math.min(1.4, v + 0.1))}
+            style={{ width: 44, height: 44 }}
+          >
+            <Plus size={15} color={palette.muted} />
+          </IconButton>
+          <IconButton
+            label={marked ? "Remove saved question" : "Save question"}
+            active={marked}
+            disabled={bookmarkBusy || hydrating}
+            onPress={() => {
+              setBookmarkBusy(true);
+              void toggleBookmark(
+                owner,
+                {
+                  id: attempt.bundleId,
+                  title: attempt.title,
+                  assets: questionAssets,
+                },
+                q,
+              )
+                .then(refreshPractice)
+                .catch((e) => setError(e.message))
+                .finally(() => setBookmarkBusy(false));
+            }}
+            style={{ width: 44, height: 44 }}
+          >
+            <Bookmark
+              size={17}
+              color={marked ? palette.accent : palette.muted}
+              fill={marked ? palette.accent : "none"}
+            />
+          </IconButton>
+          <QuestionReport
+            bundleId={attempt.bundleId}
+            version={attempt.version}
+            question={q}
           />
-        </IconButton>
-        <QuestionReport
-          bundleId={attempt.bundleId}
-          version={attempt.version}
-          question={q}
-        />
-        <IconButton
-          label="Toggle calculator"
-          active={calculator}
-          onPress={() => {
-            void (async () => {
-              try {
-                await workingFlush.current?.();
-                setBoard(false);
-                setCalculator((v) => !v);
-              } catch {
-                setError("Save your working before opening the calculator.");
+          <IconButton
+            label="Toggle calculator"
+            active={calculator}
+            onPress={() => {
+              void (async () => {
+                try {
+                  await workingFlush.current?.();
+                  setBoard(false);
+                  setCalculator((v) => !v);
+                } catch {
+                  setError("Save your working before opening the calculator.");
+                }
+              })();
+            }}
+            style={{ width: 44, height: 44 }}
+          >
+            <CalculatorIcon
+              size={17}
+              color={calculator ? palette.accent : palette.muted}
+            />
+          </IconButton>
+          <IconButton
+            label="Toggle working paper"
+            active={board}
+            onPress={() => {
+              setCalculator(false);
+              if (board)
+                void workingFlush
+                  .current?.()
+                  .then(() => setBoard(false))
+                  .catch(() =>
+                    setError("Save your working before closing the board."),
+                  );
+              else {
+                Keyboard.dismiss();
+                setBoard(true);
               }
-            })();
-          }}
-          style={{ width: 44, height: 44 }}
-        >
-          <CalculatorIcon
-            size={17}
-            color={calculator ? palette.accent : palette.muted}
-          />
-        </IconButton>
-        <IconButton
-          label="Toggle working paper"
-          active={board}
-          onPress={() => {
-            setCalculator(false);
-            if (board)
-              void workingFlush
-                .current?.()
-                .then(() => setBoard(false))
-                .catch(() =>
-                  setError("Save your working before closing the board."),
-                );
-            else setBoard(true);
-          }}
-          style={{ width: 44, height: 44 }}
-        >
-          <PenLine size={17} color={board ? palette.accent : palette.muted} />
-        </IconButton>
+            }}
+            style={{ width: 44, height: 44 }}
+          >
+            <PenLine size={17} color={board ? palette.accent : palette.muted} />
+          </IconButton>
+        </View>
       </View>
-      <View style={{ flex: 1, minHeight: 0 }}>
+      <View style={{ flex: 1, minHeight: navigationHeight }}>
         {questionError ? (
           <View>
             <ErrorText>{questionError}</ErrorText>
@@ -1097,6 +1129,9 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             </ScrollView>
           </QuestionSwipeSurface>
           <View
+            onLayout={(event) =>
+              setNavigationHeight(event.nativeEvent.layout.height)
+            }
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
@@ -1155,26 +1190,52 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
       </View>
       <View
         style={
-          sideTools && board
+          board && boardExpanded
             ? {
                 position: "absolute",
-                top: insets.top,
-                bottom: 0,
+                top: insets.top + clockHeight,
+                bottom: navigationHeight,
+                left: insets.left,
                 right: insets.right,
-                width: 320,
+                zIndex: 20,
+                backgroundColor: palette.bg,
               }
-            : undefined
+            : sideTools && board
+              ? {
+                  position: "absolute",
+                  top: insets.top,
+                  bottom: 0,
+                  right: insets.right,
+                  width: visibleBoardWidth,
+                }
+              : undefined
         }
       >
         {board ? (
           <DrawingBoard
             key={attempt.id + ":" + attempt.current}
-            side={sideTools}
+            side={sideTools && !boardExpanded}
+            expanded={boardExpanded}
+            onToggleExpanded={() => setBoardExpanded((value) => !value)}
+            savedSize={boardSize}
+            onWidthChange={setBoardWidth}
+            maxHeight={Math.max(
+              1,
+              window.height - insets.top - chromeHeight - navigationHeight,
+            )}
+            maxWidth={Math.max(
+              1,
+              window.width - insets.left - insets.right - 320,
+            )}
             attemptId={attempt.id}
             questionIndex={attempt.current}
             readOnly={review || attempt.status === "completed"}
+            disabled={busy || hydrating}
             flushRef={workingFlush}
-            onClose={() => setBoard(false)}
+            onClose={() => {
+              setBoard(false);
+              setBoardExpanded(false);
+            }}
           />
         ) : null}
       </View>

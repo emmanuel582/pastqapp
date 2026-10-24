@@ -320,3 +320,36 @@ test("long drawing gestures remain bounded, keep their end and reject corrupt ba
     /invalid/,
   );
 });
+
+test("scrollable working paper keeps long solutions and their viewport through offline restart and backup", async () => {
+  const f = storageHarness();
+  const a = makeAttempt("long-working");
+  await f.practice.saveAttempt(a, true);
+  const paper = {
+    version: 2 as const,
+    height: 2200,
+    viewY: 800,
+    strokes: [
+      {
+        erase: false,
+        size: 3,
+        points: [
+          { x: 100, y: 1200 },
+          { x: 300, y: 2000 },
+        ],
+      },
+    ],
+  };
+  await f.papers.saveWorkingPaper("alice", a.id, 0, paper);
+  const reopened = storageHarness(f.sqlite);
+  assert.deepEqual(
+    plain(await reopened.papers.readWorkingPaper("alice", a.id, 0)),
+    paper,
+  );
+  const backup = JSON.parse(await reopened.backup.exportBackup("alice"));
+  const entry = backup.workingPapers.find(
+    (row: any) => row.attemptId === a.id && row.questionIndex === 0,
+  );
+  assert.deepEqual(plain(entry.paper), paper);
+  f.sqlite.close();
+});
