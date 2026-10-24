@@ -4,7 +4,7 @@ import Svg, { Circle, Line } from "react-native-svg";
 import { useApp } from "../state/AppContext";
 import { Text } from "./ui";
 import { fonts } from "../theme/tokens";
-import { examCountdown, formatTime } from "../domain/examClock";
+import { examCountdown, formatRemainingTime } from "../domain/examClock";
 export { formatTime } from "../domain/examClock";
 export default memo(function ExamClock({
   deadline,
@@ -62,7 +62,9 @@ export default memo(function ExamClock({
   return (
     <View
       accessibilityRole="timer"
-      accessibilityLabel={"Time remaining " + formatTime(remaining)}
+      accessibilityLabel={
+        "Time remaining " + formatRemainingTime(remaining, true)
+      }
       style={{
         flexDirection: "row",
         gap: 7,
@@ -128,13 +130,14 @@ export default memo(function ExamClock({
       </View>
       <Text
         style={{
-          fontFamily: fonts.mono,
-          fontSize: 14,
+          fontFamily: fonts.bold,
+          fontSize: 15,
+          lineHeight: 20,
           color,
           fontVariant: ["tabular-nums"],
         }}
       >
-        {formatTime(remaining)}
+        {formatRemainingTime(remaining)}
       </Text>
     </View>
   );

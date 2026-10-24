@@ -1,3 +1,15 @@
+/** Round up the remaining minute so a live exam never displays zero before expiry. */
+export function formatRemainingTime(seconds: number, spoken = false) {
+  const minutes = Math.ceil(
+    Math.max(0, Number.isFinite(seconds) ? seconds : 0) / 60,
+  );
+  const hours = Math.floor(minutes / 60),
+    rest = minutes % 60;
+  return spoken
+    ? `${hours} ${hours === 1 ? "hour" : "hours"} ${rest} ${rest === 1 ? "minute" : "minutes"}`
+    : `${String(hours).padStart(2, "0")}h ${String(rest).padStart(2, "0")}m`;
+}
+
 export function formatTime(seconds: number) {
   const n = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0));
   return (
