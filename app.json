@@ -2,7 +2,10 @@
   "expo": {
     "name": "focalPoint",
     "slug": "focalpoint",
-    "scheme": ["focalpoint", "pastq"],
+    "scheme": [
+      "focalpoint",
+      "pastq"
+    ],
     "version": "1.0.8",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
@@ -15,7 +18,7 @@
         "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "9",
+      "buildNumber": "10",
       "appleTeamId": "4F385JKS7J"
     },
     "android": {
@@ -28,7 +31,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
       },
-      "versionCode": 9,
+      "versionCode": 11,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

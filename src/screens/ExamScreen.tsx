@@ -49,11 +49,7 @@ import {
   theorySolution,
 } from "../domain/theory";
 import QuestionNumbers from "../components/QuestionNumbers";
-import {
-  reviewQuestions,
-  outcomeLabel,
-  type ReviewFilter,
-} from "../domain/review";
+import { reviewQuestions, type ReviewFilter } from "../domain/review";
 import { adjacentQuestion } from "../domain/swipe";
 import ExamClock from "../components/ExamClock";
 import RichText from "../components/RichText";
@@ -812,31 +808,6 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                 <Empty title="No matching questions." />
               ) : (
                 <>
-                  {review ? (
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        fontFamily: fonts.semibold,
-                        marginBottom: 14,
-                        color:
-                          questionOutcome(attempt, attempt.current) ===
-                          "correct"
-                            ? palette.correct
-                            : questionOutcome(attempt, attempt.current) ===
-                                "incorrect"
-                              ? palette.incorrect
-                              : palette.muted,
-                      }}
-                    >
-                      {questionOutcome(attempt, attempt.current) === "correct"
-                        ? "✓ "
-                        : questionOutcome(attempt, attempt.current) ===
-                            "incorrect"
-                          ? "× "
-                          : "— "}
-                      {outcomeLabel[questionOutcome(attempt, attempt.current)]}
-                    </Text>
-                  ) : null}
                   {theory ? (
                     <View
                       style={{
@@ -1030,17 +1001,6 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                                 backgroundColor: palette.accent,
                               }}
                             />
-                          ) : null}
-                          {review && selected === i ? (
-                            <Muted
-                              style={{
-                                fontSize: 10,
-                                maxWidth: 55,
-                                textAlign: "right",
-                              }}
-                            >
-                              Your answer
-                            </Muted>
                           ) : null}
                         </Pressable>
                       ))}
