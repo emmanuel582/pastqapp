@@ -1,3 +1,4 @@
+import { questionUnits } from "./theory";
 import { questionIdentity } from "./attempt";
 import { isCbtQuestion, topicOf, type CbtQuestion } from "./cbtFilters";
 
@@ -78,7 +79,7 @@ export function subjectQuestionCount(
   questions: CbtQuestion[],
   settings: SubjectSettings,
 ): number {
-  const available = subjectPool(questions, settings).length;
+  const available = questionUnits(subjectPool(questions, settings)).length;
   const count = settings.count === "all" ? available : Number(settings.count);
   return Number.isSafeInteger(count) && count > 0
     ? Math.min(count, available)
@@ -93,7 +94,9 @@ export function buildSubjectSession(
 ): CbtQuestion[] {
   return subjects.flatMap((subject) => {
     if (!settings[subject]) return [];
-    const pool = [...subjectPool(bySubject[subject] || [], settings[subject])];
+    const pool = questionUnits(
+      subjectPool(bySubject[subject] || [], settings[subject]),
+    );
     if (shuffle)
       for (let index = pool.length - 1; index > 0; index--) {
         const other = Math.floor(Math.random() * (index + 1));
@@ -102,12 +105,14 @@ export function buildSubjectSession(
     if (seen)
       pool.sort(
         (a, b) =>
-          Number(seen.has(questionIdentity(a))) -
-          Number(seen.has(questionIdentity(b))),
+          Number(a.every((q) => seen.has(questionIdentity(q)))) -
+          Number(b.every((q) => seen.has(questionIdentity(q)))),
       );
-    return pool.slice(
-      0,
-      subjectQuestionCount(bySubject[subject] || [], settings[subject]),
-    );
+    return pool
+      .slice(
+        0,
+        subjectQuestionCount(bySubject[subject] || [], settings[subject]),
+      )
+      .flat();
   });
 }

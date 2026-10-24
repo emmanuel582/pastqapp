@@ -82,6 +82,7 @@ export interface Attempt {
   answers: (number | null)[];
   written: string[];
   flagged: boolean[];
+  revealed?: boolean[];
   current: number;
   duration: number;
   startedAt: number;

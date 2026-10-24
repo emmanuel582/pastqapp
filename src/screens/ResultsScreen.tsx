@@ -23,6 +23,7 @@ import QuestionNumbers from "../components/QuestionNumbers";
 import { reviewQuestions, type AnswerFilter } from "../domain/review";
 import Scholar from "../components/Scholar";
 import { readAttempt, saveAttempt } from "../storage/practice";
+import { isWrittenQuestion } from "../domain/theory";
 import { attemptSummary, createAttempt } from "../domain/attempt";
 import { answerIndex, sessionSummary } from "../domain/examSession";
 import { formatTime } from "../components/ExamClock";
@@ -83,10 +84,11 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
   if (!attempt)
     return (
       <Screen>
-        <Header />
+        <Header title="Results" />
         {error ? <ErrorText>{error}</ErrorText> : <Loading />}
       </Screen>
     );
+  const writtenOnly = attempt.questions.every(isWrittenQuestion);
   const summary = attemptSummary(attempt),
     timeTaken = Math.max(
       0,
@@ -104,7 +106,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
     );
   return (
     <Screen>
-      <Header />
+      <Header title="Results" />
       <Content
         style={{
           paddingTop: 28,
@@ -141,24 +143,30 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
             <View style={{ flex: 1 }}>
               <Text
                 style={{
-                  fontSize: 67,
+                  fontSize: writtenOnly ? 44 : 67,
                   lineHeight: 72,
                   fontFamily: fonts.display,
-                  letterSpacing: -4.6,
+                  letterSpacing: writtenOnly ? -2 : -4.6,
                 }}
               >
-                {summary.percent === null ? "—" : summary.percent}
+                {writtenOnly
+                  ? `${summary.answered}/${attempt.questions.length}`
+                  : summary.percent === null
+                    ? "—"
+                    : summary.percent}
                 <Text style={{ fontSize: 24, color: palette.accent }}>
                   {summary.percent === null ? "" : "%"}
                 </Text>
               </Text>
               <Muted style={{ fontSize: 9, marginTop: 9 }}>
-                {summary.graded
-                  ? summary.correct +
-                    " of " +
-                    summary.graded +
-                    " graded questions correct"
-                  : summary.answered + " questions practised · ungraded"}
+                {writtenOnly
+                  ? "Parts answered · not auto-marked"
+                  : summary.graded
+                    ? summary.correct +
+                      " of " +
+                      summary.graded +
+                      " graded questions correct"
+                    : summary.answered + " questions practised · ungraded"}
               </Muted>
             </View>
             <Svg width={90} height={63} viewBox="0 0 260 180" fill="none">
@@ -201,20 +209,32 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
           >
             {(
               [
-                {
-                  value: summary.correct,
-                  label: "Correct",
-                  filter: "correct",
-                  color: palette.correct,
-                  wash: palette.correctWash,
-                },
-                {
-                  value: summary.incorrect,
-                  label: "Wrong",
-                  filter: "incorrect",
-                  color: palette.incorrect,
-                  wash: palette.incorrectWash,
-                },
+                ...(writtenOnly
+                  ? [
+                      {
+                        value: summary.answered,
+                        label: "Answered",
+                        filter: "reviewed",
+                        color: palette.ink,
+                        wash: palette.wash,
+                      },
+                    ]
+                  : [
+                      {
+                        value: summary.correct,
+                        label: "Correct",
+                        filter: "correct",
+                        color: palette.correct,
+                        wash: palette.correctWash,
+                      },
+                      {
+                        value: summary.incorrect,
+                        label: "Wrong",
+                        filter: "incorrect",
+                        color: palette.incorrect,
+                        wash: palette.incorrectWash,
+                      },
+                    ]),
                 {
                   value: summary.skipped,
                   label: "Unanswered",
@@ -229,7 +249,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
                   color: palette.ink,
                   wash: palette.wash,
                 },
-                ...(summary.ungraded
+                ...(summary.ungraded && !writtenOnly
                   ? [
                       {
                         value: summary.ungraded,
@@ -297,9 +317,7 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
               </Pressable>
             ))}
           </View>
-          <Muted style={{ fontSize: 11, marginTop: 12 }}>
-            Tap a result box to see its question numbers.
-          </Muted>
+
           <Button
             kind="secondary"
             onPress={() => setReviewGroup("all")}
@@ -359,7 +377,9 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
                   <View
                     style={{
                       height: 3,
-                      width: ((stats.percent || 0) + "%") as `${number}%`,
+                      width: ((stats.percent ??
+                        (stats.answered * 100) / indexes.length) +
+                        "%") as `${number}%`,
                       backgroundColor: palette.accent,
                     }}
                   />
@@ -412,7 +432,6 @@ export default function ResultsScreen({ route, navigation }: Props<"Results">) {
           }
           onClose={() => setReviewGroup(null)}
         >
-          <Muted>Tap a question number to review your answer.</Muted>
           <QuestionNumbers
             attempt={attempt}
             indexes={reviewQuestions(attempt, reviewGroup)}

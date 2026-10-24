@@ -1,3 +1,4 @@
+import { isWrittenQuestion, theoryLabel } from "./theory";
 import { questionAnswered, questionOutcome } from "./attempt";
 import type { Attempt } from "./types";
 export type AnswerFilter =
@@ -24,7 +25,9 @@ export function questionNumberLabel(
 ) {
   return (
     "Question " +
-    (index + 1) +
+    (isWrittenQuestion(attempt.questions[index])
+      ? theoryLabel(attempt.questions[index], index)
+      : index + 1) +
     ", " +
     attempt.questions[index].subject +
     ", " +

@@ -30,7 +30,6 @@ import X from "lucide-react-native/icons/x";
 import { useApp } from "../state/AppContext";
 import {
   Screen,
-  Wordmark,
   Text,
   Title,
   Muted,
@@ -42,6 +41,12 @@ import {
   Empty,
 } from "../components/ui";
 import QuestionSwipeSurface from "../components/QuestionSwipeSurface";
+import {
+  isWrittenQuestion,
+  theoryLabel,
+  theoryLocation,
+  theorySolution,
+} from "../domain/theory";
 import QuestionNumbers from "../components/QuestionNumbers";
 import {
   reviewQuestions,
@@ -95,7 +100,8 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     ),
     [leaving, setLeaving] = useState<(() => void) | null>(null),
     [busy, setBusy] = useState(false),
-    [bookmarkBusy, setBookmarkBusy] = useState(false);
+    [bookmarkBusy, setBookmarkBusy] = useState(false),
+    [writingFocused, setWritingFocused] = useState(false);
   const calculatorFrame = useRef<ToolFrame | null>(null);
   const latest = useRef<Attempt | null>(null),
     submitLock = useRef(false),
@@ -333,8 +339,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         }}
       >
         <Muted>
-          Your answers and working paper will be saved. You can resume from Past
-          sessions. The exam clock keeps running.
+          Save and resume in Past sessions. The clock keeps running.
         </Muted>
         <Button
           kind="secondary"
@@ -442,8 +447,15 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     else if (review) navigation.goBack();
     else setFinish(true);
   }
-  const theory = q.type === "theory" || q.type === "short_answer",
-    reveal = review || (q.type === "theory" && selected !== null);
+  const writtenPaper = attempt.questions.every(isWrittenQuestion);
+  const theory = isWrittenQuestion(q),
+    reveal =
+      review ||
+      (theory &&
+        attempt.mode === "practice" &&
+        (attempt.revealed?.[attempt.current] || selected !== null)),
+    solution = theorySolution(q),
+    location = theory ? theoryLocation(q) : null;
   return (
     <Screen
       style={
@@ -465,7 +477,15 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           borderBottomColor: palette.line,
         }}
       >
-        <Wordmark />
+        <Text style={{ fontFamily: fonts.semibold, fontSize: 18 }}>
+          {review
+            ? "Review"
+            : theory
+              ? "Theory"
+              : attempt.mode === "full"
+                ? "Exam"
+                : "Practice"}
+        </Text>
         <View style={{ flex: 1 }} />
         {review ? (
           <Button kind="secondary" onPress={() => navigation.goBack()}>
@@ -552,8 +572,9 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
           {(
             [
               "all",
-              "correct",
-              "incorrect",
+              ...(writtenPaper
+                ? []
+                : ["correct" as const, "incorrect" as const]),
               "skipped",
               ...(summary.ungraded ? ["reviewed" as const] : []),
               "saved",
@@ -584,7 +605,9 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                   : filter === "skipped"
                     ? "Unanswered"
                     : filter === "reviewed"
-                      ? "Not marked"
+                      ? writtenPaper
+                        ? "Answered"
+                        : "Not marked"
                       : filter[0].toUpperCase() + filter.slice(1)}
               </Text>
             </Pressable>
@@ -723,6 +746,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             questionKey={attempt.id + ":" + attempt.current}
             enabled={
               !busy &&
+              !writingFocused &&
               !hydrating &&
               !finish &&
               !navigator &&
@@ -779,6 +803,36 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                       {outcomeLabel[questionOutcome(attempt, attempt.current)]}
                     </Text>
                   ) : null}
+                  {theory ? (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        marginBottom: 18,
+                      }}
+                    >
+                      <Text
+                        style={{ fontFamily: fonts.semibold, fontSize: 17 }}
+                      >
+                        {theoryLabel(q, attempt.current)}
+                      </Text>
+                      {location ? (
+                        <Muted>
+                          {[
+                            location.section,
+                            location.marks
+                              ? location.marks +
+                                (location.marks === "1" ? " mark" : " marks")
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </Muted>
+                      ) : null}
+                    </View>
+                  ) : null}
                   <QuestionMedia
                     passage={q.passage}
                     figures={q.figures}
@@ -798,16 +852,16 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                   </View>
                   {theory && (!review || attempt.written[attempt.current]) ? (
                     <View style={{ gap: 8, marginVertical: 18 }}>
-                      <Muted>
-                        {q.type === "theory"
-                          ? "Your working (optional)"
-                          : "Your answer"}
-                      </Muted>
+                      <Muted>Answer {theoryLabel(q, attempt.current)}</Muted>
                       <TextInput
                         multiline
+                        onFocus={() => setWritingFocused(true)}
+                        onBlur={() => setWritingFocused(false)}
                         editable={!review && !hydrating && !busy}
-                        accessibilityLabel="Your answer"
-                        placeholder="Type your answer"
+                        accessibilityLabel={
+                          "Your answer to " + theoryLabel(q, attempt.current)
+                        }
+                        placeholder="Write your answer…"
                         placeholderTextColor={palette.faint}
                         value={attempt.written[attempt.current] || ""}
                         onChangeText={(text) => {
@@ -816,7 +870,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                           update({ written });
                         }}
                         style={{
-                          minHeight: 100,
+                          minHeight: 160,
                           borderWidth: 1,
                           borderColor: palette.line,
                           borderRadius: 8,
@@ -958,16 +1012,19 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                       ))}
                     </View>
                   ) : null}
-                  {q.type === "theory" && !reveal ? (
+                  {theory &&
+                  !review &&
+                  attempt.mode === "practice" &&
+                  !reveal ? (
                     <Button
                       onPress={() => {
-                        const answers = [...attempt.answers];
-                        answers[attempt.current] = 0;
-                        update({ answers });
+                        const revealed = [...(attempt.revealed || [])];
+                        revealed[attempt.current] = true;
+                        update({ revealed });
                       }}
                       style={{ marginTop: 32 }}
                     >
-                      I’ve solved it — show answer
+                      Show source answer
                     </Button>
                   ) : null}
                   {reveal ? (
@@ -998,7 +1055,7 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                           </Text>
                         </View>
                       ) : null}
-                      {theory && (q.answerText || q.answerHtml) ? (
+                      {theory && (solution.text || solution.html) ? (
                         <>
                           <Text
                             style={{
@@ -1011,8 +1068,8 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                             Source answer
                           </Text>
                           <RichText
-                            text={q.answerText || ""}
-                            html={q.answerHtml}
+                            text={solution.text}
+                            html={solution.html}
                             assets={questionAssets}
                             size={13}
                           />
@@ -1020,12 +1077,16 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
                       ) : null}
                       <RichText
                         text={
-                          q.explanation ||
-                          (q.type === "theory" && !q.answerText
-                            ? "No answer was supplied for this question."
-                            : "")
+                          theory
+                            ? solution.explanation ||
+                              (!solution.text && !solution.html
+                                ? "No source answer available."
+                                : "")
+                            : q.explanation
                         }
-                        html={q.explanationHtml}
+                        html={
+                          theory ? solution.explanationHtml : q.explanationHtml
+                        }
                         assets={questionAssets}
                         size={13}
                       />
@@ -1075,8 +1136,9 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
             >
               <Grid2X2 size={14} color={palette.muted} />
               <Muted style={{ fontSize: 10 }}>
-                {review ? attempt.current + 1 : number}/
-                {review ? attempt.questions.length : total}
+                {theory
+                  ? theoryLabel(q, attempt.current)
+                  : `${review ? attempt.current + 1 : number}/${review ? attempt.questions.length : total}`}
               </Muted>
             </Pressable>
             <Button arrow onPress={advance}>
@@ -1123,8 +1185,10 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
         />
       ) : null}
       {navigator ? (
-        <Dialog title="Question numbers" onClose={() => setNavigator(false)}>
-          <Muted>Tap a number to open that question.</Muted>
+        <Dialog
+          title={theory ? "Questions & parts" : "Question numbers"}
+          onClose={() => setNavigator(false)}
+        >
           {!review ? (
             <View style={{ flexDirection: "row", gap: 6, marginTop: 10 }}>
               {(["all", "answered", "skipped"] as const).map((filter) => (

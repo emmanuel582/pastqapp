@@ -6,7 +6,7 @@ export interface CbtQuestion {
   correct?: number | string | null;
   year?: string | null;
   paper?: string | null;
-  questionNumber?: number | null;
+  questionNumber?: number | string | null;
   [key: string]: unknown;
 }
 

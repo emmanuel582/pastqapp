@@ -44,7 +44,6 @@ export default function PreferencesScreen({
     },
     {
       title: "Notifications",
-      detail: "Your messages from PastQ",
       Icon: Bell,
       screen: "Notifications" as const,
     },
@@ -142,7 +141,6 @@ export default function PreferencesScreen({
           ))}
           <Row
             title="Preparation environment"
-            detail="Open your downloaded exams first."
             icon={<BookOpen size={20} color={palette.accent} />}
             right={
               <StudySwitch

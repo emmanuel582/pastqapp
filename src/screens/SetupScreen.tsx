@@ -55,6 +55,7 @@ import {
   durationLabel,
   sessionDurationSeconds,
 } from "../domain/sessionDuration";
+import { questionUnits } from "../domain/theory";
 import { previewBundle } from "../data/preview";
 import { fonts } from "../theme/tokens";
 import type { Bundle, Question } from "../domain/types";
@@ -109,7 +110,9 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
             (old.studyBy !== "paper" || subjectYears(pool).includes(old.year))
               ? { ...defaults, ...old }
               : defaults;
-          const available = subjectPool(pool, settings[subject]).length;
+          const available = questionUnits(
+            subjectPool(pool, settings[subject]),
+          ).length;
           if (
             settings[subject].count !== "all" &&
             Number(settings[subject].count) > available &&
@@ -184,7 +187,8 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
       (c !== "all" &&
         (!/^\d+$/.test(c) ||
           Number(c) >
-            subjectPool(bySubject[s] || [], draft.settings[s]).length))
+            questionUnits(subjectPool(bySubject[s] || [], draft.settings[s]))
+              .length))
     );
   });
   const english = subjects.find((s) =>
@@ -206,7 +210,9 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
     setDraft((d) => {
       if (!d) return d;
       const next = { ...d.settings[subject], ...value };
-      const available = subjectPool(bySubject[subject] || [], next).length;
+      const available = questionUnits(
+        subjectPool(bySubject[subject] || [], next),
+      ).length;
       if (
         !("count" in value) &&
         next.count !== "all" &&
@@ -516,8 +522,7 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
             ) : null}
             {!topics.length ? (
               <Muted style={{ marginVertical: 16 }}>
-                This selection has no topic labels. You can still practise all
-                available questions.
+                No topic labels available.
               </Muted>
             ) : null}
             <Row
@@ -534,7 +539,9 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
                     accessibilityLabel={"Questions for " + editing}
                     value={
                       current.count === "all"
-                        ? String(subjectPool(pool, current).length)
+                        ? String(
+                            questionUnits(subjectPool(pool, current)).length,
+                          )
                         : current.count
                     }
                     onChangeText={(value) => {
@@ -568,7 +575,8 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
               }
             />
             <Muted style={{ marginTop: 24 }}>
-              {subjectPool(pool, current).length} available in this selection
+              {questionUnits(subjectPool(pool, current)).length} available in
+              this selection
             </Muted>
             {invalid === editing ? (
               <ErrorText>
@@ -767,11 +775,11 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
               />
             ) : null}
             <Row
-              title="Shuffle within each subject"
+              title="Shuffle questions"
               right={
                 <Checkbox
                   checked={draft.shuffle}
-                  label="Shuffle within each subject"
+                  label="Shuffle questions"
                   onPress={() => patch({ shuffle: !draft.shuffle })}
                 />
               }

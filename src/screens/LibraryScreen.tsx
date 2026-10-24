@@ -269,7 +269,6 @@ export default function LibraryScreen({
         />
         <View style={{ flex: 1, gap: 8 }}>
           <Text style={{ fontFamily: fonts.semibold }}>{scope.title}</Text>
-          <Muted>What would you like to save for offline study?</Muted>
         </View>
       </View>
       <Row

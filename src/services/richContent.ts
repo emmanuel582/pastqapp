@@ -66,6 +66,18 @@ export function contentHtml(
     allowedSchemes: ["data", "https", "http"],
     allowedSchemesByTag: { img: ["data", "https", "http"] },
     transformTags: {
+      span: (_tag, attribs) => {
+        const style = attribs.style || "";
+        const top = style.match(/(?:^|;)\s*top\s*:\s*(-?\d+(?:\.\d+)?)px/i);
+        const superscript =
+          /vertical-align\s*:\s*(super|sup)/i.test(style) ||
+          (top && Number(top[1]) < 0);
+        const subscript = /vertical-align\s*:\s*sub/i.test(style);
+        return {
+          tagName: superscript ? "sup" : subscript ? "sub" : "span",
+          attribs,
+        };
+      },
       img: (_tag, attribs) => {
         let src = attribs.src || "";
         const key = src.match(/^pastq-asset:([a-f0-9]{64})$/)?.[1];

@@ -3,6 +3,7 @@ import { View, ScrollView, useWindowDimensions } from "react-native";
 import { Text, Muted } from "./ui";
 import { useApp } from "../state/AppContext";
 import { fonts } from "../theme/tokens";
+import { isWrittenQuestion } from "../domain/theory";
 import { topicBreakdown } from "../domain/breakdown";
 import type { Attempt } from "../domain/types";
 const columns = [
@@ -17,7 +18,15 @@ export default function TopicTable({ attempt }: { attempt: Attempt }) {
   const { palette } = useApp(),
     rows = topicBreakdown(attempt),
     { width } = useWindowDimensions(),
-    compact = width < 480;
+    compact = width < 480,
+    writtenOnly = attempt.questions.every(isWrittenQuestion),
+    visibleColumns = writtenOnly
+      ? ([
+          { key: "total", label: "Parts" },
+          { key: "attempted", label: "Answered" },
+          { key: "unanswered", label: "Unanswered" },
+        ] as const)
+      : columns;
   const nameWidth = compact ? 126 : 210,
     metricWidth = compact ? 60 : 74;
   const cell = {
@@ -39,10 +48,7 @@ export default function TopicTable({ attempt }: { attempt: Attempt }) {
       >
         By topic
       </Text>
-      <Muted style={{ marginBottom: 16 }}>
-        Missed counts wrong answers. Swipe for attempted, unanswered and
-        ungraded counts.
-      </Muted>
+
       <ScrollView horizontal showsHorizontalScrollIndicator>
         <View accessibilityRole="summary">
           <View
@@ -62,7 +68,7 @@ export default function TopicTable({ attempt }: { attempt: Attempt }) {
             >
               Subject / topic
             </Text>
-            {columns.map((column) => (
+            {visibleColumns.map((column) => (
               <Text
                 key={column.key}
                 style={{
@@ -90,7 +96,7 @@ export default function TopicTable({ attempt }: { attempt: Attempt }) {
                 <Muted style={{ fontSize: 10 }}>{row.subject}</Muted>
                 <Text style={{ fontSize: 12 }}>{row.topic}</Text>
               </View>
-              {columns.map((column) => (
+              {visibleColumns.map((column) => (
                 <Text
                   key={column.key}
                   style={{

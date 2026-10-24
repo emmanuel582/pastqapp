@@ -180,23 +180,10 @@ export default function ProgressScreen({ navigation }: Props<"Progress">) {
         <Text style={{ marginTop: 6 }}>
           {correct} of {graded} marked questions correct
         </Text>
-        <Muted style={{ marginTop: 8 }}>
-          {weak.length
-            ? weak.length +
-              " topic" +
-              (weak.length === 1 ? " needs" : "s need") +
-              " more practice. Start with the first one below."
-            : graded
-              ? "Open a topic to see your progress and practise it."
-              : "Finish a practice to find your strengths and topics to work on."}
-        </Muted>
       </View>
       <Text style={{ fontFamily: fonts.semibold, fontSize: 18 }}>
         Topics to work on
       </Text>
-      <Muted>
-        Your lowest scores come first. Unmarked answers are kept separate.
-      </Muted>
     </View>
   );
   function topicCard(row: TopicProgress) {
@@ -304,9 +291,7 @@ export default function ProgressScreen({ navigation }: Props<"Progress">) {
                   </Muted>
                   {detail.graded > 0 && detail.graded < 5 ? (
                     <Muted style={{ marginTop: 8 }}>
-                      Only {detail.graded} marked question
-                      {detail.graded === 1 ? "" : "s"} so far. Practise more
-                      before judging this topic.
+                      {detail.graded} marked so far · keep practising
                     </Muted>
                   ) : null}
                 </View>
@@ -340,16 +325,9 @@ export default function ProgressScreen({ navigation }: Props<"Progress">) {
                         total: p.graded,
                       }))}
                     />
-                    <Muted style={{ marginTop: 12 }}>
-                      Each score is for this topic only. Wrong and skipped
-                      questions lower the score.
-                    </Muted>
                   </View>
                 ) : (
-                  <Muted>
-                    These answers are not auto-marked. Review them in Past
-                    sessions.
-                  </Muted>
+                  <Muted>Unmarked · review in Past sessions.</Muted>
                 )}
                 {detail.points
                   .slice(-5)
@@ -402,7 +380,7 @@ export default function ProgressScreen({ navigation }: Props<"Progress">) {
                 <Muted>
                   {all.length
                     ? "No finished practice matches these filters."
-                    : "Your topic scores will appear after you finish a practice on this phone."}
+                    : "Finish a practice to see your topics."}
                 </Muted>
                 <Button
                   onPress={() =>

@@ -1,3 +1,4 @@
+import { theoryLocation, isWrittenQuestion } from "../../src/domain/theory";
 import { practiceKey } from "../../src/domain/contracts";
 import { DatabaseSync } from "node:sqlite";
 import ts from "typescript";
@@ -50,15 +51,17 @@ export function nativeBankFixture() {
   vm.runInNewContext(compiled, {
     exports: exported,
     require: (path: string) =>
-      path === "../domain/contracts"
-        ? { practiceKey }
-        : path === "./records.native"
-          ? { database: async () => adapter, mutate: (work: any) => work() }
-          : path === "./records"
-            ? records
-            : (() => {
-                throw Error(path);
-              })(),
+      path === "../domain/theory"
+        ? { theoryLocation, isWrittenQuestion }
+        : path === "../domain/contracts"
+          ? { practiceKey }
+          : path === "./records.native"
+            ? { database: async () => adapter, mutate: (work: any) => work() }
+            : path === "./records"
+              ? records
+              : (() => {
+                  throw Error(path);
+                })(),
     console,
   });
   return { bank: exported, sqlite, records, values };

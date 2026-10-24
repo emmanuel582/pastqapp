@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-24T05:50:59.179Z",
+  "bundle": "waec-theory-testdriller-2027",
+  "version": "2026-10-18T01:16:29.235Z",
+  "total": 19838,
+  "allSourceLabelsMatch": true,
+  "nestedParts": 15797,
+  "missingImageReferences": 0,
+  "sourceRecordsWithoutSolution": 89,
+  "publicPartChecks": [
+    {
+      "subject": "Biology",
+      "year": "2026",
+      "questions": 32,
+      "sha256Matches": true
+    },
+    {
+      "subject": "Chemistry",
+      "year": "2026",
+      "questions": 62,
+      "sha256Matches": true
+    },
+    {
+      "subject": "English Language",
+      "year": "2026",
+      "questions": 16,
+      "sha256Matches": true
+    },
+    {
+      "subject": "Mathematics",
+      "year": "2026",
+      "questions": 39,
+      "sha256Matches": true
+    }
+  ],
+  "nativeSqliteLegacyCompatibility": "passed",
+  "ui": "Current part only; other parts open from bottom selector",
+  "nativeBuildStarted": false,
+  "physicalDeviceAcceptance": "Pending next requested build",
+  "browserWalkthrough": {
+    "writeNavigateReloadRetainsAnswer": true,
+    "bottomSelectorOpensOriginalPart": true,
+    "sourceAnswerShownOnce": true,
+    "revealingDoesNotMarkAnswered": true,
+    "submissionAndReviewByOriginalPart": true,
+    "theoryResultsHaveNoAutomaticScore": true
+  }
+}

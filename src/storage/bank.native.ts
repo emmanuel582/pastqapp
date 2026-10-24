@@ -1,3 +1,4 @@
+import { isWrittenQuestion, theoryLocation } from "../domain/theory";
 import { practiceKey as sourcePracticeKey } from "../domain/contracts";
 import { database, mutate } from "./records.native";
 import * as records from "./records";
@@ -46,6 +47,9 @@ export async function indexPart(
           sourceSet: q.sourceSet,
           sourceBundleId: q.sourceBundleId,
           questionNumber: q.questionNumber,
+          ...(isWrittenQuestion(q)
+            ? { theoryLocation: theoryLocation(q), orderIndex: q.orderIndex }
+            : {}),
           question: "",
           explanation: "",
           options: q.options.map(() => ""),
@@ -107,14 +111,58 @@ export async function readIndex(owner: string, id: string) {
   const database = await db(),
     questions: Question[] = [];
   for (const hash of meta.downloadedParts || []) {
-    const rows = await database.getAllAsync<{ summary: string }>(
-      "SELECT summary FROM bank_questions WHERE owner=? AND bundle=? AND version=? AND part=? ORDER BY position",
+    const rows = await database.getAllAsync<{
+      position: number;
+      summary: string;
+      legacyTheory: string | null;
+    }>(
+      `SELECT position, summary, CASE WHEN json_extract(summary,'$.type') IN ('theory','short_answer') AND json_extract(summary,'$.theoryLocation') IS NULL
+       THEN json_object('subject',json_extract(payload,'$.subject'),'year',json_extract(payload,'$.year'),'paper',json_extract(payload,'$.paper'),
+       'questionNumber',json_extract(payload,'$.questionNumber'),'sourceQuestionId',json_extract(payload,'$.sourceQuestionId'),
+       'sourceBundleId',json_extract(payload,'$.sourceBundleId'),'sourceFile',json_extract(payload,'$.sourceFile'),'sourceBank',json_extract(payload,'$.sourceBank'),'sourceSet',json_extract(payload,'$.sourceSet'),
+       'sourceAttributes',json_extract(payload,'$.sourceAttributes'),'sourceFields',json_extract(payload,'$.sourceFields'),'hierarchy',json_extract(payload,'$.hierarchy'),
+       'orderIndex',json_extract(payload,'$.orderIndex')) END AS legacyTheory
+       FROM bank_questions WHERE owner=? AND bundle=? AND version=? AND part=? ORDER BY position`,
       owner,
       id,
       meta.updatedAt!,
       hash,
     );
-    for (const row of rows) questions.push(JSON.parse(row.summary));
+    const upgrades: { position: number; summary: string }[] = [];
+    for (const row of rows) {
+      const question = JSON.parse(row.summary);
+      if (row.legacyTheory) {
+        const source = JSON.parse(row.legacyTheory);
+        question.theoryLocation = theoryLocation(source);
+        question.orderIndex = source.orderIndex;
+        upgrades.push({
+          position: row.position,
+          summary: JSON.stringify(question),
+        });
+      }
+      questions.push(question);
+    }
+    // Cache the small metadata once so later offline opens do not reparse full source records.
+    if (upgrades.length) {
+      try {
+        await mutate(() =>
+          database.withExclusiveTransactionAsync(async (tx) => {
+            for (const upgrade of upgrades)
+              await tx.runAsync(
+                "UPDATE bank_questions SET summary=? WHERE owner=? AND bundle=? AND version=? AND part=? AND position=? AND json_extract(summary,'$.theoryLocation') IS NULL",
+                upgrade.summary,
+                owner,
+                id,
+                meta.updatedAt!,
+                hash,
+                upgrade.position,
+              );
+          }),
+        );
+      } catch {
+        // This optional cache must not prevent reading existing questions when storage is full.
+      }
+    }
   }
   if (questions.length !== meta.question_count)
     throw new Error(

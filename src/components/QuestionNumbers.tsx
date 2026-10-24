@@ -5,6 +5,7 @@ import X from "lucide-react-native/icons/x";
 import { useApp } from "../state/AppContext";
 import { Text, Muted } from "./ui";
 import { questionAnswered, questionOutcome } from "../domain/attempt";
+import { isWrittenQuestion, theoryLabel } from "../domain/theory";
 import { questionNumberLabel } from "../domain/review";
 import { fonts } from "../theme/tokens";
 import type { Attempt } from "../domain/types";
@@ -22,11 +23,15 @@ export default function QuestionNumbers({
   onSelect: (index: number) => void;
 }) {
   const { palette } = useApp();
+  const columns = indexes.some((i) => isWrittenQuestion(attempt.questions[i]))
+    ? 4
+    : 5;
   return (
     <View>
       <FlatList
+        key={columns}
         data={indexes}
-        numColumns={5}
+        numColumns={columns}
         keyExtractor={(i) => String(i)}
         style={{ maxHeight: 320 }}
         initialNumToRender={30}
@@ -45,7 +50,7 @@ export default function QuestionNumbers({
                 ? palette.onDone
                 : palette.ink;
           return (
-            <View style={{ width: "20%", padding: 3 }}>
+            <View style={{ width: `${100 / columns}%`, padding: 3 }}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={questionNumberLabel(attempt, item, review)}
@@ -75,8 +80,18 @@ export default function QuestionNumbers({
                   opacity: pressed ? 0.65 : 1,
                 })}
               >
-                <Text style={{ fontFamily: fonts.mono, color, fontSize: 14 }}>
-                  {item + 1}
+                <Text
+                  style={{
+                    fontFamily: fonts.mono,
+                    color,
+                    fontSize: isWrittenQuestion(attempt.questions[item])
+                      ? 11
+                      : 14,
+                  }}
+                >
+                  {isWrittenQuestion(attempt.questions[item])
+                    ? theoryLabel(attempt.questions[item], item)
+                    : item + 1}
                 </Text>
                 {correct || wrong ? (
                   <View style={{ position: "absolute", right: 3, top: 3 }}>
