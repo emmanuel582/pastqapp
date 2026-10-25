@@ -99,17 +99,24 @@
   "mobileTestsPassed": 148,
   "typecheckPassed": true,
   "androidExportPassed": true,
-  "physicalChromebookAcceptance": "pending",
-  "playConsoleStatus": "Changes in review; automated quick checks running; closed Alpha full rollout requested",
+  "physicalChromebookAcceptance": "Still pending: user reports install incompatibility on Dell 3100; exact Android model/version and Play Store test enrollment requested",
+  "playConsoleStatus": "Published; available to selected testers on closed Alpha",
   "supportedAndroidDeviceModels": 19358,
   "previousSupportedAndroidDeviceModels": 18916,
   "manuallyExcludedDeviceModels": 0,
   "verifiedAt": "2026-10-25T21:50:43.4238407Z",
   "closedTestTrackId": "4698960041490294754",
-  "playConsoleSubmissionVerifiedAt": "2026-10-25T21:52:49.2186340Z",
+  "playConsoleSubmissionVerifiedAt": "2026-10-25T21:52:49.218634Z",
   "chromebookModelsPreviouslySupported": 10,
   "chromebookModelsSupported": 77,
   "previouslySupportedDevicesDropped": 0,
   "playEstimatedNewInstallSize": "20.1 MB; varies by device",
-  "playEstimatedUpdateSize": "366 KB; varies by device"
+  "playEstimatedUpdateSize": "366 KB; varies by device",
+  "publicationVerifiedAt": "2026-10-25T22:26:52.4710429Z",
+  "observedChromebookModel": "google octopus_cheets (Intel Gemini Lake Chromebook), Android 13 variants",
+  "observedChromebookTrackStatus": "Supported in all tracks with active releases; Closed testing - Alpha Supported",
+  "storeListingIntegrityFilter": "No integrity checks; observed only, not changed",
+  "closedTestCountries": [
+    "Nigeria"
+  ]
 }
