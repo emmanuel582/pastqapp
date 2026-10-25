@@ -81,7 +81,10 @@ async function register(
   try {
     token = (
       await Notifications.getExpoPushTokenAsync({
-        projectId: appConfig.expo.extra.eas.projectId,
+        projectId:
+          Platform.OS === "android"
+            ? appConfig.expo.extra.androidPushProjectId
+            : appConfig.expo.extra.eas.projectId,
         devicePushToken: deviceToken,
       })
     ).data;

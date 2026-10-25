@@ -4,7 +4,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
 import { randomUUID } from "node:crypto";
-function fixture() {
+function fixture(platform: "ios" | "android" = "ios") {
   const secure = new Map<string, string>(),
     prefs = new Map<string, any>(),
     calls: any[] = [],
@@ -75,9 +75,17 @@ function fixture() {
               };
             },
           };
-        if (name === "react-native") return { Platform: { OS: "ios" } };
+        if (name === "react-native") return { Platform: { OS: platform } };
         if (name === "../../app.json")
-          return { expo: { extra: { eas: { projectId: "test-project" } } } };
+          return {
+            expo: {
+              android: { googleServicesFile: "./google-services.json" },
+              extra: {
+                androidPushProjectId: "test-android-project",
+                eas: { projectId: "test-project" },
+              },
+            },
+          };
         if (name === "../storage/records")
           return {
             read: async (o: string) => prefs.get(o),
@@ -248,4 +256,13 @@ test("offline registration keeps opt-in so the next refresh retries without prom
   await f.api.refreshPush("alice");
   assert.equal(await f.api.pushStatus("alice"), true);
   assert.equal(f.prompts.filter(Boolean).length, 1);
+});
+
+test("each platform registers against its own credential project", async () => {
+  const android = fixture("android");
+  const ios = fixture("ios");
+  await android.api.connectPush("alice");
+  await ios.api.connectPush("alice");
+  assert.equal(android.tokenRequests[0].projectId, "test-android-project");
+  assert.equal(ios.tokenRequests[0].projectId, "test-project");
 });

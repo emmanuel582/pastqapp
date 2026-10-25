@@ -1,11 +1,11 @@
 {
-  "app": "focalPoint",
-  "updated": "24 October 2026",
+  "app": "FocalPoint",
+  "updated": "25 October 2026",
   "supportEmail": "wealthconsort@gmail.com",
   "privacy": [
     {
       "title": "Who operates this service",
-      "body": "focalPoint is the study app provided by the developer identified on its Google Play or Apple App Store listing. Contact wealthconsort@gmail.com about privacy, your account or your study materials."
+      "body": "FocalPoint, listed on Google Play as FocalPoint CBT, is a study app operated by Wealth Consort. Contact wealthconsort@gmail.com about privacy, your account or your study materials."
     },
     {
       "title": "Account and study information",
@@ -13,7 +13,7 @@
     },
     {
       "title": "Your papers and uploads",
-      "body": "When you choose to upload photos, PDFs or question text, those materials are sent to the focalPoint server for processing and storage. The extraction service uses OpenRouter and its selected model providers to prepare questions. These providers process the submitted content under their own applicable terms and data practices. Upload only materials you have permission to use, and remove unrelated personal information before uploading."
+      "body": "When you choose to upload photos, PDFs or question text, those materials are sent to the FocalPoint server for processing and storage. The extraction service uses OpenRouter and its selected model providers to prepare questions. These providers process the submitted content under their own applicable terms and data practices. Upload only materials you have permission to use, and remove unrelated personal information before uploading."
     },
     {
       "title": "On-device practice",
@@ -29,21 +29,21 @@
     },
     {
       "title": "Your choices and deletion",
-      "body": "You can remove saved papers and sessions in the app. To request deletion of your account and associated cloud profile, progress and private uploaded materials, open Help & privacy → Delete account, or email wealthconsort@gmail.com from your account email with the subject “focalPoint account deletion”. We verify ownership before deleting account data. Deleting local downloads or signing out alone does not delete your cloud account."
+      "body": "You can remove saved papers and sessions in the app. To request deletion of your account and associated cloud profile, progress and private uploaded materials, open Help & privacy → Delete account, or email wealthconsort@gmail.com from your account email with the subject “FocalPoint account deletion”. We verify ownership before deleting account data. Deleting local downloads or signing out alone does not delete your cloud account."
     },
     {
       "title": "Retention and safety",
       "body": "Account and study information is retained while needed to provide your account and requested study materials, until removed or an account deletion request is fulfilled. Limited records may be retained where required for security or legal obligations; any applicable exception will be explained when processing your request. Data is transferred using encrypted connections. Device security, operating-system backups and third-party provider retention are separate considerations."
     },
     {
-      "title": "Children and families",
-      "body": "Parents and guardians can contact wealthconsort@gmail.com about a child’s account, uploaded information, access or deletion. Where parental consent is legally required, it must be provided before a child’s personal information is submitted. Do not include unrelated personal information in question papers or photographs."
+      "title": "Students and age requirements",
+      "body": "FocalPoint is designed for secondary-school students and older learners aged 13 and above. It is not directed to children under 13. Parents and guardians can contact wealthconsort@gmail.com about a student’s account or deletion. Where parental consent is legally required, it must be provided before personal information is submitted. Do not include unrelated personal information in uploaded papers or photographs."
     }
   ],
   "terms": [
     {
-      "title": "Using focalPoint",
-      "body": "Use focalPoint for lawful study and revision. You are responsible for keeping your account secure and for having permission to upload or use your materials. Do not upload illegal, abusive or infringing content, or attempt to access another person’s account or materials."
+      "title": "Using FocalPoint",
+      "body": "Use FocalPoint for lawful study and revision. You are responsible for keeping your account secure and for having permission to upload or use your materials. Do not upload illegal, abusive or infringing content, or attempt to access another person’s account or materials."
     },
     {
       "title": "Questions and results",
@@ -51,7 +51,7 @@
     },
     {
       "title": "Independent study app",
-      "body": "focalPoint is an independent study service. References to WAEC, UTME, JAMB, schools or other examination bodies identify study content; they do not imply endorsement or affiliation."
+      "body": "FocalPoint is an independent study service. References to WAEC, UTME, JAMB, schools or other examination bodies identify study content; they do not imply endorsement or affiliation."
     },
     {
       "title": "Availability and payments",
@@ -65,11 +65,12 @@
   "deletion": [
     {
       "title": "Delete your account",
-      "body": "Request deletion of your focalPoint account and its associated cloud profile, progress and private uploaded study materials. Send the request from the email registered to your account so ownership can be verified. Do not send your password or verification codes."
+      "body": "Request deletion of your FocalPoint account and its associated cloud profile, progress and private uploaded study materials. Send the request from the email registered to your account so ownership can be verified. Do not send your password or verification codes."
     },
     {
       "title": "What happens next",
       "body": "The support team verifies ownership and processes the request. You will be told if any specific security or legal retention exception applies. Removing a saved paper from this phone, deleting a practice session or signing out does not delete your full account. Local copies and exported backups on other devices must be removed from those devices or destinations."
     }
-  ]
+  ],
+  "operator": "Wealth Consort"
 }

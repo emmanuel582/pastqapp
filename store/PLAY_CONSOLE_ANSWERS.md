@@ -1,4 +1,4 @@
-# focalPoint — Play Console submission pack
+# FocalPoint CBT — Play Console submission pack
 
 Updated 25 October 2026 from the actual mobile source and current Google Play documentation. This is a field-by-field draft, not a declaration that release gates have passed. Do not submit statements marked HOLD until they are true.
 
@@ -6,14 +6,15 @@ Updated 25 October 2026 from the actual mobile source and current Google Play do
 
 | Field            | Answer                                                                                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| App name         | focalPoint                                                                                                                                       |
+| App name | FocalPoint CBT |
+| Developer/company | Wealth Consort |
 | Default language | English (United Kingdom), if that is the language used for support                                                                               |
 | App or game      | App                                                                                                                                              |
 | Category         | Education                                                                                                                                        |
 | Download price   | Free at launch                                                                                                                                   |
 | Contact email    | wealthconsort@gmail.com                                                                                                                          |
 | Website          | Do not enter usefocalpoint.com; the owner has not purchased it yet. A website is optional where Console permits it.                              |
-| Package name     | com.pastq.study — keep this existing identifier for signing, upgrades and Firebase. The display name is focalPoint.                              |
+| Package name | com.wealthconsort.focalpoint — matches the existing Wealth Consort Play app. Previous com.pastq.study builds cannot be uploaded to this app. |
 | Tags             | Choose relevant available Console tags such as Education, Exam preparation or Study tools; the exact available choices are controlled by Google. |
 
 ### Short description (within 80 characters)
@@ -72,13 +73,9 @@ Do not add claims of guaranteed scores, official endorsement, a million-user cap
 | Account creation?                      | Yes: email/password and Google OAuth.                                                                                                                                                                                     |
 | Data deletion?                         | The native Help & privacy page has an account deletion request path. Public deletion page and operational handling must be verified before declaring complete. Removing a session or signing out is not account deletion. |
 
-## Target audience — HOLD
+## Target audience — owner confirmed
 
-The owner wants anyone of any age to be able to study. That product goal must not be converted into an inaccurate “all ages” declaration. Google asks which ages the actual content and experience were designed for.
-
-Current WAEC/UTME/university workflows support secondary-school and older students. The current audit has not established suitability for preschool children or early readers. Do not tick “5 and under” or “6–8” just because installation should be available to everybody.
-
-If any child age group is selected, complete the mixed/child audience review: age-appropriate content, parent/guardian consent where required, provider terms, authentication and SDK data collection, uploads containing personal information, and store artwork. Do not mark Families-compliant or Teacher Approved without evidence. The actual age-group selections remain a release gate.
+The owner confirmed the app is designed for secondary-school students and older learners aged 13+. Select 13–15, 16–17 and 18 and over. Do not select under-13 groups or claim Families/Teacher Approved status. The public privacy policy now describes this intended audience. Age selection is not a promise that every question bank suits every student; review the actual IARC content categories.
 
 ## Content rating (IARC)
 
@@ -140,13 +137,15 @@ Prepared routes on the existing HTTPS API host (must return public HTML with no 
 - Account deletion: https://76.13.110.6.nip.io/legal/delete-account
 - Terms: https://76.13.110.6.nip.io/legal/terms
 
-These are preparation targets, not claimed live until the deployment checks pass. The support address is wealthconsort@gmail.com. A future custom domain can replace them after it is owned, secured and reachable.
+These routes returned public HTML successfully during the 25 October checks. The revised Wealth Consort/13+ policy text still needs deployment verification. The support address is wealthconsort@gmail.com. A future custom domain can replace them after it is owned, secured and reachable.
 
 Account deletion must cover the account and associated cloud profile/progress/private uploads; an email link alone does not prove the support process fulfils requests. Maintain an authenticated ownership-verification process, remove associated provider-held data as applicable, and disclose legitimate retention exceptions. Do not publish an invented deletion deadline.
 
 ## Reviewer access instructions — copy after supplying private credentials
 
-Instruction title: focalPoint reviewer access.
+Instruction title: FocalPoint CBT reviewer access.
+
+The dedicated email/password account was created and verified on 25 October: confirmed email, successful password login and authenticated VPS access. Credentials are in the ignored private local file `.qa/play-reviewer-account.json`; enter them in Console App access, never in public listing text or Git. Keep this account active throughout review.
 
 Use the email and password supplied privately in this App access section. The account must be email-confirmed, available without a one-time code, and kept active throughout review. Do not require reviewers to use their personal Google account.
 
@@ -179,7 +178,7 @@ Google’s production-access form commonly asks:
 2. How easy was recruitment? Select the real experience.
 3. What engagement did you receive? State actual features tested, devices and frequency, supported by records.
 4. What feedback did testers provide and how was it collected? Summarise real reports and the channel used.
-5. Who is the intended audience? Describe the actual learner age groups/content design after the audience gate is resolved.
+5. Who is the intended audience? Describe the actual learner age groups/content design (secondary-school students and older, ages 13+).
 6. How does the app provide value? Suggested answer: “focalPoint combines offline question practice, imported study materials, per-question working and topic-level review so students can practise and understand where they need more work.”
 7. How many installs do you expect in the first year? Choose your genuine estimate; there is no evidence-based number to fabricate here.
 8. What changes did you make after the test? List changes actually made during the closed test. Existing fixes are not proof of a future test.
@@ -187,7 +186,7 @@ Google’s production-access form commonly asks:
 
 ## Build and launch sequence
 
-1. Finish the child-audience/provider/deletion/schema/access gates in docs/PRODUCTION_READINESS.md.
+1. Finish the provider/deletion/schema/access gates in docs/PRODUCTION_READINESS.md.
 2. Verify Android target SDK and manifest. The last successful 1.0.7 build targeted API 36, matching the current new-app minimum.
 3. Use an Android App Bundle (.aab), not the preview APK. Preserve the signing key/package identity and enable Google Play App Signing.
 4. Validate the production EAS environment’s API/auth variables. Do not point production at an unverified preview environment or enable fixture paths.
@@ -227,6 +226,26 @@ Keep the download free if the plan is free installation with premium study featu
 - New-account summary cloud sync passed with the existing schema. Detailed topic graphs are computed from local attempts; full topic cloud synchronization is queued until the detailed tables exist. Do not advertise complete cross-device working/analytics sync yet.
 - Included original graphic: store/feature-graphic-1024x500.png. Icon: store/icon-512.png. Capture final store screenshots from a real installed build; a browser preview alone is insufficient device evidence.
 
-## Verified release bundle
+## Current release identity and evidence — 25 October 2026
 
-focalPoint 1.0.8, Android version code 12: [signed production AAB](https://expo.dev/accounts/emmanuelwritecode/projects/focalpoint/builds/55a7e185-7663-4b7d-8f3b-e48e2a265800). EAS status FINISHED and artifact HEAD 200 verified on 25 October 2026. Use internal testing first. Successful compilation does not clear the HOLD items or grant production access.
+Play developer: Wealth Consort; public contact: wealthconsort@gmail.com. Existing Console app ID 4973565716362622149 uses com.wealthconsort.focalpoint. The saved default listing draft is FocalPoint CBT. No rollout has been submitted.
+
+The former 1.0.10/code 15 AAB finished successfully and passed bundletool validation, target SDK 36, signing verification and static 16 KB alignment checks, but its package is com.pastq.study. DO NOT upload it to this Console app.
+
+Replacement candidate: FocalPoint 1.0.11/code 16, com.wealthconsort.focalpoint, production-android profile under wealthdigitals. Firebase app registration is verified. Android uses its new Expo notification project; iOS keeps its existing signing and push identity. A replacement build and binary audit are pending.
+
+The owner confirmed they collated and are authorised to distribute the current question banks. Retain source/licence records in case Google requests proof; this confirmation is not an independent legal verification.
+
+## Closed-test status and evidence
+
+The owner added 15 people to internal testing. Console showed no active closed test and 0 closed-test opt-ins on 25 October. Internal testers, email-list entries and sideloaded installs do not start the required closed-test clock. At least 12 testers must remain continuously opted into a published closed test for 14 days. Keep real engagement and feedback records using `store/closed-test-log.csv` and `store/CLOSED_TEST_PLAN.md`. Never fabricate feedback, tester counts or dates. Approval remains Google’s decision.
+
+## Remaining submission work
+
+- Correct-package signed AAB and physical install/push/background/resume checks.
+- At least two genuine Android screenshots; listing icon/feature graphic and remaining Console fields.
+- Data safety declarations reflecting actual provider handling, including uploaded content sharing unless an applicable exception has been verified.
+- IARC answers based on the distributed content; target ages 13–15, 16–17, 18+.
+- Verify the operational account-deletion procedure, not just its request link.
+- Confirm free-download pricing at launch; add future premium features through the applicable billing policy.
+- Explicit owner review of final declarations before submission/rollout.

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1081502964642:android:96c3c754e25bbadc1570fb",
+        "mobilesdk_app_id": "1:1081502964642:android:3657b87cf44cc3c31570fb",
         "android_client_info": {
-          "package_name": "com.pastq.study"
+          "package_name": "com.wealthconsort.focalpoint"
         }
       },
       "oauth_client": [],

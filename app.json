@@ -1,12 +1,9 @@
 {
   "expo": {
-    "name": "focalPoint",
+    "name": "FocalPoint",
     "slug": "focalpoint",
-    "scheme": [
-      "focalpoint",
-      "pastq"
-    ],
-    "version": "1.0.10",
+    "scheme": ["focalpoint", "pastq"],
+    "version": "1.0.11",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -14,15 +11,15 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.pastq.study",
       "infoPlist": {
-        "NSCameraUsageDescription": "Photograph your question papers to study them in focalPoint.",
+        "NSCameraUsageDescription": "Photograph your question papers to study them in FocalPoint.",
         "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "12",
+      "buildNumber": "13",
       "appleTeamId": "4F385JKS7J"
     },
     "android": {
-      "package": "com.pastq.study",
+      "package": "com.wealthconsort.focalpoint",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.POST_NOTIFICATIONS"
@@ -31,8 +28,9 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
       },
-      "versionCode": 15,
-      "googleServicesFile": "./google-services.json"
+      "versionCode": 16,
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
     },
     "web": {
       "bundler": "metro",
@@ -63,7 +61,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Photograph your question papers to study them in focalPoint.",
+          "cameraPermission": "Photograph your question papers to study them in FocalPoint.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -95,7 +93,8 @@
     "extra": {
       "eas": {
         "projectId": "2a3c3ccd-bfc5-48af-9615-f33b8de210f6"
-      }
+      },
+      "androidPushProjectId": "6428833a-bccf-43b0-b02d-5ddc9225336a"
     },
     "owner": "emmanuelwritecode"
   }

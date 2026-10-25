@@ -137,3 +137,19 @@ eas build --platform android --profile preview-android
 Clear those two shell variables before working with the original iPhone project and sign into an Expo account with access to it. Never commit credentials.json or the keystore. Configuration checks verified that the override preserves both platform identifiers, leaves the base notification ID unchanged and rejects partial overrides.
 
 Android 1.0.10/code 14 completed successfully: [Install APK](https://expo.dev/accounts/wealthdigitals/projects/focalpoint/builds/4a2da8ec-8de0-450f-8cee-eb2e3a3c4f8f). Installer HTTP HEAD returned 200 with 61,092,188 bytes. The artifact was verified as an APK; no application binary was downloaded to the laptop. No new Play AAB was built in this account-switch step. Physical-device install/update and notification delivery checks remain.
+
+## Current Play identity correction — 25 October 2026
+
+This section supersedes earlier package/build-ownership instructions. App: FocalPoint. Play title: FocalPoint CBT. Publisher: Wealth Consort. Public support: wealthconsort@gmail.com. The existing paid Play account app uses com.wealthconsort.focalpoint, not com.pastq.study. Earlier APK/AAB links are not compatible with that Console entry.
+
+Candidate 1.0.11/code 16 corrects the Android package, keeps the original signing key, removes unused SYSTEM_ALERT_WINDOW, and registers Android push against Expo project 6428833a-bccf-43b0-b02d-5ddc9225336a. Firebase registration verified: app 1:1081502964642:android:3657b87cf44cc3c31570fb under existing project pastq-4c772. Public config uses that verified app ID and package; no private key was read or committed. The owner privately uploaded the existing FCM key and provided EAS confirmation that it is assigned to com.wealthconsort.focalpoint. No new service account or IAM permissions were created. iOS preserves its existing signing/push project.
+
+Validation: TypeScript passes; 146 mobile tests pass, including Android/iOS push-project isolation. Android production export passes. Replacement signed build and physical push/install checks remain pending.
+
+Previous 1.0.10/code 15 AAB static audit: bundletool validation passed, target SDK 36, non-debuggable, expected signing certificate, all 64-bit ELF load alignments at least 16 KB, bundle PAGE_ALIGNMENT_16K enabled. No AD_ID or READ_MEDIA_IMAGES/VIDEO permissions. That binary uses the wrong Play package and must not be uploaded. These binary checks must be repeated on the replacement; static checks do not prove physical 16 KB runtime compatibility. Binaries were inspected only in an isolated VPS temporary directory, not downloaded to the laptop.
+
+Console listing title/description saved as draft. Education category and wealthconsort@gmail.com saved. The owner confirmed intended audience 13+ and rights to distribute current banks. Reviewer email/password login and authenticated VPS access verified; ignored credentials are in .qa/play-reviewer-account.json. No real student progress was fabricated.
+
+The 15 people added to internal testing are not closed-test opt-ins. Console showed 0 closed testers and no active closed release. The 14-day clock has not started. Use store/CLOSED_TEST_PLAN.md and the empty evidence log for actual results; Google retains production-access approval discretion.
+
+Remaining gates include the signed corrected-package binary, actual device acceptance, real listing screenshots, Console content/data declarations, provider data handling, operational deletion, detailed analytics schema, known dependency advisories, and closed-test access. The single VPS has no million-user concurrency certification. Public policy source now names Wealth Consort and the 13+ audience; live replacement text still requires deployment verification.
