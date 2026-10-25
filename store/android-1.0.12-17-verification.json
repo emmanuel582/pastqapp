@@ -1,0 +1,115 @@
+{
+  "package": "com.wealthconsort.focalpoint",
+  "versionName": "1.0.12",
+  "versionCode": "17",
+  "sdk": {
+    "minSdkVersion": "24",
+    "targetSdkVersion": "36"
+  },
+  "features": [
+    {
+      "name": "android.hardware.camera",
+      "required": "false"
+    },
+    {
+      "name": "android.hardware.camera.any",
+      "required": "false"
+    },
+    {
+      "name": "android.hardware.camera.front",
+      "required": "false"
+    },
+    {
+      "name": "android.hardware.camera.autofocus",
+      "required": "false"
+    },
+    {
+      "name": "android.hardware.camera.flash",
+      "required": "false"
+    },
+    {
+      "name": "android.hardware.touchscreen",
+      "required": "false"
+    },
+    {
+      "name": "android.hardware.touchscreen.multitouch",
+      "required": "false"
+    },
+    {
+      "name": "android.hardware.touchscreen.multitouch.distinct",
+      "required": "false"
+    }
+  ],
+  "permissions": [
+    "android.permission.CAMERA",
+    "android.permission.INTERNET",
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.VIBRATE",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.WAKE_LOCK",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.USE_BIOMETRIC",
+    "android.permission.USE_FINGERPRINT",
+    "com.google.android.c2dm.permission.RECEIVE",
+    "com.wealthconsort.focalpoint.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+    "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
+    "com.sec.android.provider.badge.permission.READ",
+    "com.sec.android.provider.badge.permission.WRITE",
+    "com.htc.launcher.permission.READ_SETTINGS",
+    "com.htc.launcher.permission.UPDATE_SHORTCUT",
+    "com.sonyericsson.home.permission.BROADCAST_BADGE",
+    "com.sonymobile.home.permission.PROVIDER_INSERT_BADGE",
+    "com.anddoes.launcher.permission.UPDATE_COUNT",
+    "com.majeur.launcher.permission.UPDATE_BADGE",
+    "com.huawei.android.launcher.permission.CHANGE_BADGE",
+    "com.huawei.android.launcher.permission.READ_SETTINGS",
+    "com.huawei.android.launcher.permission.WRITE_SETTINGS",
+    "android.permission.READ_APP_BADGE",
+    "com.oppo.launcher.permission.READ_SETTINGS",
+    "com.oppo.launcher.permission.WRITE_SETTINGS",
+    "me.everything.badger.permission.BADGE_COUNT_READ",
+    "me.everything.badger.permission.BADGE_COUNT_WRITE"
+  ],
+  "mainActivity": {
+    "configChanges": "keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode|smallestScreenSize|assetsPaths",
+    "exported": "true",
+    "launchMode": "singleTask",
+    "name": "com.wealthconsort.focalpoint.MainActivity",
+    "resizeableActivity": "true",
+    "screenOrientation": "unspecified",
+    "theme": "@style/Theme.App.SplashScreen",
+    "windowSoftInputMode": "adjustResize"
+  },
+  "nativeAbis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+  ],
+  "nativeLibraryCount": 104,
+  "native64BitAlignmentFailures": [],
+  "bytes": 77774670,
+  "sha256": "4862833190b7a999c0977e2c67bc858c936a85b7dd7a14cc84bae93fc92074e3",
+  "buildId": "57cdcfb2-ef3f-44ad-b176-8505165af8b2",
+  "buildStatus": "FINISHED",
+  "sourceCommit": "7eee59bcd35c4b88073aa7cc3bdc3953251de0b6",
+  "mobileTestsPassed": 148,
+  "typecheckPassed": true,
+  "androidExportPassed": true,
+  "physicalChromebookAcceptance": "pending",
+  "playConsoleStatus": "Changes in review; automated quick checks running; closed Alpha full rollout requested",
+  "supportedAndroidDeviceModels": 19358,
+  "previousSupportedAndroidDeviceModels": 18916,
+  "manuallyExcludedDeviceModels": 0,
+  "verifiedAt": "2026-10-25T21:50:43.4238407Z",
+  "closedTestTrackId": "4698960041490294754",
+  "playConsoleSubmissionVerifiedAt": "2026-10-25T21:52:49.2186340Z",
+  "chromebookModelsPreviouslySupported": 10,
+  "chromebookModelsSupported": 77,
+  "previouslySupportedDevicesDropped": 0,
+  "playEstimatedNewInstallSize": "20.1 MB; varies by device",
+  "playEstimatedUpdateSize": "366 KB; varies by device"
+}
