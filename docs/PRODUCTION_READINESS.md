@@ -107,3 +107,13 @@ Reviewed the app entry/navigation, auth and account boundaries, queued sync, upl
 - Public-release gates remain: detailed Supabase analytics schema, physical-device background/network-loss/OAuth verification, dependency advisories, content rights, age/data compliance, operational account deletion and Play testing/production access. The existing single VPS has not been certified for million-user concurrency.
 
 The earlier 1.0.9 preview builds (Android 5607cbbb-a361-43f4-a43c-d0d0d3ed9100 and iPhone 631f248c-87fd-4eb6-b2a1-f8948d30c6cc) finished, but predate this audit. The replacement candidate is 1.0.10, preview Android code 14 and iPhone build 12. Do not distribute the older packages as this audited update.
+
+## 1.0.10 signed-build outcome, 25 October
+
+Source commit 22f64f2 passed 145 mobile tests, strict TypeScript checks and Android/iOS production exports. The EAS upload archive was 6.0 MB, compared with 7.6 MB for the preceding candidate; this is not an installed-app size measurement.
+
+- iPhone preview build 12: FINISHED. [Install on the registered iPhone](https://expo.dev/accounts/emmanuelwritecode/projects/focalpoint/builds/f84a8c01-e9b7-4a00-92d2-dc992a8a0e52). Installer HTTP HEAD returned 200 with 15,178,708 bytes. No binary was downloaded to the laptop.
+- Android was attempted first. EAS rejected the new build because the current account exhausted its monthly Free-plan Android allowance. Its stated reset is 1 November 2026. No 1.0.10 APK or Play AAB has been generated; an account change has not yet been performed.
+- The existing 1.0.9 APK remains available at build 5607cbbb-a361-43f4-a43c-d0d0d3ed9100; its installer HEAD returned 200. It predates the 1.0.10 audit fixes and must not be described as the audited update.
+
+Successful compilation and installer availability do not close the public-release gates documented above.
