@@ -1,3 +1,5 @@
+import { usePreventRemove } from "@react-navigation/native";
+import { rememberPendingUpload } from "../services/uploadHistory";
 import { registerTransferRecovery } from "../services/backgroundTransfers";
 import { stageUploadFiles } from "../services/uploadTransport";
 import { checkCancelled } from "../domain/cancellation";
@@ -22,6 +24,7 @@ import Plus from "lucide-react-native/icons/plus";
 import { useApp } from "../state/AppContext";
 import {
   Screen,
+  Dialog,
   Header,
   Content,
   Text,
@@ -34,7 +37,7 @@ import {
 } from "../components/ui";
 import PaperArt from "../components/PaperArt";
 import MaterialCamera from "../components/MaterialCamera";
-import Scholar from "../components/Scholar";
+import ScholarActivity from "../components/ScholarActivity";
 import {
   uploadMaterial,
   type UploadDraft,
@@ -53,6 +56,12 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
     [progress, setProgress] = useState({ done: 0, total: 0, label: "" }),
     [error, setError] = useState(""),
     lock = useRef(false);
+  const uploadAccepted = useRef(false);
+  const [leaveBlocked, setLeaveBlocked] = useState(false);
+  usePreventRemove(busy, ({ data }) => {
+    if (uploadAccepted.current) navigation.dispatch(data.action);
+    else setLeaveBlocked(true);
+  });
   const transfer = useRef<AbortController | null>(null);
   const mounted = useRef(true);
   useEffect(() => {
@@ -132,6 +141,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
     if (lock.current || !draft.files.length) return;
     void registerTransferRecovery().catch(() => {});
     lock.current = true;
+    uploadAccepted.current = false;
     setBusy(true);
     setError("");
     try {
@@ -161,6 +171,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
             persisted,
             next,
           );
+          await rememberPendingUpload(owner, sessionId, draft.name);
           persisted = next;
           if (updated && mounted.current) setDraft(next);
         },
@@ -175,6 +186,9 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
         null,
       );
       if (cleared) await records.write(owner, "processing", "current", id);
+      uploadAccepted.current = true;
+      await rememberPendingUpload(owner, id, draft.name, "processing");
+      if (mounted.current) setLeaveBlocked(false);
       if (cleared && mounted.current) {
         setDraft({ files: [], name: "" });
         navigation.replace("Processing", { sessionId: id });
@@ -370,7 +384,7 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
                     marginTop: 12,
                   }}
                 >
-                  <Scholar width={96} sceneWidth={110} sceneHeight={116} />
+                  <ScholarActivity mode="upload" width={106} height={116} />
                   <View style={{ flex: 1, gap: 12 }}>
                     <Muted>{progress.label || "Preparing your material"}</Muted>
                     <View style={{ height: 3, backgroundColor: palette.line }}>
@@ -443,6 +457,11 @@ export default function UploadScreen({ navigation }: Props<"Upload">) {
           </View>
         ) : null}
       </Content>
+      {leaveBlocked ? (
+        <Dialog title="Uploading files" onClose={() => setLeaveBlocked(false)}>
+          <Button onPress={() => setLeaveBlocked(false)}>Keep uploading</Button>
+        </Dialog>
+      ) : null}
       {camera ? (
         <MaterialCamera
           onClose={() => setCamera(false)}

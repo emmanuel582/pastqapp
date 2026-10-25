@@ -213,3 +213,28 @@ test("a failed upload can notify again when retry succeeds without replaying the
     f.close();
   }
 });
+test("clarification uses an attention event and confirming material never triggers a second completion alert", () => {
+  const f = fixture();
+  try {
+    push.registerDevice("a", "alice", f.device);
+    const s = {
+      id: "clarify",
+      ownerKey: "a",
+      status: "completed",
+      updatedAt: f.now,
+      questions: [{ type: "other", options: [] }],
+      followUps: [],
+    };
+    assert.equal(push.materialCompleted(s, f.now).queued, 1);
+    assert.equal(push.materialCompleted(s, f.now).queued, 0);
+    assert.equal(
+      push.materialCompleted(
+        { ...s, approvedAt: new Date(f.now).toISOString() },
+        f.now,
+      ),
+      undefined,
+    );
+  } finally {
+    f.close();
+  }
+});

@@ -5,7 +5,6 @@ import {
   quietPush,
   connectPush,
   disablePush,
-  testPush,
 } from "../services/remotePush";
 import React, { useEffect, useState } from "react";
 import { View, FlatList, AppState } from "react-native";
@@ -134,20 +133,6 @@ export default function NotificationsScreen({
       setPushBusy(false);
     }
   }
-  async function sendPushTest() {
-    setPushBusy(true);
-    setPushMessage("");
-    try {
-      await testPush();
-      setPushMessage("Test queued. Lock your phone to check the notification.");
-    } catch (e) {
-      setPushMessage(
-        e instanceof Error ? e.message : "Could not send the test. Try again.",
-      );
-    } finally {
-      setPushBusy(false);
-    }
-  }
   async function mark(id: string) {
     setBusy(id);
     try {
@@ -241,15 +226,6 @@ export default function NotificationsScreen({
                     Enable banners and sound
                   </Button>
                 </View>
-              ) : null}
-              {pushEnabled ? (
-                <Button
-                  kind="text"
-                  disabled={pushBusy}
-                  onPress={() => void sendPushTest()}
-                >
-                  Test notification
-                </Button>
               ) : null}
               {pushMessage ? <Muted>{pushMessage}</Muted> : null}
             </View>

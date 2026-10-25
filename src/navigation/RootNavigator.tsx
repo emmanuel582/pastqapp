@@ -110,6 +110,10 @@ export default function RootNavigator() {
             getComponent={() => require("../screens/ResultsScreen").default}
           />
           <Stack.Screen
+            name="Uploads"
+            getComponent={() => require("../screens/UploadsScreen").default}
+          />
+          <Stack.Screen
             name="Upload"
             getComponent={() => require("../screens/UploadScreen").default}
           />

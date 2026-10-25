@@ -1,3 +1,4 @@
+import { isWrittenQuestion } from "./theory";
 export interface GradableQuestion {
   correct?: number | string | null;
   options: string[];
@@ -6,7 +7,7 @@ export interface GradableQuestion {
 }
 
 export function answerIndex(question: GradableQuestion): number | null {
-  if (question.type === "theory" || question.type === "short_answer")
+  if (isWrittenQuestion(question as import("./cbtFilters").CbtQuestion))
     return null;
   if (question.correct == null || question.correct === "") return null;
   const index = Number(question.correct);

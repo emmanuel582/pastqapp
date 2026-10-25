@@ -1,23 +1,24 @@
-import { materialCompleted } from '../notifications/native.js';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import path from 'path';
-import * as pageStore from './pageStore.js';
+import { materialCompleted } from "../notifications/native.js";
+import { fileURLToPath } from "url";
+import fs from "fs";
+import path from "path";
+import * as pageStore from "./pageStore.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function getDataRoot() {
   const env = process.env.DATA_DIR || process.env.PASTQ_DATA_DIR;
   if (env) return path.resolve(env);
-  return path.join(__dirname, '../../data');
+  return path.join(__dirname, "../../data");
 }
 
 const DATA_DIR = getDataRoot();
-const SESSIONS_DIR = path.join(DATA_DIR, 'sessions');
-const PAGES_DIR = path.join(DATA_DIR, 'pages');
-const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
+const SESSIONS_DIR = path.join(DATA_DIR, "sessions");
+const PAGES_DIR = path.join(DATA_DIR, "pages");
+const JOBS_FILE = path.join(DATA_DIR, "jobs.json");
 
-for (const dir of [DATA_DIR, SESSIONS_DIR, PAGES_DIR]) fs.mkdirSync(dir, { recursive: true });
+for (const dir of [DATA_DIR, SESSIONS_DIR, PAGES_DIR])
+  fs.mkdirSync(dir, { recursive: true });
 if (!fs.existsSync(JOBS_FILE)) fs.writeFileSync(JOBS_FILE, JSON.stringify({}));
 
 /** Write via a temp file + rename so a crash never leaves a half-written file. */
@@ -28,7 +29,8 @@ function writeAtomic(file, text) {
 }
 
 function sessionPath(id) {
-  if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw new Error('Invalid session id');
+  if (typeof id !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(id))
+    throw new Error("Invalid session id");
   return path.join(SESSIONS_DIR, `${id}.json`);
 }
 
@@ -39,24 +41,32 @@ function pageDir(sessionId) {
 }
 
 function getJobs() {
-  return JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+  return JSON.parse(fs.readFileSync(JOBS_FILE, "utf8"));
 }
 
 function saveJobs(jobs) {
   writeAtomic(JOBS_FILE, JSON.stringify(jobs, null, 2));
 }
 
-function createSession({ id, name, icon, subjectHint, ownerKey }) {
+function createSession({
+  id,
+  name,
+  icon,
+  subjectHint,
+  ownerKey,
+  publishToLibrary = false,
+}) {
   const session = {
     id,
     // Extraction work and question content remain on the VPS. This is a
     // one-way ownership HMAC, not a Supabase user id or profile datum.
     ownerKey: ownerKey || null,
-    name: name || 'New Material',
-    icon: icon || '📖',
+    publishToLibrary: publishToLibrary === true,
+    name: name || "New Material",
+    icon: icon || "📖",
     subjectHint: subjectHint || null,
-    pipeline: 'v3',
-    status: 'pending',
+    pipeline: "v3",
+    status: "pending",
     createdAt: Date.now(),
     updatedAt: Date.now(),
     // Pages live in SQLite (pageStore.js), not in this file.
@@ -78,23 +88,36 @@ function createSession({ id, name, icon, subjectHint, ownerKey }) {
 function getSession(id) {
   const p = sessionPath(id);
   if (!fs.existsSync(p)) return null;
-  const session = JSON.parse(fs.readFileSync(p, 'utf8'));
+  const session = JSON.parse(fs.readFileSync(p, "utf8"));
   // One-time move of pages from older session files into the page store.
   if (Array.isArray(session.pages)) {
     const known = new Set(pageStore.listPages(id).map((pg) => pg.id));
     const dir = pageDir(id);
-    pageStore.addPages(id, session.pages.filter((pg) => !known.has(pg.id)).map((pg) => {
-      let textPath = pg.textPath || null;
-      // Old text-only pages kept their content inline; keep it as a text page.
-      if (!pg.imagePath && !textPath && pg.ocrMarkdown) {
-        textPath = path.join(dir, `page-${String(pg.index).padStart(6, '0')}.txt`);
-        fs.writeFileSync(textPath, pg.ocrMarkdown);
-      }
-      // Earlier pipelines' results are not reused: every page is transcribed again.
-      return { ...pg, status: 'pending', textPath, source: pg.source || (pg.imagePath ? 'image' : 'text') };
-    }));
+    pageStore.addPages(
+      id,
+      session.pages
+        .filter((pg) => !known.has(pg.id))
+        .map((pg) => {
+          let textPath = pg.textPath || null;
+          // Old text-only pages kept their content inline; keep it as a text page.
+          if (!pg.imagePath && !textPath && pg.ocrMarkdown) {
+            textPath = path.join(
+              dir,
+              `page-${String(pg.index).padStart(6, "0")}.txt`,
+            );
+            fs.writeFileSync(textPath, pg.ocrMarkdown);
+          }
+          // Earlier pipelines' results are not reused: every page is transcribed again.
+          return {
+            ...pg,
+            status: "pending",
+            textPath,
+            source: pg.source || (pg.imagePath ? "image" : "text"),
+          };
+        }),
+    );
     delete session.pages;
-    session.pipeline = session.pipeline === 'v3' ? 'v3' : 'migrated';
+    session.pipeline = session.pipeline === "v3" ? "v3" : "migrated";
     saveSession(session);
   }
   return session;
@@ -104,17 +127,21 @@ function saveSession(session) {
   session.updatedAt = Date.now();
   writeAtomic(sessionPath(session.id), JSON.stringify(session, null, 2));
   // Push failures must never roll back a saved extraction; startup reconciliation retries the enqueue.
-  try { materialCompleted(session); } catch(error) { console.error('[native-push] completion queue unavailable:',error.message); }
+  try {
+    materialCompleted(session);
+  } catch (error) {
+    console.error("[native-push] completion queue unavailable:", error.message);
+  }
   return session;
 }
 
 function listSessions() {
   return fs
     .readdirSync(SESSIONS_DIR)
-    .filter((f) => f.endsWith('.json'))
+    .filter((f) => f.endsWith(".json"))
     .map((f) => {
       try {
-        return JSON.parse(fs.readFileSync(path.join(SESSIONS_DIR, f), 'utf8'));
+        return JSON.parse(fs.readFileSync(path.join(SESSIONS_DIR, f), "utf8"));
       } catch (err) {
         console.error(`[store] unreadable session file ${f}: ${err.message}`);
         return null;
@@ -132,7 +159,15 @@ function deleteSession(id) {
 
 function progressOf(sessionId) {
   const c = pageStore.statusCounts(sessionId);
-  return { total: c.total, done: c.done, failed: c.failed, skipped: c.skipped, pending: c.pending + c.processing, processing: c.processing, questionsFound: c.questions };
+  return {
+    total: c.total,
+    done: c.done,
+    failed: c.failed,
+    skipped: c.skipped,
+    pending: c.pending + c.processing,
+    processing: c.processing,
+    questionsFound: c.questions,
+  };
 }
 
 function updateProgress(session) {
@@ -144,10 +179,23 @@ const PUBLIC_PAGE_LIMIT = 500;
 
 function publicPages(sessionId) {
   let pages = pageStore.listPages(sessionId);
-  if (pages.length > PUBLIC_PAGE_LIMIT) pages = pages.filter((p) => p.status !== 'done' && p.status !== 'skipped').slice(0, PUBLIC_PAGE_LIMIT);
+  if (pages.length > PUBLIC_PAGE_LIMIT)
+    pages = pages
+      .filter((p) => p.status !== "done" && p.status !== "skipped")
+      .slice(0, PUBLIC_PAGE_LIMIT);
   return pages.map((p) => ({
-    id: p.id, index: p.index, status: p.status, retryCount: p.attempts, pageType: p.pageType, legibility: p.legibility,
-    error: p.error, filename: p.filename, source: p.source, turns: p.turns, inspections: p.inspections, questions: p.questions,
+    id: p.id,
+    index: p.index,
+    status: p.status,
+    retryCount: p.attempts,
+    pageType: p.pageType,
+    legibility: p.legibility,
+    error: p.error,
+    filename: p.filename,
+    source: p.source,
+    turns: p.turns,
+    inspections: p.inspections,
+    questions: p.questions,
   }));
 }
 
@@ -167,13 +215,33 @@ function publicSession(session) {
     ingest: session.ingest || null,
     outline: session.outline
       ? {
-        organizedBy: session.outline.organizedBy,
-        documentTitle: session.outline.documentTitle,
-        sections: session.outline.sections.map(({ id, title, kind, pageStart, pageEnd, year, topic, subject }) => ({ id, title, kind, pageStart, pageEnd, year, topic, subject })),
-      }
+          organizedBy: session.outline.organizedBy,
+          documentTitle: session.outline.documentTitle,
+          sections: session.outline.sections.map(
+            ({
+              id,
+              title,
+              kind,
+              pageStart,
+              pageEnd,
+              year,
+              topic,
+              subject,
+            }) => ({
+              id,
+              title,
+              kind,
+              pageStart,
+              pageEnd,
+              year,
+              topic,
+              subject,
+            }),
+          ),
+        }
       : null,
     groups: session.groups,
-    followUps: (session.followUps || []).filter((f) => f.status !== 'resolved'),
+    followUps: (session.followUps || []).filter((f) => f.status !== "resolved"),
     allFollowUps: session.followUps || [],
     questions: session.questions,
     answerKeyCount: (session.answerKeys || []).length,

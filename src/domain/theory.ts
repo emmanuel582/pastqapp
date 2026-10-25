@@ -7,7 +7,14 @@ export interface TheoryLocation {
   marks: string;
 }
 export const isWrittenQuestion = (q: CbtQuestion) =>
-  q.type === "theory" || q.type === "short_answer";
+  [
+    "theory",
+    "short_answer",
+    "long_answer",
+    "essay",
+    "structured",
+    "fill_blank",
+  ].includes(String(q.type || ""));
 
 /** Read source structure, never guess subparts from prose, formulae or answer text. */
 export function theoryLocation(q: CbtQuestion): TheoryLocation {

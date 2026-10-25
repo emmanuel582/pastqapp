@@ -9,7 +9,7 @@ export type NotificationOpen = { id: string; data: Record<string, unknown> };
 export type NotificationDestination =
   | { screen: "Main"; tab: "library" }
   | { screen: "Notifications" }
-  | { screen: "ReviewMaterial"; sessionId: string };
+  | { screen: "Processing"; sessionId: string };
 export function localStudyDay(date: Date): string {
   return (
     date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate()
@@ -91,7 +91,7 @@ export function notificationDestination(
     typeof data.sessionId === "string" &&
     /^[a-zA-Z0-9_-]{1,120}$/.test(data.sessionId)
   )
-    return { screen: "ReviewMaterial", sessionId: data.sessionId };
+    return { screen: "Processing", sessionId: data.sessionId };
   return null;
 }
 

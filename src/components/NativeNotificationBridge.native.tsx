@@ -82,14 +82,21 @@ export default function NativeNotificationBridge({
     [owner],
   );
   useEffect(() => {
-    if (!pending || !navigationRef.isReady() || activeRoute === "Exam") return;
+    if (
+      !pending ||
+      !navigationRef.isReady() ||
+      ["Exam", "Upload", "Manual", "Processing", "ReviewMaterial"].includes(
+        activeRoute || "",
+      )
+    )
+      return;
     const destination = notificationDestination(pending.data, owner);
     setPending(null);
     void clearNotificationResponse().catch(() => {});
     if (destination?.screen === "Main")
       navigationRef.navigate("Main", { tab: destination.tab });
-    else if (destination?.screen === "ReviewMaterial")
-      navigationRef.navigate("ReviewMaterial", {
+    else if (destination?.screen === "Processing")
+      navigationRef.navigate("Processing", {
         sessionId: destination.sessionId,
       });
     else if (destination?.screen === "Notifications")

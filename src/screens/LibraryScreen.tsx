@@ -195,6 +195,33 @@ export default function LibraryScreen({
       rows.push({ kind: "category", id: c.id, title: c.title, category: c.id });
       const open = choice === c.id || !!needle;
       if (!open) continue;
+      if (c.id === "all") {
+        const loose = raw
+          .filter((o) => category(o.type) === "all")
+          .flatMap((o) =>
+            o.examTypes.flatMap((e) =>
+              (e.materials || e.manufacturers || []).filter(
+                (m) =>
+                  !needle ||
+                  [o.name, e.name, m.title, m.name, ...(m.subjects || [])].some(
+                    (v) => v?.toLowerCase().includes(needle),
+                  ),
+              ),
+            ),
+          );
+        loose.push(
+          ...(catalog.ungrouped || []).filter(
+            (m) =>
+              !needle ||
+              [m.name, m.title, ...(m.subjects || [])].some((v) =>
+                v?.toLowerCase().includes(needle),
+              ),
+          ),
+        );
+        for (const m of new Map(loose.map((m) => [m.bundleId, m])).values())
+          rows.push({ kind: "material", id: m.bundleId, material: m });
+        continue;
+      }
       for (const org of raw.filter((o) => category(o.type) === c.id)) {
         const exams = org.examTypes
           .map((exam) => ({
@@ -230,10 +257,6 @@ export default function LibraryScreen({
               });
           }
       }
-      if (c.id === "all")
-        for (const m of catalog.ungrouped || [])
-          if (!needle || m.name.toLowerCase().includes(needle))
-            rows.push({ kind: "material", id: m.bundleId, material: m });
     }
     return needle
       ? rows.filter(

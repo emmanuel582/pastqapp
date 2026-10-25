@@ -1,0 +1,7 @@
+FROM focalpoint-api:uploads-20261024
+COPY routes/transfers.js /app/routes/transfers.js
+COPY routes/vision.js /app/routes/vision.js
+COPY services/vision/store.js /app/services/vision/store.js
+COPY services/vision/reviewedMaterials.js /app/services/vision/reviewedMaterials.js
+COPY services/library/librarySync.js /app/services/library/librarySync.js
+COPY services/notifications/native.js /app/services/notifications/native.js

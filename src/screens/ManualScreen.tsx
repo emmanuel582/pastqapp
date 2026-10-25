@@ -1,3 +1,5 @@
+import { rememberPendingUpload } from "../services/uploadHistory";
+import { usePreventRemove } from "@react-navigation/native";
 import { checkCancelled } from "../domain/cancellation";
 import X from "lucide-react-native/icons/x";
 import React, { useEffect, useRef, useState } from "react";
@@ -5,6 +7,7 @@ import { View, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Screen,
+  Dialog,
   Text,
   Muted,
   Field,
@@ -25,6 +28,12 @@ export default function ManualScreen({ navigation }: Props<"Manual">) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     lock = useRef(false);
+  const accepted = useRef(false);
+  const [blocked, setBlocked] = useState(false);
+  usePreventRemove(busy, ({ data }) => {
+    if (accepted.current) navigation.dispatch(data.action);
+    else setBlocked(true);
+  });
   const transfer = useRef<AbortController | null>(null);
   useEffect(() => () => transfer.current?.abort(), []);
   const [loaded, setLoaded] = useState(false);
@@ -58,6 +67,7 @@ export default function ManualScreen({ navigation }: Props<"Manual">) {
   async function submit() {
     if (lock.current || !text.trim()) return;
     lock.current = true;
+    accepted.current = false;
     setBusy(true);
     setError("");
     try {
@@ -71,6 +81,9 @@ export default function ManualScreen({ navigation }: Props<"Manual">) {
       checkCancelled(abort.signal);
       await records.write(owner, "processing", "current", id);
       await records.remove(owner, "manual", "draft");
+      await rememberPendingUpload(owner, id, name, "processing");
+      accepted.current = true;
+      setBlocked(false);
       navigation.replace("Processing", { sessionId: id });
     } catch (e) {
       setError(
@@ -83,6 +96,11 @@ export default function ManualScreen({ navigation }: Props<"Manual">) {
   }
   return (
     <Screen>
+      {blocked ? (
+        <Dialog title="Uploading text" onClose={() => setBlocked(false)}>
+          <Button onPress={() => setBlocked(false)}>Keep uploading</Button>
+        </Dialog>
+      ) : null}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}

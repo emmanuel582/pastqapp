@@ -177,12 +177,19 @@ export function enqueueNative(owner, eventId, content, now = Date.now()) {
 export function materialCompleted(session, now = Date.now()) {
   if (
     !session?.ownerKey ||
+    session.approvedAt ||
     !["completed", "completed_with_errors", "failed"].includes(session.status)
   )
     return;
   // Reconciliation never sends an old backlog after deployment or enabling push.
   if (!session.updatedAt || session.updatedAt < now - 86400000) return;
-  const ready = session.status === "completed";
+  const ready =
+    session.status === "completed" &&
+    (!Array.isArray(session.questions) || session.questions.length > 0) &&
+    !(session.followUps || []).some((f) => f.status === "open") &&
+    !(session.questions || []).some(
+      (q) => q.needsReview || q.incomplete || q.type === "other",
+    );
   // Preserve legacy event IDs, avoiding a replay of previously delivered failures on deployment.
   if (
     !ready &&

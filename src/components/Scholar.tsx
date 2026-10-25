@@ -1,5 +1,5 @@
 import React, { memo, useContext, useEffect, useState } from "react";
-import { View, AppState } from "react-native";
+import { View, AppState, Pressable } from "react-native";
 import { NavigationContext } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { useApp } from "../state/AppContext";
@@ -24,6 +24,14 @@ const still: Record<ScholarState, [number, number]> = {
   encourage: [5, 5],
   celebrate: [8, 5],
 };
+const jumpFrames = [
+  require("../../assets/scholar/actions/jump-0.webp"),
+  require("../../assets/scholar/actions/jump-1.webp"),
+  require("../../assets/scholar/actions/jump-2.webp"),
+  require("../../assets/scholar/actions/jump-3.webp"),
+  require("../../assets/scholar/actions/jump-4.webp"),
+];
+const jumpHolds = [180, 100, 180, 100, 420];
 function stillPose(state: ScholarState): ScholarFrame {
   return {
     row: still[state][0],
@@ -55,6 +63,12 @@ export default memo(function Scholar({
       : stillPose(state),
   );
   const [images, setImages] = useState<ScholarImages | null>(null);
+  const [jumpFrame, setJumpFrame] = useState<number | null>(null);
+  useEffect(() => {
+    if (jumpFrame === null) return;
+    const timer = setTimeout(() => setJumpFrame(frame => frame === null || frame >= jumpFrames.length - 1 ? null : frame + 1), jumpHolds[jumpFrame]);
+    return () => clearTimeout(timer);
+  }, [jumpFrame]);
   useEffect(() => {
     if (!animated) {
       setImages(null);
@@ -102,9 +116,10 @@ export default memo(function Scholar({
   const height = (width * 208) / 192,
     key = pose.row + "-" + pose.frame;
   return (
-    <View
-      accessible={false}
-      importantForAccessibility="no-hide-descendants"
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Tap Scholar to see him jump"
+      onPress={() => { if (!reduced && jumpFrame === null) setJumpFrame(0); }}
       style={{
         width: sceneWidth || width + 12,
         height: sceneHeight || height + 8,
@@ -124,12 +139,12 @@ export default memo(function Scholar({
         }}
       />
       <Image
-        source={images?.[key] || poses[key]}
+        source={jumpFrame === null ? images?.[key] || poses[key] : jumpFrames[jumpFrame]}
         style={{ width, height }}
         contentFit="contain"
-        transition={reduced ? 0 : scholarBlend(pose)}
+        transition={reduced || jumpFrame !== null ? 0 : scholarBlend(pose)}
         cachePolicy="memory"
       />
-    </View>
+    </Pressable>
   );
 });

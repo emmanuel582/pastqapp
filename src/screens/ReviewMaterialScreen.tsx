@@ -1,3 +1,11 @@
+import {
+  normalizeUploadQuestion,
+  uploadQuestionIssues,
+  needsQuestionCheck,
+  applyUploadEdit,
+  hasOpenUploadChecks,
+} from "../domain/uploadReview";
+import { rememberUpload } from "../services/uploadHistory";
 import RichText from "../components/RichText";
 import { isWrittenQuestion, theoryLabel } from "../domain/theory";
 import { confirmedMaterial } from "../services/confirmedMaterial";
@@ -10,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "../state/AppContext";
 import {
   Screen,
+  Header,
   Text,
   Title,
   Muted,
@@ -43,7 +52,9 @@ export default function ReviewMaterialScreen({
     [editing, setEditing] = useState<number | null>(null),
     [draft, setDraft] = useState<Question | null>(null),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [editError, setEditError] = useState(""),
+    [error, setError] = useState(""),
+    [removed, setRemoved] = useState<{ q: Question; i: number } | null>(null);
   const saveLock = useRef(false);
   useEffect(() => {
     let active = true;
@@ -71,7 +82,13 @@ export default function ReviewMaterialScreen({
             navigation.replace("Setup", { bundleId: confirmed });
             return;
           }
-          if (!value.questions?.length) {
+          if (
+            hasOpenUploadChecks(value) ||
+            !["completed", "completed_with_errors", "confirmed"].includes(
+              value.status,
+            ) ||
+            !value.questions?.length
+          ) {
             navigation.replace("Processing", {
               sessionId: route.params.sessionId,
             });
@@ -80,7 +97,17 @@ export default function ReviewMaterialScreen({
           await records.write(owner, "vision-session", value.id, value);
           if (!active) return;
           setSession(value);
-          setQuestions(value.questions || []);
+          const saved = await records.read<{
+            sourceUpdatedAt?: number;
+            questions: Question[];
+          }>(owner, "material-review", value.id);
+          if (!active) return;
+          setQuestions(
+            (saved && saved.sourceUpdatedAt === value.updatedAt
+              ? saved.questions
+              : value.questions || []
+            ).map(normalizeUploadQuestion),
+          );
         }
       } catch (e) {
         if (active)
@@ -114,25 +141,30 @@ export default function ReviewMaterialScreen({
         ? [{ q, i }]
         : [],
     );
-  const minimumOptions = (q: Question) =>
-      q.type &&
-      !["single_choice", "multiple_choice", "true_false"].includes(q.type)
-        ? 0
-        : 2,
-    blocking = questions.filter(
-      (q) =>
-        !q.question.trim() ||
-        q.options.filter((o) => o.trim()).length < minimumOptions(q) ||
-        q.incomplete,
-    ),
-    flagged = questions.filter((q) => q.needsReview);
+  const minimumOptions = (q: Question) => (isWrittenQuestion(q) ? 0 : 2);
+  const checks = questions.flatMap((q, i) =>
+    needsQuestionCheck(q) ? [{ q, i }] : [],
+  );
+  const blocking = checks;
+  useEffect(() => {
+    if (session && questions.length)
+      void records
+        .write(owner, "material-review", session.id, {
+          sourceUpdatedAt: session.updatedAt,
+          questions,
+        })
+        .catch(() => {});
+  }, [owner, session?.id, questions]);
   async function save() {
     if (saveLock.current || blocking.length || !questions.length) return;
     saveLock.current = true;
     setBusy(true);
     setError("");
     try {
-      const bundle = await confirmMaterial(route.params.sessionId, questions);
+      const bundle = await confirmMaterial(
+        route.params.sessionId,
+        questions.map(normalizeUploadQuestion),
+      );
       await saveBundle(owner, { ...bundle, ownerId: owner });
       await records.write(
         owner,
@@ -145,6 +177,16 @@ export default function ReviewMaterialScreen({
         ownerId: owner,
         questions: [],
       });
+      await rememberUpload(owner, {
+        ...session!,
+        questions: bundle.questions,
+        status: "completed",
+        approvedAt:
+          typeof bundle.approvedAt === "string"
+            ? bundle.approvedAt
+            : new Date().toISOString(),
+      });
+      await records.remove(owner, "material-review", route.params.sessionId);
       await records.remove(owner, "processing", "current");
       await refreshSaved();
       void refreshLibrary();
@@ -160,31 +202,13 @@ export default function ReviewMaterialScreen({
   }
   function saveEdit() {
     if (editing === null || !draft) return;
-    const kept = draft.options
-        .map((text, index) => ({ text: text.trim(), index }))
-        .filter((o) => o.text),
-      correct =
-        draft.correct == null
-          ? null
-          : kept.findIndex((o) => o.index === draft.correct),
-      options = kept.map((o) => o.text),
-      incomplete =
-        !draft.question.trim() || options.length < minimumOptions(draft),
-      reasons = Array.isArray(draft.reviewReasons)
-        ? draft.reviewReasons.filter(
-            (r) => r !== "insufficient_complete_options",
-          )
-        : [];
-    if (incomplete) reasons.push("insufficient_complete_options");
-    const next = {
-      ...draft,
-      question: draft.question.trim(),
-      options,
-      correct: correct !== null && correct >= 0 ? correct : null,
-      incomplete,
-      reviewReasons: reasons,
-      needsReview: incomplete || reasons.length > 0,
-    };
+    const next = applyUploadEdit(draft);
+    const issues = uploadQuestionIssues(next);
+    if (issues.length) {
+      setEditError(issues[0]);
+      return;
+    }
+    setEditError("");
     setQuestions((old) => old.map((q, i) => (i === editing ? next : q)));
     setEditing(null);
     setDraft(null);
@@ -195,21 +219,11 @@ export default function ReviewMaterialScreen({
     );
   return (
     <Screen>
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 8,
-          paddingBottom: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.line,
-          backgroundColor: palette.panel,
-        }}
-      >
-        <Text style={{ fontFamily: fonts.serifMedium, fontSize: 16 }}>
-          Review questions
-        </Text>
-      </View>
-      {groups.length > 1 ? (
+      <Header
+        title={checks.length ? "Check questions" : "Review questions"}
+        onBack={() => navigation.popTo("Uploads")}
+      />
+      {!checks.length && groups.length > 1 ? (
         <View
           style={{
             borderBottomWidth: 1,
@@ -254,7 +268,7 @@ export default function ReviewMaterialScreen({
         </View>
       ) : null}
       <FlatList
-        data={visible}
+        data={checks.length ? checks : visible}
         keyExtractor={({ q, i }) => String(q.id) + "-" + i}
         contentContainerStyle={{
           paddingHorizontal: 20,
@@ -262,40 +276,30 @@ export default function ReviewMaterialScreen({
           gap: 12,
         }}
         ListHeaderComponent={
-          <View>
-            {blocking.length || flagged.length ? (
-              <View
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: palette.line,
-                  backgroundColor: palette.accentWash,
-                  marginBottom: 12,
+          removed ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Muted>Question removed</Muted>
+              <Button
+                kind="text"
+                onPress={() => {
+                  setQuestions((old) => {
+                    const next = [...old];
+                    next.splice(removed.i, 0, removed.q);
+                    return next;
+                  });
+                  setRemoved(null);
                 }}
               >
-                <Text
-                  style={{
-                    color: palette.accent,
-                    fontFamily: fonts.serifMedium,
-                    fontSize: 12,
-                  }}
-                >
-                  Check marked questions
-                </Text>
-                <Text
-                  style={{
-                    color: palette.accent,
-                    fontFamily: fonts.outfit,
-                    fontSize: 11,
-                    marginTop: 4,
-                  }}
-                >
-                  {blocking.length} incomplete · {flagged.length} to check
-                </Text>
-              </View>
-            ) : null}
-          </View>
+                Undo
+              </Button>
+            </View>
+          ) : null
         }
         renderItem={({ item: { q, i }, index }) => (
           <View
@@ -339,7 +343,7 @@ export default function ReviewMaterialScreen({
                     {q.paper && q.paper !== "Default" ? " · " + q.paper : ""}
                   </Muted>
                 ) : null}
-                {q.needsReview ? (
+                {needsQuestionCheck(q) ? (
                   <Text
                     style={{
                       fontSize: 10,
@@ -349,7 +353,7 @@ export default function ReviewMaterialScreen({
                       paddingHorizontal: 8,
                     }}
                   >
-                    Review
+                    {uploadQuestionIssues(q)[0] || "Check question"}
                   </Text>
                 ) : null}
                 {q.correct == null && !isWrittenQuestion(q) ? (
@@ -416,6 +420,7 @@ export default function ReviewMaterialScreen({
             <IconButton
               label="Edit question"
               onPress={() => {
+                setEditError("");
                 setEditing(i);
                 setDraft({ ...q, options: [...q.options] });
               }}
@@ -451,7 +456,7 @@ export default function ReviewMaterialScreen({
           {blocking.length
             ? "Fix " +
               blocking.length +
-              " incomplete question" +
+              " question" +
               (blocking.length === 1 ? "" : "s")
             : busy
               ? "Saving…"
@@ -471,6 +476,54 @@ export default function ReviewMaterialScreen({
             style={{ maxHeight: 460 }}
           >
             <View style={{ gap: 14 }}>
+              <Row
+                title="Question type"
+                right={
+                  <Select
+                    label="Question type"
+                    value={
+                      isWrittenQuestion(draft)
+                        ? "written"
+                        : draft.type &&
+                            [
+                              "single_choice",
+                              "multiple_choice",
+                              "true_false",
+                            ].includes(draft.type)
+                          ? "choice"
+                          : "choose"
+                    }
+                    options={[
+                      { value: "choose", label: "Choose type" },
+                      { value: "choice", label: "CBT" },
+                      { value: "written", label: "Written" },
+                    ]}
+                    onChange={(type) =>
+                      setDraft((d) =>
+                        d
+                          ? {
+                              ...d,
+                              type:
+                                type === "written"
+                                  ? "theory"
+                                  : type === "choice"
+                                    ? "single_choice"
+                                    : "other",
+                              correct: type === "written" ? null : d.correct,
+                              options:
+                                type === "choice" && d.options.length < 2
+                                  ? [
+                                      ...d.options,
+                                      ...Array(2 - d.options.length).fill(""),
+                                    ]
+                                  : d.options,
+                            }
+                          : d,
+                      )
+                    }
+                  />
+                }
+              />
               <Field
                 label="Subject"
                 value={draft.subject}
@@ -521,34 +574,63 @@ export default function ReviewMaterialScreen({
                   Add option
                 </Button>
               ) : null}
-              <Row
-                title="Correct answer"
-                right={
-                  <Select
-                    label="Correct answer"
-                    value={
-                      draft.correct == null ? "none" : String(draft.correct)
-                    }
-                    options={[
-                      { value: "none", label: "No key" },
-                      ...draft.options.map((_, i) => ({
-                        value: String(i),
-                        label: String.fromCharCode(65 + i),
-                      })),
-                    ]}
-                    onChange={(value) =>
-                      setDraft((d) =>
-                        d
-                          ? {
-                              ...d,
-                              correct: value === "none" ? null : Number(value),
-                            }
-                          : d,
-                      )
-                    }
-                  />
+              {!isWrittenQuestion(draft) ? (
+                <Row
+                  title="Correct answer"
+                  right={
+                    <Select
+                      label="Correct answer"
+                      value={
+                        draft.correct == null ? "none" : String(draft.correct)
+                      }
+                      options={[
+                        { value: "none", label: "No key" },
+                        ...draft.options.map((_, i) => ({
+                          value: String(i),
+                          label: String.fromCharCode(65 + i),
+                        })),
+                      ]}
+                      onChange={(value) =>
+                        setDraft((d) =>
+                          d
+                            ? {
+                                ...d,
+                                correct:
+                                  value === "none" ? null : Number(value),
+                              }
+                            : d,
+                        )
+                      }
+                    />
+                  }
+                />
+              ) : null}
+              <Field
+                label="Topic"
+                value={String(draft.topic || "")}
+                onChangeText={(topic) =>
+                  setDraft((d) => (d ? { ...d, topic } : d))
                 }
               />
+              <Field
+                label="Year"
+                value={String(draft.year || "")}
+                onChangeText={(year) =>
+                  setDraft((d) => (d ? { ...d, year } : d))
+                }
+              />
+              {isWrittenQuestion(draft) ? (
+                <Field
+                  label="Source answer"
+                  multiline
+                  value={draft.answerText || ""}
+                  onChangeText={(answerText) =>
+                    setDraft((d) =>
+                      d ? { ...d, answerText, answerHtml: undefined } : d,
+                    )
+                  }
+                />
+              ) : null}
               <Field
                 label="Explanation"
                 multiline
@@ -562,6 +644,20 @@ export default function ReviewMaterialScreen({
               />
             </View>
           </ScrollView>
+          {questions.length > 1 ? (
+            <Button
+              kind="text"
+              onPress={() => {
+                setRemoved({ q: questions[editing], i: editing });
+                setQuestions((old) => old.filter((_, i) => i !== editing));
+                setDraft(null);
+                setEditing(null);
+              }}
+            >
+              Remove question
+            </Button>
+          ) : null}
+          {editError ? <ErrorText>{editError}</ErrorText> : null}
           <Button onPress={saveEdit} style={{ marginTop: 20 }}>
             Save changes
           </Button>

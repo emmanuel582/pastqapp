@@ -1,3 +1,4 @@
+import { rememberPendingUpload } from "./uploadHistory";
 import { abortTransfer } from "../domain/cancellation";
 import * as TaskManager from "expo-task-manager";
 import * as BackgroundTask from "expo-background-task";
@@ -27,14 +28,17 @@ async function recover(owner: string, signal: AbortSignal) {
             persisted,
             next,
           );
+          await rememberPendingUpload(owner, sessionId, draft.name);
           persisted = next;
         },
         signal,
       );
       if (
         await records.compareAndSwap(owner, "upload", "draft", persisted, null)
-      )
+      ) {
         await records.write(owner, "processing", "current", id);
+        await rememberPendingUpload(owner, id, draft.name, "processing");
+      }
     } catch (error) {
       failure = error;
     }

@@ -133,7 +133,7 @@ test("notification taps only open owned, whitelisted app destinations", () => {
       { owner: "alice", kind: "material-ready", sessionId: "session-123" },
       "alice",
     ),
-    { screen: "ReviewMaterial", sessionId: "session-123" },
+    { screen: "Processing", sessionId: "session-123" },
   );
 });
 

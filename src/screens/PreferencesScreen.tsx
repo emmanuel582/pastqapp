@@ -1,3 +1,4 @@
+import Upload from "lucide-react-native/icons/upload";
 import CircleHelp from "lucide-react-native/icons/circle-question-mark";
 import React, { useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
@@ -35,15 +36,21 @@ export default function PreferencesScreen({
     .join("")
     .toUpperCase();
   const settings = [
-    { title: "Help & privacy", Icon: CircleHelp, screen: "Support" as const },
     { title: "Past sessions", Icon: History, screen: "History" as const },
     { title: "Saved questions", Icon: Bookmark, screen: "Saved" as const },
-    { title: "Storage & backup", Icon: Database, screen: "Storage" as const },
+    { title: "Uploads", Icon: Upload, screen: "Uploads" as const },
     {
-      title: "Question reports",
-      Icon: MessageSquareWarning,
-      screen: "Reports" as const,
+      title: "Study reminders",
+      detail: preferences.reminders.enabled
+        ? (preferences.reminders.mode === "smart" ? "Smart timing" : "Daily") +
+          " · " +
+          preferences.reminders.time
+        : "Off",
+      Icon: Bell,
+      screen: "Reminders" as const,
     },
+    { title: "Storage & backup", Icon: Database, screen: "Storage" as const },
+
     {
       title: "Notifications",
       Icon: Bell,
@@ -61,14 +68,9 @@ export default function PreferencesScreen({
       screen: "Theme" as const,
     },
     {
-      title: "Study reminders",
-      detail: preferences.reminders.enabled
-        ? (preferences.reminders.mode === "smart" ? "Smart timing" : "Daily") +
-          " · " +
-          preferences.reminders.time
-        : "Off",
-      Icon: Bell,
-      screen: "Reminders" as const,
+      title: "Question reports",
+      Icon: MessageSquareWarning,
+      screen: "Reports" as const,
     },
   ];
   return (
@@ -156,6 +158,12 @@ export default function PreferencesScreen({
               />
             }
             style={{ minHeight: 88, paddingVertical: 20 }}
+          />
+          <Row
+            title="Help & privacy"
+            icon={<CircleHelp size={20} color={palette.accent} />}
+            onPress={() => navigation.navigate("Support")}
+            style={{ minHeight: 72 }}
           />
         </View>
         <Button

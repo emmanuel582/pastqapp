@@ -24,6 +24,7 @@ import {
   Loading,
 } from "../components/ui";
 import Scholar from "../components/Scholar";
+import ScholarActivity from "../components/ScholarActivity";
 import {
   manifest,
   prepareDownload,
@@ -370,11 +371,11 @@ export default function DownloadScreen({
       ) : (
         <Content center>
           <View style={{ alignItems: "center", gap: 20 }}>
-            <Scholar
-              state={stage === "complete" ? "celebrate" : "waiting"}
-              width={192}
-              animated={stage !== "complete"}
-            />
+            {stage === "complete" || paused ? (
+              <Scholar state={stage === "complete" ? "celebrate" : "waiting"} width={192} animated={false} />
+            ) : (
+              <ScholarActivity mode="download" height={208} width={192} />
+            )}
             <Title size={32} style={{ textAlign: "center" }}>
               {stage === "complete"
                 ? "Ready offline."

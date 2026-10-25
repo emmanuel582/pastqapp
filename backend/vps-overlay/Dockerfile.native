@@ -3,12 +3,15 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends libreoffice-writer libreoffice-impress fonts-liberation && rm -rf /var/lib/apt/lists/*
 COPY index.js /app/index.js
 COPY routes/transfers.js /app/routes/transfers.js
+COPY routes/vision.js /app/routes/vision.js
+COPY services/library/librarySync.js /app/services/library/librarySync.js
 COPY services/vision/transferPdf.js /app/services/vision/transferPdf.js
 COPY services/vision/transferPdfWorker.js /app/services/vision/transferPdfWorker.js
 COPY services/vision/transfers.js /app/services/vision/transfers.js
 COPY routes/reminders.js /app/routes/reminders.js
 COPY services/admin/notifications.js /app/services/admin/notifications.js
 COPY services/vision/store.js /app/services/vision/store.js
+COPY services/vision/reviewedMaterials.js /app/services/vision/reviewedMaterials.js
 COPY services/notifications/native.js /app/services/notifications/native.js
 COPY public /app/public
 USER node

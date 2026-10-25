@@ -88,6 +88,11 @@ test("resumable HTTP upload enforces ownership, validates parts and survives rep
         ? {}
         : { body: Buffer.isBuffer(body) ? body : JSON.stringify(body) }),
     });
+  const indexUrl=base.slice(0,base.lastIndexOf("/"));
+  assert.equal((await fetch(indexUrl)).status,401);
+  const own=await (await fetch(indexUrl,{headers:{Authorization:"Bearer alice"}})).json();
+  assert.equal(own.total,1);assert.equal(own.items[0].id,a.id);assert.equal(own.items[0].questions,undefined);assert.equal(own.items[0].ownerKey,undefined);
+  const foreign=await (await fetch(indexUrl,{headers:{Authorization:"Bearer bob"}})).json();assert.equal(foreign.total,0);
   assert.equal((await send("", manifest, null)).status, 401);
   assert.equal((await send("", manifest, "bob")).status, 404);
   assert.equal((await send("", manifest)).status, 200);

@@ -22,6 +22,7 @@ export type Routes = {
   };
   Results: { attemptId: string };
   Upload: undefined;
+  Uploads: undefined;
   Manual: undefined;
   Processing: { sessionId: string };
   ReviewMaterial: { sessionId: string };

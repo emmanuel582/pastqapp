@@ -31,6 +31,37 @@ let working = 0;
 const running = new Set();
 const store = (id) => new TransferStore(path.join(pageDir(id), "incoming"));
 router.use(requireAuthenticatedUser);
+router.get("/", (req, res) => {
+  const offset = Math.max(0, Number.parseInt(req.query.offset, 10) || 0),
+    limit = Math.min(
+      100,
+      Math.max(1, Number.parseInt(req.query.limit, 10) || 30),
+    );
+  const rows = listSessions().filter((s) => s.ownerKey === req.auth.ownerKey);
+  const items = rows
+    .slice(offset, offset + limit)
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      status: s.status,
+      approvedAt: s.approvedAt || null,
+      createdAt: s.createdAt,
+      updatedAt: s.updatedAt,
+      questionCount: s.questions?.length || 0,
+      openChecks:
+        (s.followUps || []).filter((f) => f.status === "open").length +
+        (s.questions || []).filter(
+          (q) => q.needsReview || q.incomplete || q.type === "other",
+        ).length,
+    }));
+  res
+    .set("Cache-Control", "no-store")
+    .json({
+      items,
+      total: rows.length,
+      nextOffset: offset + limit < rows.length ? offset + limit : null,
+    });
+});
 router.use("/:id", (req, res, next) => {
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(req.params.id))
     return res.status(400).json({ error: "Invalid upload." });
@@ -60,11 +91,9 @@ router.post("/:id", async (req, res, next) => {
         totalBytes += t.files.reduce((n, f) => n + f.size, 0);
       }
       if (ownerActive >= 3 || totalBytes > 2 * 1024 * 1024 * 1024)
-        return res
-          .status(429)
-          .json({
-            error: "Finish an existing upload before starting another.",
-          });
+        return res.status(429).json({
+          error: "Finish an existing upload before starting another.",
+        });
     }
     const state = store(id).prepare(req.body?.files);
     await withSessionLock(id, (s) => {

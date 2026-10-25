@@ -1,9 +1,7 @@
-import * as records from "../storage/records";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { View, Pressable } from "react-native";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
 import BookOpen from "lucide-react-native/icons/book-open";
-import Upload from "lucide-react-native/icons/upload";
 import Download from "lucide-react-native/icons/download";
 import { useApp } from "../state/AppContext";
 import {
@@ -27,19 +25,6 @@ export default function HomeScreen({
   onLibrary: () => void;
 }) {
   const { palette, profile, saved, attempts, owner } = useApp();
-  const [pendingUpload, setPendingUpload] = useState<string | null>(null);
-  useEffect(() => {
-    let active = true;
-    void records
-      .read<string>(owner, "processing", "current")
-      .then((id) => {
-        if (active) setPendingUpload(id);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [owner]);
   const completed = attempts.filter((a) => a.status === "completed");
   const scores = completed
     .map((a) => a.summary.percent)
@@ -112,17 +97,6 @@ export default function HomeScreen({
               );
             })()
           : null}
-        {pendingUpload ? (
-          <Row
-            title="Uploads"
-
-            onPress={() =>
-              navigation.navigate("Processing", { sessionId: pendingUpload })
-            }
-            right={<ArrowRight size={19} color={palette.accent} />}
-            style={{ marginBottom: 24 }}
-          />
-        ) : null}
         {plan.material ? (
           <>
             <View
@@ -265,12 +239,6 @@ export default function HomeScreen({
                 onPress={onLibrary}
                 right={<ArrowRight size={18} color={palette.ink} />}
               />
-              <Row
-                title="Add material"
-                icon={<Upload size={22} color={palette.ink} />}
-                onPress={() => navigation.navigate("Upload")}
-                right={<ArrowRight size={18} color={palette.ink} />}
-              />
             </View>
           </>
         ) : (
@@ -288,22 +256,6 @@ export default function HomeScreen({
             </Title>
             <Button arrow onPress={onLibrary} style={{ marginTop: 24 }}>
               Find a paper
-            </Button>
-            <Button
-              kind="text"
-              onPress={() => navigation.navigate("Upload")}
-              style={{ marginTop: 18 }}
-            >
-              <Upload size={17} color={palette.accent} />
-              <Text
-                style={{
-                  color: palette.accent,
-                  fontSize: 13,
-                  fontFamily: fonts.semibold,
-                }}
-              >
-                Add your own material
-              </Text>
             </Button>
           </View>
         )}

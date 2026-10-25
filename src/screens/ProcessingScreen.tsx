@@ -1,3 +1,5 @@
+import { hasOpenUploadChecks } from "../domain/uploadReview";
+import { rememberUpload } from "../services/uploadHistory";
 import { confirmedMaterial } from "../services/confirmedMaterial";
 import { missingPageInsertion, processingFollowUp } from "../domain/processing";
 import React, { useEffect, useRef, useState } from "react";
@@ -14,6 +16,7 @@ import {
   ErrorText,
 } from "../components/ui";
 import Scholar from "../components/Scholar";
+import ScholarActivity from "../components/ScholarActivity";
 import {
   visionSession,
   resumeVision,
@@ -37,6 +40,7 @@ export default function ProcessingScreen({
   const finish = useRef(false);
   const [pollRevision, setPollRevision] = useState(0);
   useEffect(() => {
+    finish.current = false;
     let mounted = true,
       timer: ReturnType<typeof setTimeout> | undefined;
     const abort = new AbortController();
@@ -56,19 +60,18 @@ export default function ProcessingScreen({
         }
         setSession(value);
         setInterrupted(false);
-        await records.write(owner, "vision-session", value.id, value);
+        await rememberUpload(owner, value);
         if (
           ["completed", "completed_with_errors"].includes(value.status) &&
           value.questions?.length &&
-          !finish.current
+          !finish.current &&
+          !hasOpenUploadChecks(value)
         ) {
           finish.current = true;
-          setTimeout(() => {
-            if (mounted)
-              navigation.replace("ReviewMaterial", { sessionId: value.id });
-          }, 350);
+          navigation.replace("ReviewMaterial", { sessionId: value.id });
           return;
         }
+        if (hasOpenUploadChecks(value)) return;
         if (
           ["failed", "paused", "needs_input", "needs_attention"].includes(
             value.status,
@@ -195,18 +198,16 @@ export default function ProcessingScreen({
         }}
       >
         <View style={{ alignItems: "center", gap: 20 }}>
-          <Scholar
-            state={
-              failed
-                ? "encourage"
-                : waiting || interrupted
-                  ? "waiting"
-                  : "study"
-            }
-            width={240}
-            sceneWidth={300}
-            sceneHeight={278}
-          />
+          {failed || waiting || interrupted ? (
+            <Scholar
+              state={failed ? "encourage" : "waiting"}
+              width={100}
+              sceneWidth={130}
+              sceneHeight={130}
+            />
+          ) : (
+            <ScholarActivity mode="processing" height={260} width={240} />
+          )}
           <Title
             size={34}
             style={{
@@ -297,22 +298,9 @@ export default function ProcessingScreen({
               Try again
             </Button>
           ) : null}
-          {waiting && session?.questions?.length ? (
-            <Button
-              kind="secondary"
-              onPress={() =>
-                navigation.replace("ReviewMaterial", { sessionId: session.id })
-              }
-            >
-              Use ready questions
-            </Button>
-          ) : null}
           {error ? <ErrorText>{error}</ErrorText> : null}
-          <Button
-            kind="text"
-            onPress={() => navigation.navigate("Main", { tab: "home" })}
-          >
-            Continue studying
+          <Button kind="text" onPress={() => navigation.popTo("Uploads")}>
+            Back to uploads
           </Button>
         </View>
       </Content>

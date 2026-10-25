@@ -135,6 +135,7 @@ function background() {
       },
     },
     "../storage/records": records,
+    "./uploadHistory": { rememberPendingUpload: async () => {} },
     "./uploads": {
       uploadMaterial: async (...args: any[]) => {
         await args[4]?.("session");
