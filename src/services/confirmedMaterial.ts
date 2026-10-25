@@ -19,7 +19,7 @@ export async function confirmedMaterial(
   if (!saved) {
     const bundle = await request<Bundle>(
       "/api/vision/materials/" + encodeURIComponent(id),
-      {},
+      { owner },
       true,
     );
     await saveBundle(owner, { ...bundle, ownerId: owner });

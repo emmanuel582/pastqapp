@@ -353,3 +353,81 @@ test("scrollable working paper keeps long solutions and their viewport through o
   assert.deepEqual(plain(entry.paper), paper);
   f.sqlite.close();
 });
+
+test("completion, sync outbox and topic evidence commit atomically when storage fails", async () => {
+  const f = storageHarness();
+  const active = makeAttempt("atomic-completion");
+  await f.practice.saveAttempt(active, true);
+  f.sqlite.exec(
+    "CREATE TRIGGER fail_topic_evidence BEFORE INSERT ON records WHEN NEW.kind='learning-evidence' BEGIN SELECT RAISE(ABORT, 'simulated storage full'); END",
+  );
+  await assert.rejects(
+    () => f.practice.saveAttempt(attempts.completeAttempt(active)),
+    /simulated storage full/,
+  );
+  assert.equal(
+    (await f.practice.readAttempt("alice", active.id)).status,
+    "active",
+  );
+  assert.equal(
+    await f.records.read("alice", "history-outbox", active.id),
+    null,
+  );
+  assert.equal((await f.records.list("alice", "learning-evidence")).length, 0);
+  f.sqlite.exec("DROP TRIGGER fail_topic_evidence");
+  await f.practice.saveAttempt(attempts.completeAttempt(active));
+  assert.equal(
+    (await f.practice.readAttempt("alice", active.id)).status,
+    "completed",
+  );
+  assert.ok(await f.records.read("alice", "history-outbox", active.id));
+  assert.equal(
+    (await f.records.list("alice", "learning-evidence")).length,
+    active.questions.length,
+  );
+  f.sqlite.close();
+});
+
+test("backup restores self-assessment for every supported written question format", () => {
+  for (const type of [
+    "theory",
+    "essay",
+    "short_answer",
+    "long_answer",
+    "structured",
+    "fill_blank",
+  ]) {
+    const attempt = makeAttempt("written-" + type);
+    attempt.questions = [
+      {
+        id: 1,
+        subject: "Biology",
+        question: "Explain cell function",
+        options: [],
+        correct: null,
+        explanation: "",
+        type,
+      },
+    ];
+    attempt.answers = [1];
+    attempt.written = ["My solution"];
+    attempt.flagged = [false];
+    const raw = {
+      format: "pastq-native-study-backup",
+      version: 1,
+      owner: "alice",
+      attempts: [attempt],
+      bookmarks: [],
+      workingPapers: [],
+    };
+    assert.equal(
+      backupDomain.validateBackup(raw, "alice").attempts[0].answers[0],
+      1,
+    );
+    attempt.answers = [2];
+    assert.throws(
+      () => backupDomain.validateBackup(raw, "alice"),
+      /incomplete session/,
+    );
+  }
+});

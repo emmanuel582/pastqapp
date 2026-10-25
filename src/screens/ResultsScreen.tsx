@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { View, Pressable } from "react-native";
 import BookOpen from "lucide-react-native/icons/book-open";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
@@ -9,7 +9,6 @@ import {
   Screen,
   Header,
   Content,
-  Title,
   Text,
   Muted,
   Button,
@@ -24,7 +23,7 @@ import Scholar from "../components/Scholar";
 import { readAttempt, saveAttempt } from "../storage/practice";
 import { isWrittenQuestion } from "../domain/theory";
 import { attemptSummary, createAttempt } from "../domain/attempt";
-import { answerIndex, sessionSummary } from "../domain/examSession";
+import { answerIndex } from "../domain/examSession";
 import { formatTime } from "../components/ExamClock";
 import { fonts } from "../theme/tokens";
 import type { Attempt } from "../domain/types";

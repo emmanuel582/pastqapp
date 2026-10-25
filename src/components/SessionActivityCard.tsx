@@ -1,8 +1,8 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Pressable, View } from "react-native";
 import ArrowUpRight from "lucide-react-native/icons/arrow-up-right";
 import { useApp } from "../state/AppContext";
-import { Text, Muted } from "./ui";
+import { Text } from "./ui";
 import { mergeHistory } from "../domain/history";
 import { sessionActivity } from "../domain/sessionActivity";
 import { fonts } from "../theme/tokens";

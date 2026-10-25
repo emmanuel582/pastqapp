@@ -1,8 +1,7 @@
 import { matchesSavedQuestion } from "../domain/search";
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, FlatList, Pressable } from "react-native";
 import BookmarkIcon from "lucide-react-native/icons/bookmark";
-import ArrowRight from "lucide-react-native/icons/arrow-right";
 import Trash2 from "lucide-react-native/icons/trash";
 import PenLine from "lucide-react-native/icons/pen-line";
 import * as Crypto from "expo-crypto";

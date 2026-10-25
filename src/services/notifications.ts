@@ -10,9 +10,6 @@ export async function scheduleReminders(
   if (settings.enabled)
     throw new Error("Open the iOS or Android app to enable device reminders.");
 }
-export async function testNotification(_owner: string) {
-  throw new Error("Open the iOS or Android app to test device reminders.");
-}
 
 export function configureNotificationContext(
   _owner: string,

@@ -1,15 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, Pressable } from "react-native";
 import Monitor from "lucide-react-native/icons/monitor";
 import Check from "lucide-react-native/icons/check";
-import {
-  Screen,
-  Header,
-  Content,
-  Text,
-  Muted,
-  ErrorText,
-} from "../components/ui";
+import { Screen, Header, Content, Text, ErrorText } from "../components/ui";
 import { useApp } from "../state/AppContext";
 import { fonts } from "../theme/tokens";
 import type { ThemeMode } from "../domain/types";
@@ -169,7 +162,6 @@ export default function ThemeScreen({ navigation }: Props<"Theme">) {
             );
           })}
         </View>
-        {preferences.theme === "system" ? <></> : null}
         {error ? <ErrorText>{error}</ErrorText> : null}
       </Content>
     </Screen>

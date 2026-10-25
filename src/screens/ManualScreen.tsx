@@ -2,7 +2,7 @@ import { rememberPendingUpload } from "../services/uploadHistory";
 import { usePreventRemove } from "@react-navigation/native";
 import { checkCancelled } from "../domain/cancellation";
 import X from "lucide-react-native/icons/x";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -56,14 +56,14 @@ export default function ManualScreen({ navigation }: Props<"Manual">) {
     };
   }, [owner]);
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || busy || accepted.current) return;
     const timer = setTimeout(() => {
       void records
         .write(owner, "manual", "draft", { name, text })
         .catch(() => setError("Your draft could not be saved on this device."));
     }, 400);
     return () => clearTimeout(timer);
-  }, [owner, name, text, loaded]);
+  }, [owner, name, text, loaded, busy]);
   async function submit() {
     if (lock.current || !text.trim()) return;
     lock.current = true;
@@ -73,14 +73,17 @@ export default function ManualScreen({ navigation }: Props<"Manual">) {
     try {
       const abort = new AbortController();
       transfer.current = abort;
+      const snapshot = { name, text };
+      await records.write(owner, "manual", "draft", snapshot);
       const id = await extractText(
         text,
         name.trim() || "Manual Entry",
         abort.signal,
+        owner,
       );
       checkCancelled(abort.signal);
       await records.write(owner, "processing", "current", id);
-      await records.remove(owner, "manual", "draft");
+      await records.compareAndSwap(owner, "manual", "draft", snapshot, null);
       await rememberPendingUpload(owner, id, name, "processing");
       accepted.current = true;
       setBlocked(false);

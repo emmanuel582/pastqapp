@@ -95,12 +95,15 @@ async function register(
   await SecureStore.setItemAsync(key, JSON.stringify({ ...d, owner, token }));
   await request(
     "/api/reminders/native-device",
-    json("PUT", {
-      installationId: d.installationId,
-      secret: d.secret,
-      token,
-      platform: Platform.OS,
-    }),
+    {
+      ...json("PUT", {
+        installationId: d.installationId,
+        secret: d.secret,
+        token,
+        platform: Platform.OS,
+      }),
+      owner,
+    },
     true,
   );
   await ensureOwner(owner);
@@ -211,9 +214,6 @@ export function offerInitialPush(owner: string): Promise<void> {
   });
 }
 
-export async function testPush(): Promise<void> {
-  await request("/api/reminders/native-test", json("POST", {}), true);
-}
 export function observePushToken(
   listener: (token: Notifications.DevicePushToken) => void,
 ): () => void {

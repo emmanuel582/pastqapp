@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Text as NativeText, View } from "react-native";
 import { useApp } from "../state/AppContext";
 import { fonts } from "../theme/tokens";

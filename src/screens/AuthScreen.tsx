@@ -1,8 +1,7 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { View, TextInput } from "react-native";
 import Eye from "lucide-react-native/icons/eye";
 import EyeOff from "lucide-react-native/icons/eye-off";
-import ArrowRight from "lucide-react-native/icons/arrow-right";
 import Check from "lucide-react-native/icons/check";
 import Svg, { Path } from "react-native-svg";
 import AuthShell from "../components/AuthShell";

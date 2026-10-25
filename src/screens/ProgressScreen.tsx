@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Pressable, FlatList } from "react-native";
 import * as Crypto from "expo-crypto";
 import { useApp } from "../state/AppContext";
@@ -90,8 +90,7 @@ export default function ProgressScreen({ navigation }: Props<"Progress">) {
   );
   const detail = rows.find((r) => r.id === selected),
     graded = rows.reduce((n, r) => n + r.graded, 0),
-    correct = rows.reduce((n, r) => n + r.correct, 0),
-    weak = rows.filter((r) => r.graded >= 5 && r.percent! < 50);
+    correct = rows.reduce((n, r) => n + r.correct, 0);
   const card = {
     padding: 18,
     borderWidth: 1,
@@ -388,7 +387,6 @@ export default function ProgressScreen({ navigation }: Props<"Progress">) {
               </View>
             )
           }
-          ListFooterComponent={<></>}
         />
       )}
     </Screen>

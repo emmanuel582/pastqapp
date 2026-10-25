@@ -62,7 +62,7 @@ function fixture() {
           };
         if (p === "expo-linking")
           return {
-            createURL: (path: string, options: any) => {
+            createURL: (_path: string, _options: any) => {
               throw Error(
                 "Native OAuth must not derive a callback from the development host",
               );

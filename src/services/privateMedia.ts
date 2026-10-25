@@ -1,3 +1,4 @@
+import * as Crypto from "expo-crypto";
 import { requestBlob, API_BASE } from "./api";
 import { supabase } from "./auth";
 import { trustedApiUrl } from "../domain/contracts";
@@ -9,6 +10,7 @@ export async function preparePrivateMedia(owner: string, bundle: Bundle) {
     throw new Error("This material belongs to another account.");
   const result: Bundle = {
       ...bundle,
+      assets: { ...bundle.assets },
       questions: bundle.questions.map((q) => ({
         ...q,
         figures: q.figures?.map((f) => ({ ...f })),
@@ -16,7 +18,20 @@ export async function preparePrivateMedia(owner: string, bundle: Bundle) {
       })),
     },
     images = new Map<string, Promise<string>>();
+  async function assetReference(data: string) {
+    const key = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      data,
+    );
+    const comma = data.indexOf(",");
+    result.assets![key] = {
+      mime: data.slice(5, data.indexOf(";")),
+      data: data.slice(comma + 1),
+    };
+    return "pastq-asset:" + key;
+  }
   async function load(value: string) {
+    if (image.test(value)) return assetReference(value);
     const url = trustedApiUrl(value, API_BASE);
     if (!url || !new URL(url).pathname.startsWith("/api/library/figures/"))
       return value;
@@ -28,7 +43,11 @@ export async function preparePrivateMedia(owner: string, bundle: Bundle) {
             (await supabase?.auth.getSession())?.data.session?.user.id !== owner
           )
             throw new Error("Sign in to save your private diagrams.");
-          const blob = await requestBlob(new URL(url).pathname, {}, true);
+          const blob = await requestBlob(
+            new URL(url).pathname,
+            { owner },
+            true,
+          );
           if (
             !/^image\/(png|jpeg|webp|gif)$/.test(blob.type) ||
             blob.size <= 0 ||
@@ -44,7 +63,7 @@ export async function preparePrivateMedia(owner: string, bundle: Bundle) {
           });
           if (!image.test(data))
             throw new Error("A diagram could not be saved.");
-          return data;
+          return assetReference(data);
         })(),
       );
     return images.get(url)!;

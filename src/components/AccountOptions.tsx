@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useApp } from "../state/AppContext";
 import { cancelReminders } from "../services/notifications";
 import { Dialog, Row, Text, Muted, Button, ErrorText } from "./ui";

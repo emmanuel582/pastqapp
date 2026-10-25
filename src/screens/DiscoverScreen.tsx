@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, FlatList, Pressable } from "react-native";
 import Compass from "lucide-react-native/icons/compass";
 import KeyRound from "lucide-react-native/icons/key-round";
-import ArrowRight from "lucide-react-native/icons/arrow-right";
 import Check from "lucide-react-native/icons/check";
 import ChevronRight from "lucide-react-native/icons/chevron-right";
 import { Image } from "expo-image";
@@ -10,7 +9,6 @@ import { useApp } from "../state/AppContext";
 import {
   Header,
   Text,
-  Title,
   Muted,
   SearchField,
   Tabs,
@@ -26,7 +24,7 @@ import type { StudySession } from "../domain/types";
 import type { Navigation } from "../navigation/types";
 import { fonts } from "../theme/tokens";
 export default function DiscoverScreen({
-  navigation,
+  navigation: _navigation,
 }: {
   navigation: Navigation;
 }) {

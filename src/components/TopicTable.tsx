@@ -1,4 +1,3 @@
-import React from "react";
 import { View, ScrollView, useWindowDimensions } from "react-native";
 import { Text, Muted } from "./ui";
 import { useApp } from "../state/AppContext";

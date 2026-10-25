@@ -8,7 +8,7 @@ import {
   materialMimeType,
   supportedMaterial,
 } from "../domain/files";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import * as DocumentPicker from "expo-document-picker";
@@ -38,11 +38,7 @@ import {
 import PaperArt from "../components/PaperArt";
 import MaterialCamera from "../components/MaterialCamera";
 import ScholarActivity from "../components/ScholarActivity";
-import {
-  uploadMaterial,
-  type UploadDraft,
-  type UploadFile,
-} from "../services/uploads";
+import { uploadMaterial, type UploadDraft } from "../services/uploads";
 import { formatBytes } from "../services/library";
 import * as records from "../storage/records";
 import { fonts } from "../theme/tokens";

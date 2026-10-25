@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, Pressable } from "react-native";
 import { useApp } from "../state/AppContext";
 import { Text } from "./ui";

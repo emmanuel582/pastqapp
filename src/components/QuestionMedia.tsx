@@ -1,5 +1,5 @@
 import { trustedApiUrl } from "../domain/contracts";
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, Pressable, ScrollView, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import Plus from "lucide-react-native/icons/plus";

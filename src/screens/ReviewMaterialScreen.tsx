@@ -9,18 +9,15 @@ import { rememberUpload } from "../services/uploadHistory";
 import RichText from "../components/RichText";
 import { isWrittenQuestion, theoryLabel } from "../domain/theory";
 import { confirmedMaterial } from "../services/confirmedMaterial";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { View, FlatList, ScrollView, Pressable } from "react-native";
 import Edit2 from "lucide-react-native/icons/pen";
-import Plus from "lucide-react-native/icons/plus";
-import Trash2 from "lucide-react-native/icons/trash";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "../state/AppContext";
 import {
   Screen,
   Header,
   Text,
-  Title,
   Muted,
   Button,
   IconButton,
@@ -30,7 +27,6 @@ import {
   Loading,
   Row,
 } from "../components/ui";
-import Scholar from "../components/Scholar";
 import QuestionMedia from "../components/QuestionMedia";
 import Select from "../components/Select";
 import { visionSession, confirmMaterial } from "../services/uploads";
@@ -301,7 +297,7 @@ export default function ReviewMaterialScreen({
             </View>
           ) : null
         }
-        renderItem={({ item: { q, i }, index }) => (
+        renderItem={({ item: { q, i } }) => (
           <View
             style={{
               padding: 16,

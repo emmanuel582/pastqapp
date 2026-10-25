@@ -3,7 +3,7 @@ import { supabase } from "./auth";
 export const API_BASE = (process.env.EXPO_PUBLIC_API_URL || "")
   .trim()
   .replace(/\/$/, "");
-export type ApiOptions = RequestInit & { timeoutMs?: number };
+export type ApiOptions = RequestInit & { timeoutMs?: number; owner?: string };
 export function apiUrl(path: string) {
   if (!API_BASE)
     throw new Error(
@@ -21,12 +21,19 @@ async function consume<T>(
   authenticated: boolean,
   read: (res: Response) => Promise<T>,
 ): Promise<T> {
-  const { timeoutMs = 30000, ...init } = options,
+  const { timeoutMs = 30000, owner: expectedOwner, ...init } = options,
     headers = new Headers(init.headers);
+  if (init.signal?.aborted) {
+    const error = new Error("Request cancelled.");
+    error.name = "AbortError";
+    throw error;
+  }
   const original = authenticated
     ? (await supabase?.auth.getSession())?.data.session
     : null;
   if (authenticated && !original) throw new Error("Sign in to continue.");
+  if (expectedOwner && original?.user.id !== expectedOwner)
+    throw new Error("Your account changed. Sign in again.");
   if (original) headers.set("Authorization", "Bearer " + original.access_token);
   const controller = new AbortController(),
     external = init.signal,

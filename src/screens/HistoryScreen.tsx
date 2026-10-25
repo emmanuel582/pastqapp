@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, SectionList } from "react-native";
 import BookOpen from "lucide-react-native/icons/book-open";
 import Trash2 from "lucide-react-native/icons/trash";

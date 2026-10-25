@@ -240,26 +240,6 @@ export async function refreshReminders(
   if (activeOwner === owner && manualRevision === revision)
     refreshed.set(owner, signature);
 }
-export async function testNotification(owner: string): Promise<void> {
-  ensureOwner(owner);
-  await permission(true);
-  ensureOwner(owner);
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "focalPoint · Scholar",
-      body: "Your study reminder is ready. Tap to open your library.",
-      sound: "default",
-      categoryIdentifier: "study-reminder",
-      data: { kind: "study-reminder", owner, screen: "Main", tab: "library" },
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 3,
-      repeats: false,
-      channelId: "study",
-    },
-  });
-}
 export function observeNotificationResponses(
   listener: (event: NotificationOpen) => void,
 ): () => void {

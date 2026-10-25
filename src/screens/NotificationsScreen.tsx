@@ -6,7 +6,7 @@ import {
   connectPush,
   disablePush,
 } from "../services/remotePush";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, FlatList, AppState } from "react-native";
 import Bell from "lucide-react-native/icons/bell";
 import Check from "lucide-react-native/icons/check";
@@ -54,11 +54,14 @@ export default function NotificationsScreen({
   useEffect(() => {
     const abort = new AbortController();
     let timer: ReturnType<typeof setInterval> | undefined;
+    let polling = false;
     async function load() {
+      if (polling || abort.signal.aborted) return;
+      polling = true;
       try {
         const value = await request<Inbox>(
           "/api/reminders/inbox?offset=" + offset,
-          { signal: abort.signal },
+          { signal: abort.signal, owner },
           true,
         );
         if (!abort.signal.aborted) {
@@ -77,6 +80,8 @@ export default function NotificationsScreen({
           setError(
             e instanceof Error ? e.message : "Could not load notifications.",
           );
+      } finally {
+        polling = false;
       }
     }
     function resume(state: string) {
@@ -190,7 +195,6 @@ export default function NotificationsScreen({
               <Text style={{ fontFamily: fonts.semibold }}>
                 Phone notifications
               </Text>
-              <></>
               <Button
                 kind="secondary"
                 disabled={pushBusy || owner === "guest"}
@@ -204,7 +208,6 @@ export default function NotificationsScreen({
               </Button>
               {pushEnabled && pushQuiet ? (
                 <View style={{ gap: 10 }}>
-                  <></>
                   <Button
                     kind="text"
                     disabled={pushBusy}
@@ -261,7 +264,6 @@ export default function NotificationsScreen({
               }}
             >
               <Bell size={16} color={palette.muted} />
-              <></>
               <Muted style={{ marginLeft: "auto", fontSize: 9 }}>
                 {new Date(item.sent_at).toLocaleString()}
               </Muted>
@@ -338,9 +340,7 @@ export default function NotificationsScreen({
               <Empty
                 title="You’re all caught up."
                 icon={<Bell size={30} color={palette.accent} />}
-              >
-                <></>
-              </Empty>
+              ></Empty>
             ) : null}
           </View>
         }

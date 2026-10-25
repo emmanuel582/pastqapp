@@ -1,6 +1,6 @@
 import Upload from "lucide-react-native/icons/upload";
 import CircleHelp from "lucide-react-native/icons/circle-question-mark";
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import SessionActivityCard from "../components/SessionActivityCard";

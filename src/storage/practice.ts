@@ -3,7 +3,12 @@ import { workingKind } from "./working";
 import { resolveQuestion } from "./bank";
 import * as records from "./records";
 import { progressSession, type ProgressSession } from "../domain/topicProgress";
-import { attemptSummary, bookmarkIdentity } from "../domain/attempt";
+import {
+  attemptSummary,
+  bookmarkIdentity,
+  questionIdentity,
+  questionOutcome,
+} from "../domain/attempt";
 import type { Attempt, Bookmark, Question, Bundle } from "../domain/types";
 export type AttemptHeader = Omit<Attempt, "questions" | "assets"> & {
   questionCount: number;
@@ -47,8 +52,25 @@ export function saveAttempt(attempt: Attempt, newPaper = false) {
         id: attempt.id,
         value: { questions, assets },
       });
-    if (attempt.status === "completed")
+    if (attempt.status === "completed") {
       rows.push({ kind: "history-outbox", id: attempt.id, value: header });
+      rows.push(
+        ...attempt.questions.map((q, i) => ({
+          kind: "learning-evidence",
+          id: attempt.bundleId + ":" + questionIdentity(q),
+          value: {
+            key: questionIdentity(q),
+            bundleId: attempt.bundleId,
+            subject: q.subject,
+            topic: q.topic || q.section || null,
+            year: q.year || "",
+            paper: q.paper || "",
+            at: attempt.completedAt,
+            outcome: questionOutcome(attempt, i),
+          },
+        })),
+      );
+    }
     await records.restore(attempt.owner, rows);
   });
 }

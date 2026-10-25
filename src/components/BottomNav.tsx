@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Pressable } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import Home from "lucide-react-native/icons/house";

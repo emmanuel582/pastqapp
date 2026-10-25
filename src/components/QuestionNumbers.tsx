@@ -1,4 +1,3 @@
-import React from "react";
 import { View, FlatList, Pressable } from "react-native";
 import Check from "lucide-react-native/icons/check";
 import X from "lucide-react-native/icons/x";

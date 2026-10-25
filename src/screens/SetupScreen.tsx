@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, ScrollView, Pressable, TextInput, FlatList } from "react-native";
-import ArrowLeft from "lucide-react-native/icons/arrow-left";
-import ArrowRight from "lucide-react-native/icons/arrow-right";
 import Check from "lucide-react-native/icons/check";
-import ChevronRight from "lucide-react-native/icons/chevron-right";
 import Clock3 from "lucide-react-native/icons/clock-3";
 import BookOpen from "lucide-react-native/icons/book-open";
 import Plus from "lucide-react-native/icons/plus";
@@ -32,17 +29,15 @@ import Select from "../components/Select";
 import * as records from "../storage/records";
 import { getBundle } from "../services/library";
 import { saveAttempt } from "../storage/practice";
-import { createAttempt, questionIdentity } from "../domain/attempt";
+import { createAttempt } from "../domain/attempt";
 import {
   getAvailableSubjects,
   getAvailableTopics,
   getQuestionCountByTopic,
   isCbtQuestion,
-  type CbtQuestion,
 } from "../domain/cbtFilters";
 import {
   buildSubjectSession,
-  calendarYear,
   defaultSubjectSettings,
   subjectYears,
   subjectPapers,
@@ -70,7 +65,7 @@ interface Draft {
   mock: boolean;
 }
 export default function SetupScreen({ route, navigation }: Props<"Setup">) {
-  const { owner, palette, refreshPractice, attempts } = useApp(),
+  const { owner, palette, refreshPractice } = useApp(),
     insets = useSafeAreaInsets();
   const [bundle, setBundle] = useState<Bundle | null>(null),
     [draft, setDraft] = useState<Draft | null>(null),
@@ -83,8 +78,7 @@ export default function SetupScreen({ route, navigation }: Props<"Setup">) {
     [search, setSearch] = useState(""),
     [busy, setBusy] = useState(false),
     lock = useRef(false),
-    scroll = useRef<React.ElementRef<typeof ScrollView>>(null),
-    seen = useRef(new Set<string>());
+    scroll = useRef<React.ElementRef<typeof ScrollView>>(null);
   const key = route.params.bundleId;
   useEffect(() => {
     let active = true;

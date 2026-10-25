@@ -22,6 +22,7 @@ import {
   forgetParts,
   pauseParts,
 } from "./downloadTransport";
+import type { Bundle, Catalog, Question, Asset } from "../domain/types";
 export async function prepareDownload(
   owner: string,
   value: Manifest,
@@ -45,7 +46,6 @@ export async function prepareDownload(
   });
   return prepareParts(owner, value, selected, signal);
 }
-import type { Bundle, Catalog, Question, Asset } from "../domain/types";
 export type DownloadPart = {
   hash: string;
   subject: string;
@@ -110,7 +110,7 @@ export async function getBundle(owner: string, id: string) {
   const raw = await request<Bundle>(
     (remote ? "/api/vision/materials/" : "/api/library/bundles/") +
       encodeURIComponent(id),
-    {},
+    remote ? { owner } : {},
     !!remote,
   );
   const bundle = normalizeBundle(raw);
@@ -342,7 +342,7 @@ export async function savedUploads(owner: string, signal?: AbortSignal) {
       throw new Error("Your account changed. Reopen your library.");
     const value: { materials: Bundle[]; nextOffset?: number } = await request(
       "/api/vision/materials?offset=" + offset + "&limit=100",
-      { signal },
+      { signal, owner },
       true,
     );
     if ((await supabase?.auth.getSession())?.data.session?.user.id !== owner)

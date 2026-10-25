@@ -1,6 +1,6 @@
 import { removeIndex } from "../storage/bank";
 import { listAttempts, readAttempt, saveAttempt } from "../storage/practice";
-import React, { useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import Database from "lucide-react-native/icons/database";
 import Trash2 from "lucide-react-native/icons/trash";
@@ -73,7 +73,6 @@ export default function StorageScreen({ navigation }: Props<"Storage">) {
               }
               icon={<Database size={22} color={palette.accent} />}
             />
-            <></>
             {saved.map((bundle) => (
               <Row
                 key={bundle.id}
@@ -138,7 +137,6 @@ export default function StorageScreen({ navigation }: Props<"Storage">) {
           </>
         ) : (
           <>
-            <></>
             <Button
               disabled={busy}
               onPress={() =>

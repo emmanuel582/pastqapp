@@ -6,7 +6,7 @@ import {
 import { disconnectPush } from "../services/remotePush";
 import { syncAccount } from "../services/sync";
 import { remoteHistory, type PracticeSummary } from "../services/history";
-import React, {
+import {
   createContext,
   useContext,
   useCallback,
@@ -16,7 +16,7 @@ import React, {
   useRef,
   type ReactNode,
 } from "react";
-import { AppState, useColorScheme, Platform } from "react-native";
+import { AppState, useColorScheme } from "react-native";
 import * as Linking from "expo-linking";
 import type { Session } from "@supabase/supabase-js";
 import {
@@ -33,8 +33,6 @@ import {
   deletedAttemptIds,
   type AttemptHeader,
 } from "../storage/practice";
-import { syncHistory } from "../services/history";
-import { syncReports } from "../services/reports";
 import type {
   Profile,
   Preferences,
@@ -389,7 +387,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
   const updateProfile = useCallback(
     async (value: Partial<Profile>) => {
-      if (!profile) throw new Error("Sign in again.");
+      if (!profile || profile.id !== owner || ownerRef.current !== owner)
+        throw new Error("Your account changed. Sign in again.");
       if (session && supabase) {
         const fields = Object.fromEntries(
           Object.entries(value).filter(([key]) =>
@@ -408,6 +407,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (value.phone_number !== undefined)
           data.contact_phone = value.phone_number;
         if (Object.keys(data).length) {
+          if (
+            (await supabase.auth.getSession()).data.session?.user.id !== owner
+          )
+            throw new Error("Your account changed. Sign in again.");
           const result = await supabase.auth.updateUser({ data });
           if (result.error) throw result.error;
         }

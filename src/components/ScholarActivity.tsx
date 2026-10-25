@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppState, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 
-export type ScholarActivityMode = "six-seven" | "upload" | "download" | "processing";
+export type ScholarActivityMode =
+  "six-seven" | "upload" | "download" | "processing";
 type Step = { source: number; hold: number };
 
 const sixSeven = [
@@ -55,7 +56,10 @@ const wait = [
 ];
 
 const sequence = (sources: number[], holds: number | number[]): Step[] =>
-  sources.map((source, index) => ({ source, hold: typeof holds === "number" ? holds : holds[index] }));
+  sources.map((source, index) => ({
+    source,
+    hold: typeof holds === "number" ? holds : holds[index],
+  }));
 const studySteps = sequence(study, [350, 280, 500, 280, 500, 700]);
 const waitSteps = sequence(wait, [450, 220, 420, 300, 350, 700]);
 const plans: Record<ScholarActivityMode | "jump", Step[]> = {
@@ -73,11 +77,20 @@ const plans: Record<ScholarActivityMode | "jump", Step[]> = {
     ...studySteps,
     ...waitSteps,
   ],
-  processing: [...studySteps, ...sequence(wait, 340), ...studySteps, ...waitSteps],
+  processing: [
+    ...studySteps,
+    ...sequence(wait, 340),
+    ...studySteps,
+    ...waitSteps,
+  ],
   jump: sequence(jump, [180, 100, 180, 100, 420]),
 };
 
-export default function ScholarActivity({ mode, height, width }: {
+export default function ScholarActivity({
+  mode,
+  height,
+  width,
+}: {
   mode: ScholarActivityMode;
   height: number;
   width?: number;
@@ -88,10 +101,15 @@ export default function ScholarActivity({ mode, height, width }: {
   const [index, setIndex] = useState(0);
   const plan = plans[jumping ? "jump" : mode];
   const frameWidth = width ?? (height * 192) / 208;
-  const source = useMemo(() => plan[Math.min(index, plan.length - 1)].source, [plan, index]);
+  const source = useMemo(
+    () => plan[Math.min(index, plan.length - 1)].source,
+    [plan, index],
+  );
 
   useEffect(() => {
-    const sub = AppState.addEventListener("change", state => setActive(state === "active"));
+    const sub = AppState.addEventListener("change", (state) =>
+      setActive(state === "active"),
+    );
     return () => sub.remove();
   }, []);
   useEffect(() => {
@@ -99,10 +117,13 @@ export default function ScholarActivity({ mode, height, width }: {
   }, [mode, jumping]);
   useEffect(() => {
     if (reduced || !active) return;
-    const timer = setTimeout(() => {
-      if (jumping && index === plan.length - 1) setJumping(false);
-      else setIndex(current => (current + 1) % plan.length);
-    }, plan[Math.min(index, plan.length - 1)].hold);
+    const timer = setTimeout(
+      () => {
+        if (jumping && index === plan.length - 1) setJumping(false);
+        else setIndex((current) => (current + 1) % plan.length);
+      },
+      plan[Math.min(index, plan.length - 1)].hold,
+    );
     return () => clearTimeout(timer);
   }, [active, index, jumping, plan, reduced]);
 
@@ -110,8 +131,15 @@ export default function ScholarActivity({ mode, height, width }: {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Tap Scholar to see him jump"
-      onPress={() => { if (!reduced && !jumping) setJumping(true); }}
-      style={{ width: frameWidth, height, alignItems: "center", justifyContent: "flex-end" }}
+      onPress={() => {
+        if (!reduced && !jumping) setJumping(true);
+      }}
+      style={{
+        width: frameWidth,
+        height,
+        alignItems: "center",
+        justifyContent: "flex-end",
+      }}
     >
       <Image
         source={source}

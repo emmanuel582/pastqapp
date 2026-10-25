@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { View, Pressable } from "react-native";
 import { Image } from "expo-image";
 import {
@@ -22,7 +22,7 @@ import {
   type ReminderSettings,
   type ReminderSnapshot,
 } from "../services/reminders";
-import { scheduleReminders, testNotification } from "../services/notifications";
+import { scheduleReminders } from "../services/notifications";
 import * as records from "../storage/records";
 import { fonts } from "../theme/tokens";
 import type { Props } from "../navigation/types";
@@ -37,22 +37,28 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [status, setStatus] = useState("");
+  const edited = useRef(false);
   useEffect(() => {
     const abort = new AbortController();
     void records
       .read<ReminderSettings>(owner, "reminders", "current")
       .then((saved) => {
-        if (saved && !abort.signal.aborted) setDraft(saved);
-      });
-    void getReminders(abort.signal)
-      .then((value) => {
-        setSnapshot(value);
-        setDraft(value.settings);
+        if (saved && !abort.signal.aborted && !edited.current) setDraft(saved);
+      })
+      .catch(() => {});
+    void getReminders(owner, abort.signal)
+      .then(async (value) => {
+        const pending = await records.read(owner, "reminder-outbox", "current");
+        if (!abort.signal.aborted && !edited.current && !pending) {
+          setSnapshot(value);
+          setDraft(value.settings);
+        }
       })
       .catch(() => {});
     return () => abort.abort();
   }, [owner]);
   function patch(value: Partial<ReminderSettings>) {
+    edited.current = true;
     setDraft((d) => ({ ...d, ...value }));
     setStatus("");
   }
@@ -63,6 +69,7 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
         Intl.DateTimeFormat().resolvedOptions().timeZone || value.timezone,
     };
     if (busy) return;
+    edited.current = true;
     setBusy(true);
     setError("");
     setStatus("");
@@ -80,7 +87,10 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
           return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
         });
       await scheduleReminders(owner, value, snapshot?.preview, studiedDays);
-      await records.write(owner, "reminders", "current", value);
+      await records.commit(owner, [
+        { kind: "reminders", id: "current", value },
+        { kind: "reminder-outbox", id: "current", value },
+      ]);
       await setPreferences({
         ...preferences,
         reminders: {
@@ -93,10 +103,16 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
       });
       setDraft(value);
       try {
-        setSnapshot(await saveReminders(value));
+        setSnapshot(await saveReminders(owner, value));
+        await records.compareAndSwap(
+          owner,
+          "reminder-outbox",
+          "current",
+          value,
+          null,
+        );
         setStatus("Reminder settings saved.");
       } catch {
-        await records.write(owner, "reminder-outbox", "current", value);
         setStatus(
           "Saved on this device. Account settings will sync when connected.",
         );
@@ -144,7 +160,6 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
             style={{ width: 76, height: 76, borderRadius: 14 }}
           />
           <View style={{ flex: 1, gap: 5 }}>
-            <></>
             <Text style={{ fontFamily: fonts.semibold }}>
               {draft.personalized
                 ? snapshot?.preview.title || "A study moment with Scholar"
@@ -158,20 +173,6 @@ export default function RemindersScreen({ navigation }: Props<"Reminders">) {
             </Muted>
           </View>
         </View>
-        {draft.enabled ? (
-          <Button
-            kind="text"
-            onPress={() =>
-              void testNotification(owner)
-                .then(() =>
-                  setStatus("Test reminder will arrive in a few seconds."),
-                )
-                .catch((e) => setError(e.message))
-            }
-          >
-            Send test reminder
-          </Button>
-        ) : null}
         <Text style={{ fontFamily: fonts.semibold, marginBottom: 16 }}>
           Timing
         </Text>

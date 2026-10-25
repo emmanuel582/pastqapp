@@ -1,4 +1,3 @@
-import React from "react";
 import { View } from "react-native";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
 import { Text, Muted, Row, ErrorText } from "./ui";

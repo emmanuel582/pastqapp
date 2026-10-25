@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Animated, View } from "react-native";
 import { useApp } from "../state/AppContext";
 import { useReducedMotion } from "../hooks/useReducedMotion";

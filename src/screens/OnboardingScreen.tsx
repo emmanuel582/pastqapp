@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { View, Pressable } from "react-native";
 import GraduationCap from "lucide-react-native/icons/graduation-cap";
 import Compass from "lucide-react-native/icons/compass";

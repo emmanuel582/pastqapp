@@ -1,4 +1,3 @@
-import React from "react";
 import Svg, { Rect, G, Path, Circle } from "react-native-svg";
 import { useApp } from "../state/AppContext";
 export default function PaperArt() {

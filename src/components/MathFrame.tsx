@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { WebView } from "react-native-webview";
 export default function MathFrame({ html }: { html: string }) {
   const [height, setHeight] = useState(48);

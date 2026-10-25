@@ -1,5 +1,5 @@
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import React, { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Animated, Easing, Platform } from "react-native";
 import { questionSwipeDirection } from "../domain/swipe";
 import { useReducedMotion } from "../hooks/useReducedMotion";

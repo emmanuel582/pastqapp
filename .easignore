@@ -38,3 +38,8 @@ fcm-*.json
 /store/
 /docs/
 /qa-progress.entry.ts
+
+# Local authoring tools and unused source artwork are not release inputs.
+/scripts/
+/assets/scholar/spritesheet.webp
+/assets/scholar/wave-clean-v2.webp

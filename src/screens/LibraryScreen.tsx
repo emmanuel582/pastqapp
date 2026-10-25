@@ -1,6 +1,6 @@
 import { useContentTransition } from "../hooks/useContentTransition";
 import QuestionSearchResults from "../components/QuestionSearchResults";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Pressable, FlatList, Animated } from "react-native";
 import Upload from "lucide-react-native/icons/upload";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
@@ -8,7 +8,6 @@ import ChevronRight from "lucide-react-native/icons/chevron-right";
 import ChevronDown from "lucide-react-native/icons/chevron-down";
 import Download from "lucide-react-native/icons/download";
 import Plus from "lucide-react-native/icons/plus";
-import ArrowLeft from "lucide-react-native/icons/arrow-left";
 import BookOpen from "lucide-react-native/icons/book-open";
 import { useApp } from "../state/AppContext";
 import {

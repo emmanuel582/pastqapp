@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import Download from "lucide-react-native/icons/download";
 import { useApp } from "../state/AppContext";

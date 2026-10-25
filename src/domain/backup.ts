@@ -1,6 +1,7 @@
+import { isWrittenQuestion } from "./theory";
 import { validateWorkingPaper, type WorkingPaper } from "./working";
 import type { Attempt, Bookmark, Question } from "./types";
-import { attemptSummary, bookmarkIdentity } from "./attempt";
+import { bookmarkIdentity } from "./attempt";
 export interface Backup {
   format: "pastq-native-study-backup";
   version: 1;
@@ -101,8 +102,9 @@ export function validateBackup(raw: unknown, owner: string): Backup {
           n !== null &&
           (!Number.isInteger(n) ||
             n < 0 ||
-            (n >= a.questions[i].options.length &&
-              a.questions[i].type !== "theory")),
+            (isWrittenQuestion(a.questions[i])
+              ? n > 1
+              : n >= a.questions[i].options.length)),
       ) ||
       !Array.isArray(a.written) ||
       a.written.length !== a.questions.length ||

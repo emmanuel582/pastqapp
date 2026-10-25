@@ -1,9 +1,9 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Modal, View, Pressable } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import X from "lucide-react-native/icons/x";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text, Button, ErrorText } from "./ui";
+import { Text, Button } from "./ui";
 import type { UploadFile } from "../services/uploads";
 export default function MaterialCamera({
   onClose,

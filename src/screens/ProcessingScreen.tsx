@@ -2,7 +2,7 @@ import { hasOpenUploadChecks } from "../domain/uploadReview";
 import { rememberUpload } from "../services/uploadHistory";
 import { confirmedMaterial } from "../services/confirmedMaterial";
 import { missingPageInsertion, processingFollowUp } from "../domain/processing";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, AppState } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { useApp } from "../state/AppContext";
@@ -25,7 +25,6 @@ import {
   insertVisionPage,
 } from "../services/uploads";
 import type { VisionSession } from "../domain/types";
-import * as records from "../storage/records";
 import { fonts } from "../theme/tokens";
 import type { Props } from "../navigation/types";
 export default function ProcessingScreen({
@@ -242,14 +241,12 @@ export default function ProcessingScreen({
               </View>
             </View>
           ) : null}
-          {!failed && !waiting ? <></> : null}
           <Button
             kind="text"
             onPress={() => navigation.navigate("Notifications")}
           >
             Notifications
           </Button>
-          {interrupted ? <></> : failed ? <></> : null}
           {session?.followUps
             ?.filter((f) => f.status === "open")
             .map((item) => (

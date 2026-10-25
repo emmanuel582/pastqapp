@@ -1,5 +1,5 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import React, {
+import {
   useEffect,
   memo,
   useMemo,
@@ -7,14 +7,7 @@ import React, {
   useState,
   type MutableRefObject,
 } from "react";
-import {
-  View,
-  Pressable,
-  PanResponder,
-  AppState,
-  Animated,
-  Platform,
-} from "react-native";
+import { View, PanResponder, AppState, Animated, Platform } from "react-native";
 import Svg, { Path, Pattern, Defs, Circle, Rect } from "react-native-svg";
 import X from "lucide-react-native/icons/x";
 import PenLine from "lucide-react-native/icons/pen-line";
@@ -78,7 +71,7 @@ export default function DrawingBoard({
   const [tool, setTool] = useState<"pen" | "erase" | "move">(
       readOnly ? "move" : "pen",
     ),
-    [revision, setRevision] = useState(0),
+    [, setRevision] = useState(0),
     [displayedSize, setDisplayedSize] = useState(() =>
       fitWorkingBoard(savedSize.current, {
         width: maxWidth,
@@ -199,7 +192,7 @@ export default function DrawingBoard({
           );
           lastDrag.current = travel;
         },
-        onPanResponderRelease: (_, gesture) => {
+        onPanResponderRelease: () => {
           if (!resized.current) toggleSize();
           setDisplayedSize({ ...size.current });
         },

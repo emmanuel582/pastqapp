@@ -48,18 +48,14 @@
   },
   "devDependencies": {
     "@bacons/apple-targets": "^5.0.0",
-    "@tailwindcss/vite": "^4.1.12",
     "@types/katex": "^0.16.8",
     "@types/node": "^26.6.5",
     "@types/react": "~19.2.4",
     "@types/sanitize-html": "^2.16.2",
-    "@vitejs/plugin-react": "^4.7.0",
     "prettier": "^3.9.10",
     "sharp": "^0.35.5",
-    "tailwindcss": "^4.1.12",
     "tsx": "^4.23.15",
-    "typescript": "~6.0.3",
-    "vite": "^6.4.4"
+    "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
@@ -67,7 +63,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test --test-concurrency=2 tests/*.test.ts",
     "verify": "npm run typecheck && npm test",
     "export:android": "expo export --platform android --output-dir dist/android",
     "export:ios": "expo export --platform ios --output-dir dist/ios",

@@ -1,4 +1,4 @@
-import React, { memo, useContext, useEffect, useState } from "react";
+import { memo, useContext, useEffect, useState } from "react";
 import { View, AppState, Pressable } from "react-native";
 import { NavigationContext } from "@react-navigation/native";
 import { Image } from "expo-image";
@@ -66,7 +66,13 @@ export default memo(function Scholar({
   const [jumpFrame, setJumpFrame] = useState<number | null>(null);
   useEffect(() => {
     if (jumpFrame === null) return;
-    const timer = setTimeout(() => setJumpFrame(frame => frame === null || frame >= jumpFrames.length - 1 ? null : frame + 1), jumpHolds[jumpFrame]);
+    const timer = setTimeout(
+      () =>
+        setJumpFrame((frame) =>
+          frame === null || frame >= jumpFrames.length - 1 ? null : frame + 1,
+        ),
+      jumpHolds[jumpFrame],
+    );
     return () => clearTimeout(timer);
   }, [jumpFrame]);
   useEffect(() => {
@@ -119,7 +125,9 @@ export default memo(function Scholar({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Tap Scholar to see him jump"
-      onPress={() => { if (!reduced && jumpFrame === null) setJumpFrame(0); }}
+      onPress={() => {
+        if (!reduced && jumpFrame === null) setJumpFrame(0);
+      }}
       style={{
         width: sceneWidth || width + 12,
         height: sceneHeight || height + 8,
@@ -139,7 +147,11 @@ export default memo(function Scholar({
         }}
       />
       <Image
-        source={jumpFrame === null ? images?.[key] || poses[key] : jumpFrames[jumpFrame]}
+        source={
+          jumpFrame === null
+            ? images?.[key] || poses[key]
+            : jumpFrames[jumpFrame]
+        }
         style={{ width, height }}
         contentFit="contain"
         transition={reduced || jumpFrame !== null ? 0 : scholarBlend(pose)}

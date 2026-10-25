@@ -5,7 +5,7 @@ import { resolveQuestion } from "../storage/bank";
 import * as records from "../storage/records";
 import { listAttempts, readAttempt, listBookmarks } from "../storage/practice";
 import { attemptSummary } from "../domain/attempt";
-import { validateBackup, type Backup } from "../domain/backup";
+import { validateBackup } from "../domain/backup";
 export async function exportBackup(owner: string) {
   const headers = await listAttempts(owner),
     attempts = [];

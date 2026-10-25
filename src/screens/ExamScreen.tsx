@@ -20,7 +20,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ArrowLeft from "lucide-react-native/icons/arrow-left";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
 import Bookmark from "lucide-react-native/icons/bookmark";
-import BookOpen from "lucide-react-native/icons/book-open";
 import CalculatorIcon from "lucide-react-native/icons/calculator";
 import Check from "lucide-react-native/icons/check";
 import Grid2X2 from "lucide-react-native/icons/grid-2x2";
@@ -64,17 +63,13 @@ import {
   attemptSummary,
   completeAttempt,
   bookmarkIdentity,
-  questionIdentity,
   questionAnswered,
-  questionOutcome,
 } from "../domain/attempt";
 import { answerIndex } from "../domain/examSession";
 import {
   subjectQuestionGroups,
   subjectQuestionPosition,
 } from "../domain/subjectNavigation";
-import { syncHistory } from "../services/history";
-import * as records from "../storage/records";
 import { fonts } from "../theme/tokens";
 import type { Attempt } from "../domain/types";
 import type { Props } from "../navigation/types";
@@ -232,7 +227,11 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     ]),
   );
   function update(value: Partial<Attempt>) {
-    if (!latest.current || (!review && submitLock.current)) return;
+    if (
+      !latest.current ||
+      (!review && (submitLock.current || latest.current.status !== "active"))
+    )
+      return;
     const next = { ...latest.current, ...value };
     latest.current = next;
     setAttempt(next);
@@ -252,25 +251,10 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
       await workingFlush.current?.();
       const done = completeAttempt(latest.current);
       await saveAttempt(done);
-      const evidence = done.questions.map((q, i) => ({
-        kind: "learning-evidence",
-        id: done.bundleId + ":" + questionIdentity(q),
-        value: {
-          key: questionIdentity(q),
-          bundleId: done.bundleId,
-          subject: q.subject,
-          topic: q.topic || q.section || null,
-          year: q.year || "",
-          paper: q.paper || "",
-          at: done.completedAt,
-          outcome: questionOutcome(done, i),
-        },
-      }));
-      await records.restore(owner, evidence);
       latest.current = done;
       setAttempt(done);
       setFinish(false);
-      await refreshPractice();
+      await refreshPractice().catch(() => {});
       void syncNow();
       setTimeout(
         () => navigation.replace("Results", { attemptId: done.id }),
@@ -465,7 +449,6 @@ export default function ExamScreen({ route, navigation }: Props<"Exam">) {
     boardWidth,
     Math.max(1, window.width - insets.left - insets.right - 320),
   );
-  const writtenPaper = attempt.questions.every(isWrittenQuestion);
   const theory = isWrittenQuestion(q),
     reveal =
       review ||

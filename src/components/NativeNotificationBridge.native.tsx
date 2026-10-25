@@ -3,7 +3,7 @@ import {
   observePushToken,
   offerInitialPush,
 } from "../services/remotePush";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppState } from "react-native";
 import type { NavigationContainerRefWithCurrent } from "@react-navigation/native";
 import { useApp } from "../state/AppContext";

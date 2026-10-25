@@ -83,7 +83,7 @@ function fixture(id: string) {
             prepareParts: async () => () => {},
             pauseParts: async () => {},
             forgetParts: async () => {},
-            readPart: async (_o: any, value: any, part: any) => {
+            readPart: async (_o: any, _value: any, part: any) => {
               if (!online) throw Error("Offline");
               requested.push(part.hash);
               return textByHash.get(part.hash);

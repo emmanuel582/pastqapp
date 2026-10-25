@@ -104,3 +104,41 @@ test("VPS timeout covers response body consumption, including a stalled download
     /timed out/,
   );
 });
+
+test("owner-bound queued work never starts a request under another account", async () => {
+  let requests = 0;
+  const client = api(
+    async () => {
+      requests++;
+      return new Response("{}");
+    },
+    {
+      getSession: async () => ({
+        data: { session: { ...session, user: { id: "other" } } },
+      }),
+    },
+  );
+  await assert.rejects(
+    () => client.request("/api/private", { owner: "owner" }, true),
+    /account changed/,
+  );
+  assert.equal(requests, 0);
+});
+test("an already cancelled request does not query auth or start network work", async () => {
+  const controller = new AbortController();
+  controller.abort();
+  const client = api(
+    async () => {
+      throw Error("unexpected fetch");
+    },
+    {
+      getSession: async () => {
+        throw Error("unexpected auth");
+      },
+    },
+  );
+  await assert.rejects(
+    () => client.request("/api/private", { signal: controller.signal }, true),
+    { name: "AbortError" },
+  );
+});

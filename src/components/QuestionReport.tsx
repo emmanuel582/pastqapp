@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { View } from "react-native";
+import { useState } from "react";
 import MessageSquareWarning from "lucide-react-native/icons/message-square-warning";
 import { useApp } from "../state/AppContext";
 import { IconButton, Dialog, Muted, Button, Field, ErrorText, Row } from "./ui";

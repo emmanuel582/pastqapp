@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { View, Pressable } from "react-native";
 import ArrowRight from "lucide-react-native/icons/arrow-right";
 import BookOpen from "lucide-react-native/icons/book-open";
@@ -24,7 +24,7 @@ export default function HomeScreen({
   navigation: Navigation;
   onLibrary: () => void;
 }) {
-  const { palette, profile, saved, attempts, owner } = useApp();
+  const { palette, profile, saved, attempts } = useApp();
   const completed = attempts.filter((a) => a.status === "completed");
   const scores = completed
     .map((a) => a.summary.percent)

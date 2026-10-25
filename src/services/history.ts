@@ -4,7 +4,7 @@ import * as records from "../storage/records";
 import { readAttempt } from "../storage/practice";
 import { supabase } from "./auth";
 import { savePracticeResult } from "./analytics";
-import { historyRow, analyticsInput } from "../domain/contracts";
+import { analyticsInput } from "../domain/contracts";
 import { request, json } from "./api";
 export type PracticeSummary = {
   id: string;
@@ -91,9 +91,12 @@ async function sync(owner: string) {
           return;
         await request(
           "/api/recommendations/attempts",
-          json("POST", {
-            attempts: payload.attempts.slice(offset, offset + 500),
-          }),
+          {
+            ...json("POST", {
+              attempts: payload.attempts.slice(offset, offset + 500),
+            }),
+            owner,
+          },
           true,
         );
         await withSession(owner, header.id, async () => {

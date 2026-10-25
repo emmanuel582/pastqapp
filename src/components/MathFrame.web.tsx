@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 export default function MathFrame({ html }: { html: string }) {
   const [height, setHeight] = useState(48),
     ref = useRef<HTMLIFrameElement>(null);

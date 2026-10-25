@@ -3,9 +3,8 @@ import {
   savedDownloadSelection,
   groupDownloadPapers,
 } from "../domain/downloads";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, FlatList, Pressable } from "react-native";
-import Download from "lucide-react-native/icons/download";
+import { useEffect, useRef, useState } from "react";
+import { View, Pressable } from "react-native";
 import Check from "lucide-react-native/icons/check";
 import Pause from "lucide-react-native/icons/pause";
 import ChevronRight from "lucide-react-native/icons/chevron-right";
@@ -372,7 +371,11 @@ export default function DownloadScreen({
         <Content center>
           <View style={{ alignItems: "center", gap: 20 }}>
             {stage === "complete" || paused ? (
-              <Scholar state={stage === "complete" ? "celebrate" : "waiting"} width={192} animated={false} />
+              <Scholar
+                state={stage === "complete" ? "celebrate" : "waiting"}
+                width={192}
+                animated={false}
+              />
             ) : (
               <ScholarActivity mode="download" height={208} width={192} />
             )}

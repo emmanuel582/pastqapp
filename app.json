@@ -6,7 +6,7 @@
       "focalpoint",
       "pastq"
     ],
-    "version": "1.0.9",
+    "version": "1.0.10",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -18,7 +18,7 @@
         "NSPhotoLibraryUsageDescription": "Choose question paper photos to prepare for practice.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "11",
+      "buildNumber": "12",
       "appleTeamId": "4F385JKS7J"
     },
     "android": {
@@ -31,7 +31,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
       },
-      "versionCode": 13,
+      "versionCode": 14,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

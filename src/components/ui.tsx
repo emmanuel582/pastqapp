@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import {
   View,
   Text as NativeText,

@@ -73,7 +73,7 @@ export async function loadUploads(
         offset +
         "&limit=" +
         Math.min(100, limit - items.length),
-      { signal },
+      { signal, owner },
       true,
     );
     items.push(...result.items);

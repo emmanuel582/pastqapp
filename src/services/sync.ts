@@ -6,7 +6,7 @@ import {
   getReminders,
   type ReminderSettings,
 } from "./reminders";
-import { scheduleReminders } from "./notifications";
+import { refreshReminders } from "./notifications";
 import { listAttempts } from "../storage/practice";
 import { request, json } from "./api";
 export async function syncAccount(owner: string) {
@@ -25,8 +25,14 @@ async function syncReminders(owner: string) {
     "current",
   );
   if (pending) {
-    await saveReminders(pending);
-    await records.remove(owner, "reminder-outbox", "current");
+    await saveReminders(owner, pending);
+    await records.compareAndSwap(
+      owner,
+      "reminder-outbox",
+      "current",
+      pending,
+      null,
+    );
   }
   const attempts = (await listAttempts(owner)).filter(
     (a) => a.status === "completed",
@@ -34,16 +40,19 @@ async function syncReminders(owner: string) {
   if (attempts.length)
     await request(
       "/api/reminders/activity",
-      json("POST", {
-        sessions: attempts.slice(0, 100).map((a) => ({
-          id: a.id,
-          at: new Date(a.completedAt!).toISOString(),
-          total: a.summary.graded,
-          score: a.summary.correct,
-          durationSeconds: Math.round((a.completedAt! - a.startedAt) / 1000),
-          subject: a.title.slice(0, 100),
-        })),
-      }),
+      {
+        ...json("POST", {
+          sessions: attempts.slice(0, 100).map((a) => ({
+            id: a.id,
+            at: new Date(a.completedAt!).toISOString(),
+            total: a.summary.graded,
+            score: a.summary.correct,
+            durationSeconds: Math.round((a.completedAt! - a.startedAt) / 1000),
+            subject: a.title.slice(0, 100),
+          })),
+        }),
+        owner,
+      },
       true,
     );
   const local = await records.read<ReminderSettings>(
@@ -52,17 +61,12 @@ async function syncReminders(owner: string) {
     "current",
   );
   if (local?.enabled) {
-    const remote = await getReminders();
+    const remote = await getReminders(owner);
     const studied = attempts.map((a) => {
       const d = new Date(a.completedAt!);
       return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
     });
-    await scheduleReminders(
-      owner,
-      remote.settings,
-      remote.preview,
-      studied,
-      false,
-    );
+    await records.write(owner, "reminder-preview", "current", remote.preview);
+    await refreshReminders(owner, studied);
   }
 }

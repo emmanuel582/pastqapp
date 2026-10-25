@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import BookOpen from "lucide-react-native/icons/book-open";

@@ -1,4 +1,3 @@
-import React from "react";
 import Svg, { Path, Circle, G } from "react-native-svg";
 import { useApp } from "../state/AppContext";
 export function StudyArt({ type = "institution" }: { type?: string }) {

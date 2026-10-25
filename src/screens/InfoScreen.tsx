@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Linking, View } from "react-native";
 import {
   Screen,

@@ -1,11 +1,11 @@
 import { supabase } from "./auth";
 import { appendUploadFile as appendFile } from "./multipartFile";
-export { appendUploadFile as appendFile } from "./multipartFile";
 import { checkCancelled } from "../domain/cancellation";
 import { transferUpload } from "./uploadTransport";
 import { supportedMaterial } from "../domain/files";
 import { request, json } from "./api";
 import type { VisionSession, Bundle, Question } from "../domain/types";
+export { appendUploadFile as appendFile } from "./multipartFile";
 export interface UploadFile {
   uri: string;
   name: string;
@@ -23,10 +23,11 @@ export async function extractText(
   text: string,
   name: string,
   signal?: AbortSignal,
+  owner?: string,
 ) {
   const result = await request<{ sessionId?: string; jobId?: string }>(
     "/api/vision/extract-text",
-    { ...json("POST", { text, name, icon: "📝" }), signal },
+    { ...json("POST", { text, name, icon: "📝" }), signal, owner },
     true,
   );
   const id = result.sessionId || result.jobId;
@@ -70,6 +71,7 @@ export async function uploadMaterial(
     const current = run;
     uploadRuns.set(key, current);
     current.promise = performUpload(
+      owner,
       files,
       name,
       (...progress) => {
@@ -98,6 +100,7 @@ export async function uploadMaterial(
   }
 }
 async function performUpload(
+  owner: string,
   files: UploadFile[],
   name: string,
   onProgress: (done: number, total: number, label: string) => void,
@@ -117,7 +120,11 @@ async function performUpload(
     ? await visionSession(resumeId, signal)
     : await request<VisionSession>(
         "/api/vision/sessions",
-        { ...json("POST", { name: name.trim() || "New material" }), signal },
+        {
+          ...json("POST", { name: name.trim() || "New material" }),
+          signal,
+          owner,
+        },
         true,
       );
   if (!session.id) throw new Error("Your upload could not be opened.");
@@ -125,6 +132,8 @@ async function performUpload(
   await onSession?.(session.id);
   if (resumeId && !["pending", "uploading"].includes(session.status))
     return session.id;
+  if ((await supabase?.auth.getSession())?.data.session?.user.id !== owner)
+    throw Error("Your account changed. Reopen your upload.");
   await transferUpload(session.id, files, onProgress, signal);
   checkCancelled(signal);
   return session.id;

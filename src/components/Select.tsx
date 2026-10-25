@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, FlatList, Pressable } from "react-native";
+import { useState } from "react";
+import { FlatList, Pressable } from "react-native";
 import ChevronDown from "lucide-react-native/icons/chevron-down";
 import Check from "lucide-react-native/icons/check";
 import { useApp } from "../state/AppContext";

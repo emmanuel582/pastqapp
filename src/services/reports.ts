@@ -22,7 +22,7 @@ export async function syncReports(owner: string) {
       const { owner: _, ...input } = report;
       const remote = await request<Partial<QuestionReport>>(
         "/api/question-reports",
-        json("POST", input),
+        { ...json("POST", input), owner },
         true,
       );
       await records.write(owner, "report", report.id, {
@@ -33,7 +33,7 @@ export async function syncReports(owner: string) {
     }
   const remote = await request<{ items: QuestionReport[] }>(
     "/api/question-reports",
-    {},
+    { owner },
     true,
   );
   for (const report of remote.items || [])
