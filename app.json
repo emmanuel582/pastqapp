@@ -31,7 +31,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
       },
-      "versionCode": 14,
+      "versionCode": 15,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

@@ -27,6 +27,17 @@
         "FOCALPOINT_EAS_PROJECT_ID": "6428833a-bccf-43b0-b02d-5ddc9225336a",
         "EXPO_PUBLIC_DESIGN_PREVIEW": "0"
       }
+    },
+    "production-android": {
+      "extends": "production",
+      "environment": "production",
+      "credentialsSource": "local",
+      "autoIncrement": false,
+      "env": {
+        "FOCALPOINT_EAS_OWNER": "wealthdigitals",
+        "FOCALPOINT_EAS_PROJECT_ID": "6428833a-bccf-43b0-b02d-5ddc9225336a",
+        "EXPO_PUBLIC_DESIGN_PREVIEW": "0"
+      }
     }
   }
 }

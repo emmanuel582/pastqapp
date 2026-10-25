@@ -1,0 +1,8 @@
+<en-GB>
+Internal test release of focalPoint.
+- Practise downloaded questions offline.
+- Upload and review your own question papers.
+- Review answers and topic results.
+- Use the calculator and writing board.
+- Receive study reminders and upload alerts.
+</en-GB>
