@@ -3,7 +3,7 @@
     "name": "FocalPoint",
     "slug": "focalpoint",
     "scheme": ["focalpoint", "pastq"],
-    "version": "1.0.11",
+    "version": "1.0.12",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -28,7 +28,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#151515"
       },
-      "versionCode": 16,
+      "versionCode": 17,
       "googleServicesFile": "./google-services.json",
       "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
     },
@@ -85,7 +85,8 @@
         }
       ],
       "@bacons/apple-targets",
-      "expo-background-task"
+      "expo-background-task",
+      "./plugins/withOptionalHardware.cjs"
     ],
     "experiments": {
       "reactCompiler": true

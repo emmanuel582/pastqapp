@@ -180,3 +180,13 @@ Owner explicitly approved free download with future paid features. Console prici
 Build 952e5052-6454-474b-9d73-bb047f22c2c1 finished successfully. Version 1.0.11/code 16, package com.wealthconsort.focalpoint, artifact HEAD 200, 77,774,459 bytes. Actual signed binary passed bundletool validation, expected certificate, target SDK 36, release/non-debuggable, all 64-bit ELF load alignments ≥16 KB and enabled PAGE_ALIGNMENT_16K. No SYSTEM_ALERT_WINDOW, AD_ID or READ_MEDIA_IMAGES/VIDEO permissions remain. Full public static evidence: store/android-1.0.11-16-verification.json. Physical 16 KB/device, OAuth, background transfer and real push acceptance remain pending for this new identity.
 
 VPS optional EXPO_ACCESS_TOKEN is not configured; its per-device push requests can reach both Expo project identities without old-account access-token scoping. The approved reviewer credentials/instructions are saved privately in Play Console; optional additional Google/partner-device feedback access was disabled. Privacy URL saved in Console. Matching APK build queued: 6ba6b522-4961-41e8-add3-df7b93393716.
+
+## Chromebook compatibility update — 26 October 2026
+
+Google Play Device catalog confirms that some Chromebooks are unsupported in the active closed Alpha because version 1.0.11 (16) implicitly requires `android.hardware.camera`. The CAMERA permission alone implies a rear-facing camera unless explicitly overridden.
+
+Android 1.0.12 (17) now declares camera, autofocus, flash and touchscreen features optional, enables a resizable main activity, and retries with the front camera when the rear camera cannot open. The production AAB retains all four Android ABIs. This widens eligible devices; it does not override minimum Android versions, device certification, country/account eligibility or managed-device restrictions.
+
+Validation: strict TypeScript and all 148 mobile tests pass. Expo's final Android manifest introspection confirms the optional hardware declarations and resizable, unrestricted-orientation activity. A cloud build and Play processing are still required before current testers receive this fix. Physical Dell Chromebook 3100 installation and camera acceptance remain pending.
+
+Private feedback is provided from the enrolled tester's Android Play Store app, not a guaranteed browser feedback URL. Email to wealthconsort@gmail.com remains a valid supported reporting channel. Google does not publish a daily-minutes requirement or its complete tester-engagement scoring method.

@@ -14,6 +14,7 @@ export default function MaterialCamera({
 }) {
   const [permission, requestPermission] = useCameraPermissions(),
     [ready, setReady] = useState(false),
+    [facing, setFacing] = useState<"back" | "front">("back"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     ref = useRef<CameraView>(null),
@@ -44,13 +45,19 @@ export default function MaterialCamera({
       <View style={{ flex: 1, backgroundColor: "#111" }}>
         {permission?.granted ? (
           <CameraView
+            key={facing}
             ref={ref}
             style={{ flex: 1 }}
-            facing="back"
+            facing={facing}
             onCameraReady={() => setReady(true)}
-            onMountError={() =>
-              setError("The camera could not open. Choose a photo instead.")
-            }
+            onMountError={() => {
+              setReady(false);
+              if (facing === "back") {
+                setFacing("front");
+              } else {
+                setError("The camera could not open. Choose a photo instead.");
+              }
+            }}
             active={!busy}
           />
         ) : (
