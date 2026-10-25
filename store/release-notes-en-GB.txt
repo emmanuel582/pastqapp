@@ -1,5 +1,5 @@
 <en-GB>
-Internal test release of FocalPoint CBT.
+Closed test release of FocalPoint CBT.
 - Practise downloaded questions offline.
 - Upload and review your own question papers.
 - Review answers and topic results.

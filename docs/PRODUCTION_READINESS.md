@@ -2,6 +2,21 @@
 
 Updated 25 October 2026. Scope: separate mobile app and its VPS overlay. Original web source is not edited.
 
+## Current closed-test preparation - 25 October 2026
+
+This section supersedes historical build/package/draft status recorded further below. Separate mobile project only; original web source remains untouched.
+
+- FocalPoint CBT, Wealth Consort, wealthconsort@gmail.com. Correct Android identity com.wealthconsort.focalpoint, 1.0.11/code 16, source 8ba777d.
+- AAB 952e5052-6454-474b-9d73-bb047f22c2c1 and APK 6ba6b522-4961-41e8-add3-df7b93393716 both FINISHED. Full AAB static verification passed (store/android-1.0.11-16-verification.json). Mobile tests 146/146; TypeScript and Android/iOS production JS exports passed. iOS 1.0.11 has not been signed/built.
+- Owner authorised downloading only this AAB for Play upload. Downloaded SHA-256 matches the original audited bundle; ignored local file .qa/play-release/focalpoint-1.0.11-16.aab. Google accepted version 16 (1.0.11), target SDK 36, and the release preview shows Ready to release, with no blocking errors shown. Google estimates 20.1 MB for a new install; per-device delivery differs from the 77.8 MB upload bundle.
+- All app-content declarations are actioned. Intended ages 13-15, 16-17 and 18+; Data safety saved with actual account, upload, study and messaging identifiers; IARC completed (Generic 12+, ESRB Everyone 10+, PEGI parental guidance). Content ratings do not certify production readiness.
+- Listing FocalPoint CBT is ready to send for review, including six actual 800x1280 Android screenshots. Owner-confirmed AI mascot screenshot is individually labelled. Exact copy is in store/listing-en-GB.json; relevant exam names distinguish existing downloadable banks from user-provided papers. Four clean captures at 1080px or more on each side remain an asset improvement for enhanced promotion.
+- Closed Alpha track 4698960041490294754: Nigeria only for testing, existing 15-person list selected, feedback wealthconsort@gmail.com, actual release notes saved. Worldwide production availability is requested for after production access; it is not yet configured or publicly launched.
+- Public health, privacy, deletion-request and support routes returned 200 in fresh checks. Policies name Wealth Consort and ages 13+. Dedicated confirmed reviewer access is saved privately in Console; keep it active.
+- The closed-test release and 14 prepared changes were sent for review; Console confirms Changes in review with automated quick checks in progress. Pending: successful Google checks/review, closed-test availability and 12 continuous opted-in testers for 14 days with genuine engagement/feedback. The clock has not started merely because the release was submitted. No public production release was submitted; do not promise approval.
+- Public-production evidence still needed: operational account-deletion fulfilment, latest new-package physical OAuth/push/background/recovery/account-isolation checks and real 16 KB runtime. Detailed cloud topic sync still lacks the Supabase schema; no complete detailed cross-device sync is advertised. Known npm advisories remain. The single VPS is not million-user load certified.
+
+Detailed current Console answers and actual limits: store/PLAY_CONSOLE_ANSWERS.md. Older chronological sections below are historical, not current release status.
 ## Delivery order
 
 1. Fix results layout, neutral overview, direct Question 1 review and outcome grid.
@@ -153,3 +168,15 @@ Console listing title/description saved as draft. Education category and wealthc
 The 15 people added to internal testing are not closed-test opt-ins. Console showed 0 closed testers and no active closed release. The 14-day clock has not started. Use store/CLOSED_TEST_PLAN.md and the empty evidence log for actual results; Google retains production-access approval discretion.
 
 Remaining gates include the signed corrected-package binary, actual device acceptance, real listing screenshots, Console content/data declarations, provider data handling, operational deletion, detailed analytics schema, known dependency advisories, and closed-test access. The single VPS has no million-user concurrency certification. Public policy source now names Wealth Consort and the 13+ audience; live replacement text still requires deployment verification.
+
+### Live policy and current store drafts
+
+The public Wealth Consort/13+ policy was deployed as focalpoint-api:policy-20261025 after checking zero active jobs/running sessions. The 28 pending upload records were older idle drafts, not processing work. Exact previous policy backup: /opt/pastq/backups/focalpoint-policy-20261025/legal-content.json; prior image retained as pastq-api:rollback-policy-20261025. API health, privacy, terms and account-deletion routes returned HTTP 200 after restart. Privacy contains Wealth Consort and the age-13 audience text.
+
+Owner explicitly approved free download with future paid features. Console pricing was changed to Free and saved. Default listing draft includes the real 512px icon and 1024×500 feature graphic; real phone screenshots remain pending. Android corrected-package store build queued as 952e5052-6454-474b-9d73-bb047f22c2c1. Source commit 8ba777d. Both Android and iOS production exports passed; no claim is made that iOS 1.0.11 has been signed/built.
+
+### Correct-package AAB verified
+
+Build 952e5052-6454-474b-9d73-bb047f22c2c1 finished successfully. Version 1.0.11/code 16, package com.wealthconsort.focalpoint, artifact HEAD 200, 77,774,459 bytes. Actual signed binary passed bundletool validation, expected certificate, target SDK 36, release/non-debuggable, all 64-bit ELF load alignments ≥16 KB and enabled PAGE_ALIGNMENT_16K. No SYSTEM_ALERT_WINDOW, AD_ID or READ_MEDIA_IMAGES/VIDEO permissions remain. Full public static evidence: store/android-1.0.11-16-verification.json. Physical 16 KB/device, OAuth, background transfer and real push acceptance remain pending for this new identity.
+
+VPS optional EXPO_ACCESS_TOKEN is not configured; its per-device push requests can reach both Expo project identities without old-account access-token scoping. The approved reviewer credentials/instructions are saved privately in Play Console; optional additional Google/partner-device feedback access was disabled. Privacy URL saved in Console. Matching APK build queued: 6ba6b522-4961-41e8-add3-df7b93393716.

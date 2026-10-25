@@ -1,251 +1,158 @@
-# FocalPoint CBT — Play Console submission pack
+# FocalPoint CBT - Play Console release pack
 
-Updated 25 October 2026 from the actual mobile source and current Google Play documentation. This is a field-by-field draft, not a declaration that release gates have passed. Do not submit statements marked HOLD until they are true.
+Verified 25 October 2026. This records actual saved settings and remaining release gates; it is not a promise of Google approval.
 
-## App creation and listing
+## Release identity
 
-| Field            | Answer                                                                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| App name | FocalPoint CBT |
-| Developer/company | Wealth Consort |
-| Default language | English (United Kingdom), if that is the language used for support                                                                               |
-| App or game      | App                                                                                                                                              |
-| Category         | Education                                                                                                                                        |
-| Download price   | Free at launch                                                                                                                                   |
-| Contact email    | wealthconsort@gmail.com                                                                                                                          |
-| Website          | Do not enter usefocalpoint.com; the owner has not purchased it yet. A website is optional where Console permits it.                              |
-| Package name | com.wealthconsort.focalpoint — matches the existing Wealth Consort Play app. Previous com.pastq.study builds cannot be uploaded to this app. |
-| Tags             | Choose relevant available Console tags such as Education, Exam preparation or Study tools; the exact available choices are controlled by Google. |
+| Field | Value |
+| --- | --- |
+| Play title | FocalPoint CBT |
+| In-app brand | FocalPoint |
+| Publisher | Wealth Consort |
+| Support | wealthconsort@gmail.com |
+| Package | com.wealthconsort.focalpoint |
+| Version | 1.0.11 / code 16 |
+| Category | Education |
+| Default language | English (United Kingdom), en-GB |
+| Price | Free download; no paid features implemented in this release |
+| Intended audience | Secondary-school students and older: 13-15, 16-17, 18+ |
+| Closed-test country | Nigeria, as confirmed by the owner |
+| Public-launch scope | Worldwide where Google Play permits distribution; configure the production track after access is granted |
 
-### Short description (within 80 characters)
+Canonical listing text: listing-en-GB.json. Title 14 characters; short description 70; full description 1,479. Search terms describe real functionality without repetitive keywords or claims of official endorsement. WAEC/JAMB UTME banks are available from the VPS. Post-UTME, JUPEB, IJMB, SAT and 100-level study are explicitly described as uses for papers students provide, not existing built-in banks. Question banks are not embedded in the installer.
 
-Practise exam questions offline, review topics and study your own papers.
+## Verified Android builds
 
-### Full description (within 4,000 characters)
+- Play AAB: https://expo.dev/accounts/wealthdigitals/projects/focalpoint/builds/952e5052-6454-474b-9d73-bb047f22c2c1
+- Direct-install APK: https://expo.dev/accounts/wealthdigitals/projects/focalpoint/builds/6ba6b522-4961-41e8-add3-df7b93393716
+- Both finished, version 1.0.11/code 16, source commit 8ba777d. AAB 77,774,459 bytes; APK 61,108,976 bytes.
+- Signed AAB passed bundletool validation, target SDK 36, non-debuggable release check, expected signing certificate, all 64-bit ELF load alignments at least 16 KB and enabled PAGE_ALIGNMENT_16K.
+- No SYSTEM_ALERT_WINDOW, AD_ID or READ_MEDIA_IMAGES/VIDEO permissions in the audited AAB. See android-1.0.11-16-verification.json.
+- Mobile checks: 146 tests, strict TypeScript and Android/iOS production JS exports passed. Physical acceptance of every flow on the new Android identity and a real 16 KB device remains to be recorded.
+- The owner expressly authorised this AAB's laptop download for Play upload. Its SHA-256 matches the original audited bundle. Local file .qa/play-release/focalpoint-1.0.11-16.aab is ignored by Git. No APK/IPA was downloaded in this step.
+- Previous com.pastq.study Android builds cannot update this Play entry. Existing iOS signing/push identity remains separate; no iOS 1.0.11 signed build is claimed.
 
-focalPoint helps you turn your questions into focused study.
+## Saved listing and assets
 
-Practise downloaded exam papers offline, prepare your own materials, and review the topics that need more attention.
+The default listing is ready to send for review, not publicly launched. Public name/contact/category and free-download price are saved. Icon: icon-512.png (512x512). Feature graphic: feature-graphic-1024x500.png.
 
-STUDY YOUR WAY
-• Browse available papers, including WAEC and UTME materials.
-• Download the subjects and papers you want to keep on your phone.
-• Choose subjects, topics and timed practice settings.
-• Answer written/theory questions with their original numbered parts.
+The owner supplied 15 genuine installed-Android screenshots in C:\Users\DELL\Downloads\newset\kk. Six unmodified JPEGs, each 800x1280, were uploaded and saved:
 
-WORK THROUGH THE QUESTION
-• Swipe between questions without leaving your exam.
-• Use the movable calculator and expandable writing board.
-• Keep your working with each question so you can revisit your reasoning.
-• Resume saved practice sessions.
+1. Image (6).jpg - Chemistry practice.
+2. Image (5).jpg - Subject/year/paper/topic selection.
+3. Image (14).jpg - Answer review and question grid.
+4. Image (1).jpg - Library.
+5. Image (13).jpg - Upload intake.
+6. Image.jpg - Completed offline download.
 
-LEARN FROM YOUR RESULTS
-• Review answers from the first question or jump to a question number.
-• See correct, wrong and unanswered questions in answer review.
-• Explore your topic results and choose what to practise next.
+Screenshots containing the Android screenshot toolbar were excluded. All supplied screenshots include a green floating phone control. These files do not prove their build number or every device test. The owner confirmed the mascot was AI-created; only Image.jpg, which contains the mascot, was labelled as AI-created/edited artwork in the store asset declaration. The screenshots remain real captures.
 
-BRING YOUR OWN MATERIALS
-Upload question photos, PDFs, Word or PowerPoint documents, or text; review the prepared questions once and save them for practice. Uploading and question extraction require an internet connection.
+The supplied 800px-wide screenshots were accepted by the listing editor but do not meet its enhanced-promotion guidance of at least four screenshots with each side at least 1080px. Obtain clean original high-resolution captures for a stronger public launch. Do not invent screens, results, reviews or ranking claims.
 
-DOWNLOADED PAPERS WORK OFFLINE
-New downloads, sign-in, uploads and account synchronisation require internet access. Previously saved papers and working can be used offline. Some features depend on available source content; written answers are not automatically marked.
+## App-content declarations saved
 
-focalPoint is an independent study app and is not affiliated with or endorsed by WAEC, JAMB or other examination bodies.
+All required app-content items are actioned; the Need attention tab reports no outstanding declarations.
 
-Support: wealthconsort@gmail.com
+| Declaration | Saved answer |
+| --- | --- |
+| Ads | No |
+| Advertising ID | No; actual AAB checked |
+| Government | No |
+| Financial features | No financial features |
+| Health features | No health features; school Biology is not a medical service |
+| App access | Email/password reviewer account and instructions supplied privately |
+| Target audience | 13-15, 16-17, 18 and over |
+| Privacy | Public HTTPS URL below |
+| Data safety | Completed using actual collection/sharing map below |
+| Content ratings | IARC completed; actual ratings below |
 
-Do not add claims of guaranteed scores, official endorsement, a million-user capacity, free lifetime access, or material you do not have the rights to distribute.
+The owner confirmed they collated and are authorised to distribute the present banks. Retain ownership/licence evidence; this is not independent legal verification.
 
-## App content declarations
+## IARC outcome and basis
 
-| Console question                       | Current app answer                                                                                                                                                                                                        |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contains ads?                          | No advertising SDK or ad placements were found. Select No for the current build, provided administrator campaigns are not used to serve third-party ads.                                                                  |
-| Access restrictions?                   | Some or all functionality is restricted by sign-in. Supply a working, confirmed, reusable email/password account.                                                                                                         |
-| News or magazine app?                  | No. This is study/practice software.                                                                                                                                                                                      |
-| Government app?                        | No. Do not claim to represent an examination board or government body.                                                                                                                                                    |
-| Health features?                       | No health features. Biology exam questions are not a medical service. Reassess if medical advice or health tracking is added.                                                                                             |
-| Financial features?                    | My app does not provide financial features. Future study subscriptions are not a banking or money-transfer feature.                                                                                                       |
-| COVID-19 tracing/status?               | No, if this legacy form is shown.                                                                                                                                                                                         |
-| Advertising ID?                        | No advertising-ID use was found in app code. Verify the final AAB merged manifest and SDK behaviour before final submission.                                                                                              |
-| External downloads of executable code? | No such feature was found; question-paper downloads are data, not app updates.                                                                                                                                            |
-| Real-money gambling or contests?       | No.                                                                                                                                                                                                                       |
-| Account creation?                      | Yes: email/password and Google OAuth.                                                                                                                                                                                     |
-| Data deletion?                         | The native Help & privacy page has an account deletion request path. Public deletion page and operational handling must be verified before declaring complete. Removing a session or signing out is not account deletion. |
+The owner explicitly authorised IARC Terms of Use acceptance. Category: All Other App Types; contact wealthconsort@gmail.com. Completed questionnaire and generated ratings saved in Console on 25 October 2026.
 
-## Target audience — owner confirmed
+- Brazil: All ages.
+- North America / ESRB: Everyone 10+.
+- Europe / PEGI: Parental guidance.
+- Germany / USK: Ages 6+, Contents for Different Age Groups.
+- IARC Generic / rest of world: 12+.
+- Russia and South Korea: 12+.
 
-The owner confirmed the app is designed for secondary-school students and older learners aged 13+. Select 13–15, 16–17 and 18 and over. Do not select under-13 groups or claim Families/Teacher Approved status. The public privacy policy now describes this intended audience. Age selection is not a promise that every question bank suits every student; review the actual IARC content categories.
+The app's intended audience remains 13+ even where a territory's content rating is lower. Ratings are not production approval and rating authorities may revise them.
 
-## Content rating (IARC)
+Questionnaire answers: no ratings-relevant content embedded in the initial app package; no native public user chat/sharing; yes downloadable online content. Existing public questions include textual violence, non-scientific literary sexual references, mild/moderate offensive language, discriminatory quotations and drug references. Access to these is not the app's primary purpose. Visual non-scientific sexual material and visual violence were not found in the targeted illustration checks; scientific reproductive-system diagrams were excluded under the form's explicit scientific-setting exception. No sexual expletives were found in the exact lexical scan. No age-restricted product sales, location sharing, current purchases, rewards/NFTs or web-browser/search-engine feature. Primarily educational: yes.
 
-- Contact email: wealthconsort@gmail.com.
-- Questionnaire app type: usually All other app types for an education utility; use the category actually offered by Console.
-- Users cannot chat, message or publicly interact with other users in the current student UI. Private uploads and question reports are not a public social network.
-- No unrestricted web-browser feature, live location sharing, gambling, digital currency trading or random-item purchases were found.
-- No paid products are implemented in the current build. Update the rating answers when purchases are added.
-- Do not answer No indiscriminately to violence, sex/nudity, drugs, language or frightening content. Review all distributed questions and diagrams, particularly biology/reproduction/anatomy and historical or literary passages, and answer each question exactly. Educational context does not automatically mean the content is absent.
-- Google/IARC assigns the rating; do not enter an invented rating such as Everyone or 3+ as if already awarded.
+Audit scope: four public banks, 97,254 questions total (WAEC theory 19,838; WAEC CBT 33,369; UTME 42,148; Chemistry Remix 1,899). Keyword/context checks plus targeted illustration inspection, not a claim of exhaustive manual review of every question. Private student uploads were not read. No question or diagram was added, removed or submitted as a store screenshot during this audit. Revisit ratings if the distributed catalogue or app features change.
 
-## Data safety — actual app mapping
+## Data safety saved mapping
 
-### Top-level answers
+Collection/sharing: yes. Encrypted in transit: yes (HTTPS). Account creation: username/password and OAuth. Account-deletion request URL supplied. Optional partial cloud-data deletion without account deletion: no. No independent security-audit or UPI badge claimed.
 
-- Does the app collect or share user data? YES. Offline practice does not make the whole app data-free.
-- Encrypted in transit? HTTPS is used for API/auth/provider traffic; HTTP remote question images were removed. Verify all final build endpoints before selecting Yes.
-- Account creation methods: email/password; OAuth (Google).
-- Independent security review? NO qualifying independent audit has been completed.
-- Delete account: YES only after the in-app request path, public URL and real support handling are verified.
-- Delete some data without deleting the account: local session/download removal exists. Do not claim every cloud copy is erased until the deletion/outbox checks pass.
+| Data type | Collected | Shared | Optional | Purposes |
+| --- | --- | --- | --- | --- |
+| Name | Yes | No | No | App functionality, account management |
+| Email | Yes | No | No | App functionality, account management |
+| User IDs | Yes | No | No | App functionality, account management, fraud/security/compliance |
+| Phone number | Yes | No | Yes | App functionality, account management |
+| Other personal info | Yes | No | No | App functionality, personalisation, account management; includes required undergraduate-status choice |
+| Photos | Yes | Yes | Yes | App functionality for collection and sharing |
+| Files and docs | Yes | Yes | Yes | App functionality for collection and sharing |
+| App interactions | Yes | No | No | App functionality, personalisation |
+| Other user-generated content | Yes | Yes | Yes | App functionality for collection and sharing |
+| Device or other IDs | Yes | No | No | App functionality, developer communications |
 
-### Data types and purposes
+All listed types: not processed only ephemerally. Optional phone, uploads and question text can be omitted; users still create and use accounts. Messaging installation identifiers are required because Firebase automatic initialisation can collect identifiers before notification permission is granted. Notification display permission remains optional.
 
-The classifications below come from app code. Required/optional and sharing answers need a final check of the shipped SDK configuration and service-provider arrangements.
+Uploaded photos/documents/text are disclosed as shared because extraction involves OpenRouter and model providers whose relevant retention/processing exceptions have not been fully verified. Do not claim blanket no sharing, zero retention or no training. Supabase and messaging service providers process account/notification data for the service; no advertising SDK or behavioural analytics SDK was found. Search filters and normal drawing strokes/written working remain local; user-requested exports are separate. No location, contacts, audio, finance, installed-app list or health-data collection was invented.
 
-| Type                                        | Why it is used                                                                                       | Control / purpose                                                                                                                                                                                                                         |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Personal info → Name                        | Email signup and Google profile; Supabase account/profile                                            | Required in email signup; Account management and App functionality                                                                                                                                                                        |
-| Personal info → Email address               | Sign-in, authentication and account requests                                                         | Required; Account management and App functionality                                                                                                                                                                                        |
-| Personal info → User IDs                    | Supabase identity and owner-bound progress/materials                                                 | Required; Account management and App functionality                                                                                                                                                                                        |
-| Personal info → Phone number                | Optional profile field supported by the profile screen and metadata update                           | Optional if exposed/used; Account management. Remove this row only if the shipped build truly cannot collect it.                                                                                                                          |
-| Photos and videos → Photos                  | Student-uploaded question photographs                                                                | Optional; App functionality                                                                                                                                                                                                               |
-| Files and docs                              | Uploaded PDFs/text documents                                                                         | Optional; App functionality                                                                                                                                                                                                               |
-| App activity → Other user-generated content | Pasted question text and student-written reports                                                     | Optional; App functionality                                                                                                                                                                                                               |
-| App activity → App interactions             | Answers selected, session results, question/topic outcomes and practice timing                       | Automatic when cloud synchronisation runs; App functionality, Personalisation; Analytics where used to analyse learning/activity                                                                                                          |
-| Device or other IDs                         | Push tokens and installation identifiers; Firebase messaging installation behaviour must be verified | Notifications are optional at app level; verify Firebase automatic initialisation before declaring collection optional. App functionality and Developer communications; add Advertising or marketing if using the channel for promotions. |
-| Personal info → Other info, if applicable   | Chosen school/exam, undergraduate status and study preferences                                       | Optional details, except required onboarding selections; Personalisation and App functionality                                                                                                                                            |
-
-Do not add location, contacts, microphone/audio, SMS, call logs, installed-app lists, financial information or payment history merely because the app uses a camera or internet. No such access was found in the app feature audit. IP address processing must be included under the relevant actual use (for example approximate location only if location is inferred); do not invent geolocation use.
-
-Crash logs/diagnostics are not automatically declared solely because local error messages exist. Audit any enabled production telemetry and provider SDKs separately.
-
-### Ephemeral processing
-
-Account information, uploaded papers and stored study outcomes are retained, so answer No to ephemeral processing for those types. Do not describe stored uploads as memory-only processing. Purely local drawing-board strokes and written answers are not transmitted by the normal progress-sync payload; user-selected backup/export destinations are separate.
-
-### Sharing — HOLD on a blanket “No data shared” claim
-
-The VPS, Supabase, Expo/Firebase/Apple and extraction providers participate in the service. Google has a service-provider exception, but it applies only where the provider processes data on the developer’s behalf under the relevant conditions.
-
-OpenRouter routes uploaded content to model providers with differing retention/training practices. Until the selected provider settings and applicable arrangements are verified, do not select blanket No sharing. Uploaded Photos, Files/docs and Other user-generated content need a specific provider/sharing decision. Do not claim zero retention, no model training or end-to-end encryption without proof.
-
-## Privacy and deletion URLs
-
-Prepared routes on the existing HTTPS API host (must return public HTML with no login before submission):
+## Public policy and reviewer access
 
 - Privacy: https://76.13.110.6.nip.io/legal/privacy
 - Account deletion: https://76.13.110.6.nip.io/legal/delete-account
+- Support: https://76.13.110.6.nip.io/legal/support
 - Terms: https://76.13.110.6.nip.io/legal/terms
 
-These routes returned public HTML successfully during the 25 October checks. The revised Wealth Consort/13+ policy text still needs deployment verification. The support address is wealthconsort@gmail.com. A future custom domain can replace them after it is owned, secured and reachable.
+API health, privacy, deletion and support returned 200 in fresh checks. Public policies identify FocalPoint / Wealth Consort and ages 13+. A reachable request page does not prove fulfilment of account deletion: the owner must monitor requests, verify ownership and delete associated provider-held data with disclosed lawful retention exceptions. Do not invent a deletion deadline.
 
-Account deletion must cover the account and associated cloud profile/progress/private uploads; an email link alone does not prove the support process fulfils requests. Maintain an authenticated ownership-verification process, remove associated provider-held data as applicable, and disclose legitimate retention exceptions. Do not publish an invented deletion deadline.
+Dedicated reusable reviewer account was email-confirmed and passed password login/authenticated API checks. Credentials are private in ignored .qa/play-reviewer-account.json and already saved in Play Console; never put the password in Git, public screenshots or listing copy. Keep this account active. Optional additional Google/partner device-feedback access is off. No fabricated student questions/progress were seeded.
 
-## Reviewer access instructions — copy after supplying private credentials
+## Closed test and production access
 
-Instruction title: FocalPoint CBT reviewer access.
+Track: Closed testing - Alpha, ID 4698960041490294754. Existing list FocalPoint Internal Tester (15 people) is now selected for this closed track. Feedback: wealthconsort@gmail.com. Country: Nigeria. Draft: FocalPoint CBT 1.0.11 (16) - Closed test. Google accepted the AAB, the release preview showed Ready to release without blocking errors, and all 14 prepared changes were sent for review. Console now shows Changes in review while automated quick checks complete. No public production release was submitted. Google estimates a 20.1 MB new-install download for the displayed delivery configuration; this is not a universal per-device size guarantee.
 
-The dedicated email/password account was created and verified on 25 October: confirmed email, successful password login and authenticated VPS access. Credentials are in the ignored private local file `.qa/play-reviewer-account.json`; enter them in Console App access, never in public listing text or Git. Keep this account active throughout review.
+Tester opt-in URL (not active until the release is published): https://play.google.com/apps/testing/com.wealthconsort.focalpoint
 
-Use the email and password supplied privately in this App access section. The account must be email-confirmed, available without a one-time code, and kept active throughout review. Do not require reviewers to use their personal Google account.
+The 14-day clock has not started merely because a draft, email list or sideloaded APK exists. After Google makes the closed release available, at least 12 testers must opt in continuously for 14 days and use the app. Retain actual dated feature tests, issues, feedback, fixes and retests using CLOSED_TEST_PLAN.md and closed-test-log.csv. No engagement records or production-access answers have been fabricated.
 
-1. Open focalPoint and select Sign in.
-2. Sign in with the supplied email and password.
-3. If onboarding appears, choose the learner option and a study focus.
-4. Open Library, select an available paper and download a subject/paper.
-5. Start practice, answer questions, open the calculator/writing board, then finish.
-6. Select Review answers to open Question 1; use question numbers to inspect outcomes.
-7. Open Progress or Past sessions to review completed practice.
-8. Upload a permitted PDF/photo/text file, review the prepared questions and save the material.
-9. Open Preferences → Help & privacy for policy and account deletion information.
+Apply for production access with real recruitment, usage, feedback and readiness evidence after the qualifying test. Google can request more testing; 14 days is not an approval guarantee. Once production access is granted, configure worldwide availability as the owner requested rather than copying the closed-test Nigeria restriction blindly.
 
-Internet is needed for first sign-in, new downloads and upload processing. Downloaded practice works offline. No subscription or payment is required in this build. Provide real, repeatable access to all reviewable functionality; do not substitute a static demo or hide broken features.
+## Discovery and future monetisation
 
-## Graphics
+The app title is FocalPoint CBT. Descriptions naturally cover CBT practice, offline study, JAMB UTME and WAEC, with explicitly user-supplied papers for other exams. Education category and the saved Education, Study guide and Test preparation tags, true screenshots, ratings and support help present the app accurately. Existing external-marketing opt-in remains enabled; this is not a paid ad campaign or guarantee of promotion. Avoid keyword stuffing, competitor impersonation, fake reviews, guaranteed ranking and claims that Google recommends the app. Search relevance, technical quality and genuine user response affect discovery. Use search/acquisition reports and Android vitals after launch; translate only supported, accurately reviewed content.
 
-- App icon: store/icon-512.png, 512×512 PNG, opaque.
-- Feature graphic: 1024×500 JPEG/opaque PNG; create with the real focalPoint branding.
-- Minimum two real screenshots. Recommended set: library, timed question with writing board, answer review, topic progress, uploads. Use actual app screens without synthetic scores or unsupported claims. Up to eight per device type.
-- A promotional video is optional.
+Free download is owner-approved. Future paid digital question-bank access generally requires Google Play Billing unless a specific country/programme exception applies. Flutterwave is not a blanket substitute for digital purchases inside a Play-distributed app. No billing SDK, payment collection or paid access is implemented or claimed now.
 
-## New personal account: closed test and production access
+## Remaining evidence and release gates
 
-Before production access, at least 12 testers must remain opted in continuously for 14 days. Real engagement matters. A sideloaded EAS APK does not count as a Play closed-test opt-in. Complete account/identity and Android device verification when Console requests it. Then distribute the AAB through Play’s testing track.
+- Google quick checks and review remain external gates. The closed-test release and 14 prepared changes have been submitted; Console shows Changes in review. Check the result before distributing the opt-in link as active.
+- Actual new-package phone acceptance: sign-in/OAuth return, offline practice, interrupted/background transfers, notification delivery, account isolation and 16 KB runtime.
+- Monitor and fulfil account-deletion requests; verify the operational process.
+- Detailed topic cloud sync still needs missing Supabase fields; local topic analysis and bounded legacy summary sync are not complete detailed cross-device synchronisation.
+- Known dependency audit findings remain; no clean security audit or million-user load certification is claimed. Single-VPS architecture has not been certified for that scale.
+- Public-launch enhancements: clean high-resolution screenshots, worldwide production targeting after access, real tester evidence and fixes.
 
-Google’s production-access form commonly asks:
+## Primary references
 
-1. How did you recruit testers? Give the real channels and relationships used. Do not invent recruitment or tester counts.
-2. How easy was recruitment? Select the real experience.
-3. What engagement did you receive? State actual features tested, devices and frequency, supported by records.
-4. What feedback did testers provide and how was it collected? Summarise real reports and the channel used.
-5. Who is the intended audience? Describe the actual learner age groups/content design (secondary-school students and older, ages 13+).
-6. How does the app provide value? Suggested answer: “focalPoint combines offline question practice, imported study materials, per-question working and topic-level review so students can practise and understand where they need more work.”
-7. How many installs do you expect in the first year? Choose your genuine estimate; there is no evidence-based number to fabricate here.
-8. What changes did you make after the test? List changes actually made during the closed test. Existing fixes are not proof of a future test.
-9. How did you decide it was ready? Use measured stability, complete critical journeys, feedback resolution and release-gate results. Passing unit tests alone is insufficient.
-
-## Build and launch sequence
-
-1. Finish the provider/deletion/schema/access gates in docs/PRODUCTION_READINESS.md.
-2. Verify Android target SDK and manifest. The last successful 1.0.7 build targeted API 36, matching the current new-app minimum.
-3. Use an Android App Bundle (.aab), not the preview APK. Preserve the signing key/package identity and enable Google Play App Signing.
-4. Validate the production EAS environment’s API/auth variables. Do not point production at an unverified preview environment or enable fixture paths.
-5. Upload the first AAB manually in Play Console; Expo documents this first-upload requirement before API submission can be used. Follow the local-download restriction agreed with the owner when arranging the transfer.
-6. Complete listing, declarations and restricted-access credentials, then start internal/closed testing.
-7. Run the required genuine closed test, apply for production access, and wait for approval before public rollout.
-
-## Free now, paid later
-
-Keep the download free if the plan is free installation with premium study features later. Google does not let an app offered free later become a paid download under the same package. Future paid digital features/subscriptions generally require Google Play Billing unless a specific policy/program exception applies. Add billing, restore/manage/cancel flows, accurate pricing and updated privacy/Data safety before charging.
-
-## Official sources
-
-- Listing fields: https://support.google.com/googleplay/android-developer/answer/9859152
-- App content: https://support.google.com/googleplay/android-developer/answer/9859455
+- Testing: https://support.google.com/googleplay/android-developer/answer/14151465
+- Store copy and screenshots: https://support.google.com/googleplay/android-developer/answer/13393723
+- Search discovery: https://support.google.com/googleplay/android-developer/answer/4448378
+- Ranking: https://support.google.com/googleplay/android-developer/answer/9958766
+- Metadata: https://support.google.com/googleplay/android-developer/answer/9898842
+- AI assets: https://support.google.com/googleplay/android-developer/answer/17262077
 - Data safety: https://support.google.com/googleplay/android-developer/answer/10787469
+- Firebase disclosure: https://firebase.google.com/docs/android/play-data-disclosure
 - Account deletion: https://support.google.com/googleplay/android-developer/answer/13327111
-- Target audience: https://support.google.com/googleplay/android-developer/answer/9867159
-- Families: https://support.google.com/googleplay/android-developer/answer/9893335
-- Content rating: https://support.google.com/googleplay/android-developer/answer/9859655
-- Reviewer login: https://support.google.com/googleplay/android-developer/answer/15748846
-- Preview graphics: https://support.google.com/googleplay/android-developer/answer/9866151
-- Personal-account testing: https://support.google.com/googleplay/android-developer/answer/14151465
-- API targets: https://developer.android.com/google/play/requirements/target-sdk
-- Future pricing: https://support.google.com/googleplay/android-developer/answer/6334373
+- Audience: https://support.google.com/googleplay/android-developer/answer/9867159
 - Payments: https://support.google.com/googleplay/android-developer/answer/10281818
-- Expo submission: https://docs.expo.dev/submit/android/
-- Extraction provider data practices: https://openrouter.ai/privacy
-
-## Latest verified implementation
-
-- Public privacy URL: https://76.13.110.6.nip.io/legal/privacy (HTTP 200, no sign-in).
-- Public deletion-request URL: https://76.13.110.6.nip.io/legal/delete-account (HTTP 200, no sign-in).
-- Support URL: https://76.13.110.6.nip.io/legal/support (HTTP 200). Support email remains wealthconsort@gmail.com.
-- Upload intake supports JPEG/PNG/WebP/GIF/HEIC/HEIF, PDF, DOCX/DOC, PPTX/PPT, ODT/RTF and TXT/Markdown/JSON. Word/slides convert to PDF. A document is limited to 200 MB (photos 40 MB; text 10 MB), a transfer to 300 MB and PDFs to 1,000 pages; unsupported/encrypted/unreadable material can be rejected with a retry/PDF-copy message. Do not advertise every possible file format.
-- Real PNG, PDF and DOCX extraction and private confirmation passed on the VPS. Native background/resume adapters have tests; actual phone suspension/relaunch checks on 1.0.8 remain pending.
-- New-account summary cloud sync passed with the existing schema. Detailed topic graphs are computed from local attempts; full topic cloud synchronization is queued until the detailed tables exist. Do not advertise complete cross-device working/analytics sync yet.
-- Included original graphic: store/feature-graphic-1024x500.png. Icon: store/icon-512.png. Capture final store screenshots from a real installed build; a browser preview alone is insufficient device evidence.
-
-## Current release identity and evidence — 25 October 2026
-
-Play developer: Wealth Consort; public contact: wealthconsort@gmail.com. Existing Console app ID 4973565716362622149 uses com.wealthconsort.focalpoint. The saved default listing draft is FocalPoint CBT. No rollout has been submitted.
-
-The former 1.0.10/code 15 AAB finished successfully and passed bundletool validation, target SDK 36, signing verification and static 16 KB alignment checks, but its package is com.pastq.study. DO NOT upload it to this Console app.
-
-Replacement candidate: FocalPoint 1.0.11/code 16, com.wealthconsort.focalpoint, production-android profile under wealthdigitals. Firebase app registration is verified. Android uses its new Expo notification project; iOS keeps its existing signing and push identity. A replacement build and binary audit are pending.
-
-The owner confirmed they collated and are authorised to distribute the current question banks. Retain source/licence records in case Google requests proof; this confirmation is not an independent legal verification.
-
-## Closed-test status and evidence
-
-The owner added 15 people to internal testing. Console showed no active closed test and 0 closed-test opt-ins on 25 October. Internal testers, email-list entries and sideloaded installs do not start the required closed-test clock. At least 12 testers must remain continuously opted into a published closed test for 14 days. Keep real engagement and feedback records using `store/closed-test-log.csv` and `store/CLOSED_TEST_PLAN.md`. Never fabricate feedback, tester counts or dates. Approval remains Google’s decision.
-
-## Remaining submission work
-
-- Correct-package signed AAB and physical install/push/background/resume checks.
-- At least two genuine Android screenshots; listing icon/feature graphic and remaining Console fields.
-- Data safety declarations reflecting actual provider handling, including uploaded content sharing unless an applicable exception has been verified.
-- IARC answers based on the distributed content; target ages 13–15, 16–17, 18+.
-- Verify the operational account-deletion procedure, not just its request link.
-- Confirm free-download pricing at launch; add future premium features through the applicable billing policy.
-- Explicit owner review of final declarations before submission/rollout.
+- Privacy of extraction routing: https://openrouter.ai/privacy

@@ -2,6 +2,10 @@
 
 Company: Wealth Consort. Support: wealthconsort@gmail.com. Intended audience: secondary-school students and older, ages 13+.
 
+## Track setup
+
+Closed Alpha track 4698960041490294754 uses Nigeria, the owner-confirmed country of the existing 15 testers. The existing email list is selected, and feedback goes to wealthconsort@gmail.com. Release candidate: com.wealthconsort.focalpoint, 1.0.11/code 16. Production availability should be worldwide where permitted after access is granted. This test setup is not a public launch.
+
 ## Before the clock starts
 
 Upload the correct-package signed AAB, complete the listing and app-content requirements, publish the closed-test release after owner review, and share its opt-in link with authorised testers. Adding email addresses to internal testing is insufficient. Record the date Console first shows at least 12 continuously opted-in closed testers. Maintain 12 or more for 14 continuous days; allow extra time if anyone leaves. Do not claim the existing 15 internal testers already satisfy this.

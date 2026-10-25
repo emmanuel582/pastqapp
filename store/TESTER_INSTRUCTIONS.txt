@@ -1,0 +1,23 @@
+FocalPoint CBT - closed test
+Wealth Consort | wealthconsort@gmail.com
+
+Join after the closed release becomes available:
+https://play.google.com/apps/testing/com.wealthconsort.focalpoint
+
+Use the Google account included in the tester list. Choose Become a tester, then install from Google Play. A direct APK installation alone does not count as joining the Play closed test.
+
+Stay joined for the whole 14-day period and use the app for real study. If you leave the test, your continuous opt-in period starts again when you rejoin.
+
+Try these journeys during the test:
+1. Create an account/sign in and finish setup.
+2. Download a subject and practise it without internet.
+3. Interrupt a download, reconnect and check that it resumes.
+4. Swipe questions, move the calculator and resize the writing board.
+5. Finish a paper, review Question 1 and use the answer grid.
+6. Upload a question photo/PDF/Word document, resolve any flagged items, complete it and practise the saved material.
+7. Reopen saved sessions and check results/topic progress.
+8. Check notifications, support/privacy links and account isolation when signing out.
+
+Report problems to wealthconsort@gmail.com. Include phone model, Android version, app version, what you tapped, what happened and what you expected. Attach screenshots only if they do not reveal private information. Also tell us what worked and what was confusing. Honest feedback is useful; positive reviews are not required.
+
+The 14-day requirement needs at least 12 continuously opted-in testers. Google reviews the actual testing evidence before granting production access; reaching day 14 does not automatically publish the app.
