@@ -117,3 +117,23 @@ Source commit 22f64f2 passed 145 mobile tests, strict TypeScript checks and Andr
 - The existing 1.0.9 APK remains available at build 5607cbbb-a361-43f4-a43c-d0d0d3ed9100; its installer HEAD returned 200. It predates the 1.0.10 audit fixes and must not be described as the audited update.
 
 Successful compilation and installer availability do not close the public-release gates documented above.
+
+## Android build account, 25 October
+
+The owner authorised Android builds under Expo account wealthdigitals. Project @wealthdigitals/focalpoint has ID 6428833a-bccf-43b0-b02d-5ddc9225336a. Source commit baf98be adds an Android preview profile and a validated, opt-in build-ownership override.
+
+The base app.json and its existing notification project ID remain unchanged. The native push service explicitly uses that stable ID; the existing FCM/APNs registrations and iPhone build remain on the original project. This is a separate Android build project, not a transfer of the iPhone/push project. Runtime push delivery on the replacement APK still needs a physical-device check.
+
+Android uses the existing com.pastq.study application ID, version 1.0.10/code 14, public Firebase app configuration and original signing keystore. The locally exported signing files are ignored by Git and excluded from the source archive; EAS receives them through its supported local-credentials channel. Only the three verified public API/Supabase variables and the disabled design-preview flag were copied into the new project's preview environment.
+
+For subsequent Android builds on the authenticated wealthdigitals CLI, use PowerShell:
+
+```powershell
+$env:FOCALPOINT_EAS_OWNER = 'wealthdigitals'
+$env:FOCALPOINT_EAS_PROJECT_ID = '6428833a-bccf-43b0-b02d-5ddc9225336a'
+eas build --platform android --profile preview-android
+```
+
+Clear those two shell variables before working with the original iPhone project and sign into an Expo account with access to it. Never commit credentials.json or the keystore. Configuration checks verified that the override preserves both platform identifiers, leaves the base notification ID unchanged and rejects partial overrides.
+
+Android 1.0.10/code 14 completed successfully: [Install APK](https://expo.dev/accounts/wealthdigitals/projects/focalpoint/builds/4a2da8ec-8de0-450f-8cee-eb2e3a3c4f8f). Installer HTTP HEAD returned 200 with 61,092,188 bytes. The artifact was verified as an APK; no application binary was downloaded to the laptop. No new Play AAB was built in this account-switch step. Physical-device install/update and notification delivery checks remain.
